@@ -1,1 +1,6 @@
 data/
+env/
+e2/ 
+*.pyc
+*.log
+*.pdf
