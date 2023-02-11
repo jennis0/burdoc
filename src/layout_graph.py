@@ -26,6 +26,25 @@ class LayoutGraph(object):
             el_str = el_str[10:min(30, len(el_str))]
             return f"<N:{self.id} element:{el_str}>"
 
+    def get_node(self, id_dist_pair) -> Node:
+        if id_dist_pair[0] < len(self.nodes):
+            return self.nodes[id_dist_pair[0]]
+
+
+    def node_has_ancester(self, node_id: int, target_id: int):
+        if node_id == target_id:
+            return True
+
+        anc = self.nodes[node_id]
+        for a in anc.up:
+            if self.node_has_ancester(a[0], target_id):
+                return True
+        
+        for a in anc.left:
+            if self.node_has_ancester(a[0], target_id):
+                return True
+        
+        return False
 
     def __get_next_overlaps_from_projection(self, node: Node, slice: np.array, transpose: bool=False):
 
@@ -60,7 +79,7 @@ class LayoutGraph(object):
                 if overlap_func(node, candidate) <= 0.1:
                     continue    
                 node_distances.append([i, distance_func(node, candidate)])
-            node_distances.sort(key=lambda d: d[1])
+            node_distances.sort(key=lambda d: d[1] + 0.01*self.nodes[d[0]].element.bbox.y0)
 
             #Remove nodes which would intersect with closer ones
             non_overlapping_nodes = []
@@ -76,7 +95,7 @@ class LayoutGraph(object):
             return non_overlapping_nodes
 
     def __build_graph(self):
-        matrix = np.zeros(shape=(int(self.pagebound[2]), int(self.pagebound[3])), dtype=np.int16)
+        matrix = np.zeros(shape=(int(self.pagebound.x1), int(self.pagebound.y1)), dtype=np.int16)
 
         for e in self.nodes[1:]:
             matrix[
@@ -98,7 +117,6 @@ class LayoutGraph(object):
                 int(e.element.bbox.y0):int(e.element.bbox.y1)
             ]
             e.right = self.__get_next_overlaps_from_projection(e, slice, True)
-            #print(e.id, e.down, e.right)
 
         for node in self.nodes[1:]:
             if len(node.up) == 0:
@@ -122,7 +140,7 @@ class LayoutGraph(object):
     def __init__(self, logger: logging.Logger, pagebound: Bbox, elements: List[LayoutElement]):
         self.logger = logger.getChild('layoutgraph')
         self.pagebound = pagebound
-        self.root = LayoutGraph.Node(0, LayoutElement(Bbox(0, -2, pagebound.x1, -1)))
+        self.root = LayoutGraph.Node(0, LayoutElement(Bbox(0, -2, pagebound.x1, -1, pagebound.x1, pagebound.y1)))
         self.nodes = [self.root]
         for i,e in enumerate(elements):
             n = LayoutGraph.Node(i+1, e)

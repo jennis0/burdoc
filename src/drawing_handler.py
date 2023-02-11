@@ -2,7 +2,7 @@ from typing import List, Any
 import logging
 import fitz
 
-from .layout_objects import Drawing
+from .layout_objects import LDrawing
 from .bbox import Bbox
 
 
@@ -21,31 +21,32 @@ class DrawingHandler(object):
         y = bbox[3] - self.page_bbox[1] > 0 and bbox[3] > self.page_bbox[1]
         return x and y
 
-    def get_page_drawings(self, page: fitz.Page, merge_boxes=True) -> List[Drawing]:
+    def get_page_drawings(self, page: fitz.Page, merge_boxes=True) -> List[LDrawing]:
         self.logger.debug("Starting drawing extraction")
         self.page = page
-        self.page_bbox = Bbox(*page.bound())
+        bound = page.bound()
+        self.page_bbox = Bbox(*bound, bound[2], bound[3])
         _,_,self.width,self.height = page.bound()
 
-        processed_drawings = {t.name:[] for t in Drawing.DrawingType}
+        processed_drawings = {t.name:[] for t in LDrawing.DrawingType}
         for d in self.page.get_cdrawings():
             if d['type'] == 'f':
                 if d['fill_opacity'] < 0.1:
                     continue
 
-                drawing = Drawing(None, Bbox(*d['rect']), d['fill_opacity'])
+                drawing = LDrawing(None, Bbox(*d['rect'], bound[2], bound[3]), d['fill_opacity'])
                 overlap = drawing.bbox.overlap(self.page_bbox, normalisation='second')
 
                 if (drawing.bbox.height() < 10) or (drawing.bbox.width() < 10):
                     if overlap > 0:
                         self.logger.debug(f"Found line {len(processed_drawings['Line'])} with box {drawing.bbox}")
-                        drawing.type = Drawing.DrawingType.Line
+                        drawing.type = LDrawing.DrawingType.Line
                         processed_drawings['Line'].append(drawing)
                         continue
                 
                 if overlap > 0.05 and overlap < 0.55:
                     self.logger.debug(f"Found rectangle {len(processed_drawings['Rect'])} with box {drawing.bbox}")
-                    drawing.type = Drawing.DrawingType.Rect
+                    drawing.type = LDrawing.DrawingType.Rect
                     processed_drawings['Rect'].append(drawing)
 
         #Merge boxes with significant overlap

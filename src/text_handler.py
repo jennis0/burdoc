@@ -1,7 +1,7 @@
 import logging
 import fitz
 from typing import List, Any
-from .layout_objects import Line
+from .layout_objects import LLine
 
 class TextHandler(object):
 
@@ -9,39 +9,61 @@ class TextHandler(object):
         self.logger = logger.getChild('texthandler')
         self.pdf = pdf
 
-    def _remove_line_duplicates(self, blocks: List[Any]) -> List[Any]:
-        for block in blocks:
-            skip = [False for l in range(len(block['lines']))]
-            if len(block['lines']) > 1:
-                for i,l1 in enumerate(block['lines'][:-1]):
-                    if skip[i]:
-                        continue
-                    l2 = block['lines'][i+1]
-                    t1 = "".join([s['text'] for s in l1['spans']])
-                    t2 = "".join([s['text'] for s in l2['spans']])
+    def _remove_line_duplicates(self, lines: List[LLine]) -> List[LLine]:
+        skip = [False for l in range(len(lines))]
+        for i,l1 in enumerate(lines):
+            if skip[i]:
+                continue
+            
+            t1 = l1.get_text()
+            if t1.strip() == "":
+                skip[i] = True
+                continue
 
-                    if t1.strip() == "":
-                        skip[i] = True
+            if len(lines) > 1:
+                for j,l2 in enumerate(lines[i+1:]):
+                    if skip[j]:
                         continue
+                    t2 = l2.get_text()
 
-                    if t1 == t2 and abs(l1['bbox'][1] - l2['bbox'][1]) < 0.005 \
-                            and abs(l1['bbox'][0] - l2['bbox'][0]) < 0.05:
-                        skip[i+1] = True
-            block['lines'] = [l for i,l in enumerate(block['lines']) if not skip[i]]
-        return blocks
+                    if t1 == t2 and l2.bbox.overlap(l1.bbox, 'min') > 0.2:
+                        skip[i+j] = True
+        lines = [l for i,l in enumerate(lines) if not skip[i]]
+        return lines
+
+    def _clean_text(self, lines: List[LLine]) -> List[LLine]:
+        #Clean some text which has erroneous spaces between characters
+        #This is common in some headers
+        for l in lines:
+            for s in l.spans:
+                if len(s.text) > 1 and s.text[1] == " ":
+                    if len(s.text) < 4 or s.text[1] == s.text[3]:
+                        if len(s.text) < 6 or s.text[1] == s.text[5]:
+                            s.text = s.text.replace(" ","")
+
+        #Fuse together lines where the first letter is oversized
+        for l in lines:
+            if len(l.spans) > 2 and l.spans[0].font.size > l.spans[1].font.size:
+                if len(l.spans[0].text) == 1:
+                    l.spans[0].text += l.spans[1].text
+                    l.spans.remove(l.spans[1])
+        return lines
 
     def get_page_text(self, page: fitz.Page):
         self.logger.debug("Starting text extraction")
         textpage = page.get_textpage(flags=fitz.TEXTFLAGS_DICT & fitz.TEXT_DEHYPHENATE & ~fitz.TEXT_PRESERVE_LIGATURES )
         data = textpage.extractDICT()
-        blocks = self._remove_line_duplicates(data['blocks'])
+        bound = page.bound()
 
         lines = []
-        for block in blocks:
+        for block in data['blocks']:
+            block_lines = []
             for line in block['lines']:
-                lines.append(
-                    Line.from_dict(line)
+                block_lines.append(
+                    LLine.from_dict(line, bound[2], bound[3])
                 )
-        
+            lines += self._remove_line_duplicates(block_lines)
+
+        lines = self._clean_text(lines)
         self.logger.debug(f"Found {len(lines)} lines of text")
         return lines
