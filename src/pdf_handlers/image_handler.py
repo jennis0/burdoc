@@ -1,6 +1,4 @@
-from enum import Enum, auto
 from PIL import Image as PILImage
-import PIL.ImageOps
 import fitz
 import numpy as np
 import logging
@@ -8,6 +6,9 @@ import io
 from typing import List, Tuple
 from ..elements.bbox import Bbox
 from ..elements.layout_objects import ImageElement
+
+from ..utils.image_manip import get_image_palette
+
 
 class ImageHandler(object):
 
@@ -49,7 +50,7 @@ class ImageHandler(object):
             return PILImage.open(io.BytesIO(pix.tobytes()))
         return None
 
-    def _classify_image(self, imageData: ImageElement) -> ImageElement.ImageType:
+    def _classify_image(self, imageData: ImageElement, page_colour: np.array) -> ImageElement.ImageType:
     
         #Calculate visible area of image intersected with visible area of page
         x_coverage = round(imageData.bbox.x_overlap(self.page_bbox, 'second'), 3)
@@ -69,6 +70,10 @@ class ImageHandler(object):
         imageData.properties['coverage'] = {'x':x_coverage, 'y':y_coverage, 'page':page_coverage}
         imageData.properties['extrema'] = maxExtrema
 
+        imageData.properties['primary_colour'] = np.array(get_image_palette(imageData.image, 1)[0][0])
+        
+        colour_offset = imageData.properties['primary_colour'] - page_colour
+        imageData.properties['colour_offset'] = np.sqrt(np.sum(colour_offset*colour_offset))
 
         self.logger.debug(f"Image properties :{imageData.properties}")
 
@@ -88,7 +93,7 @@ class ImageHandler(object):
         if x_variance < 50 and y_variance < 50 and maxExtrema < 100:
             if page_coverage > 0.9:
                 return ImageElement.ImageType.Background
-            elif page_coverage > 0.1:
+            elif page_coverage > 0.1 and imageData.properties['colour_offset'] > 15:
                 return ImageElement.ImageType.Section
             else:
                 return ImageElement.ImageType.Decorative
@@ -171,8 +176,10 @@ class ImageHandler(object):
         return [i for i,u in zip(images, used_images) if not u]
 
                     
-    def get_page_images(self, page: fitz.Page) -> List[ImageElement]:
+    def get_page_images(self, page: fitz.Page, page_image: PILImage) -> List[ImageElement]:
         self.logger.debug("Starting image extraction")
+
+        page_colour = np.array(get_image_palette(page_image, 1)[0][0])
         
         bound = page.bound()
         self.page_bbox = Bbox(*bound, bound[2], bound[3])
@@ -189,11 +196,12 @@ class ImageHandler(object):
                     continue
                 im = ImageElement(bbox=crop_bbox, original_bbox=orig_bbox, type=None,
                     image=image, properties={})
-                im.type = self._classify_image(im)
+                im.type = self._classify_image(im, page_colour)
                 processed_images[im.type].append(im)
 
         processed_images[ImageElement.ImageType.Primary] = self.merge_images(processed_images[ImageElement.ImageType.Primary])
 
         for t in processed_images:
             self.logger.debug(f"Found {len(processed_images[t])} {t} images")
+
         return processed_images

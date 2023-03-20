@@ -13,12 +13,14 @@ class MarginProcessor(Processor):
     def __init__(self, logger: Logger):
         super().__init__("Margin", logger)
 
-    @staticmethod
-    def requirements() -> List[str]:
+    
+    def initialise(self):
+        return super().initialise()
+
+    def requirements(self) -> List[str]:
         return ["page_bounds", 'text']
     
-    @staticmethod
-    def generates() -> List[str]:
+    def generates(self) -> List[str]:
         return ['text', 'headers', 'footers', 'left_sidebar', 'right_sidebar', 'extracted_page_number']
     
     def _process_text(self, page_bound: Bbox, text: List[LineElement]) -> Dict[str, Any]:
@@ -68,8 +70,7 @@ class MarginProcessor(Processor):
         return data
 
 
-    @staticmethod
-    def add_generated_items_to_fig(page_number:int, fig: Figure, data: Dict[str, Any]):
+    def add_generated_items_to_fig(self, page_number:int, fig: Figure, data: Dict[str, Any]):
 
         colours = {
             'headers':'violet',
@@ -88,8 +89,6 @@ class MarginProcessor(Processor):
         for field in ['headers', 'footers', 'left_sidebar', 'right_sidebar']:
             for e in data[field][page_number]:
                 add_rect(fig, e.bbox, colours[field])
-        for e in data['elements'][page_number]:
-            print(e)
 
         fig.add_scatter(x=[None], y=[None], name="Footers", line=dict(width=3, color=colours['headers']))
         fig.add_scatter(x=[None], y=[None], name="Headers", line=dict(width=3, color=colours['footers']))

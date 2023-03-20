@@ -7,28 +7,56 @@ from .bbox import Bbox
 class LayoutElement:
     bbox: Bbox
 
-    def __init__(self, bbox: Bbox):
+    def __init__(self, bbox: Bbox, title: Optional[str]=None):
+        self.title = title if title else 'LayoutElement'
         self.id = uuid4().hex
         self.bbox = bbox
-        self.properties = {}
+
+    def _str_rep(self, extras=None) -> str:
+        if extras:
+            extra_str = " ".join(f"{t}={extras[t]}" for t in extras)
+            if len(extra_str) > 0:
+                extra_str = " "+extra_str
+        else:
+            extra_str = ""
+        return f"<{self.title} Id={self.id[8]}... Bbox={self.bbox}{extra_str}>" 
 
     def __str__(self) -> str:
-        return f"<LayoutElement Id={self.id[:8]}... Bbox={self.bbox}>"
+        return self._str_rep()
+    
+    def __repr__(self) -> str:
+        return self.__str__()
+    
+    def to_html(self, content=""):
+        return f"<div>{content}</div>"
+    
+    def to_json(self, include_bbox=False, extras=None):
+        if not extras:
+            extras = {}
+
+        extras['type'] = self.title.lower()
+        if include_bbox:
+            extras['bbox'] = self.bbox.to_json()
+
+        return extras
 
 class LayoutElementGroup(LayoutElement):
     items: List[LayoutElement]
     open: bool
 
-    def __init__(self, bbox: Optional[Bbox]=None, items: Optional[List[LayoutElement]]=None, open: Optional[bool]=False):
+    def __init__(self, bbox: Optional[Bbox]=None, items: Optional[List[LayoutElement]]=None, open: Optional[bool]=False, title: Optional[str]=None):
         
+        if not title:
+            title = "LayoutElementGroup"
+
         if bbox and not items:
-            super().__init__(bbox)
+            super().__init__(bbox=bbox, title=title)
             self.items = []
         elif items and not bbox:
-            super().__init__(Bbox.merge([line.bbox for line in items]))
+            super().__init__(bbox=Bbox.merge([line.bbox for line in items]), title=title)
             self.items = items
         elif items and bbox:
-            super().__init__(bbox)
+            super().__init__(bbox=bbox, title=title)
             self.items = items
         else:
             raise Exception("Require either a bbox or item list to create LayoutElementGroup")
@@ -66,4 +94,17 @@ class LayoutElementGroup(LayoutElement):
         return self.items[self._index - 1]
 
     def __str__(self) -> str:
-        return f"<LayoutElementGroup Id={self.id[:8]}... Bbox={self.bbox} N_Items={len(self.items)}>"
+        extras = {"N_Items":len(self.items)}
+        return self._str_rep(extras)
+    
+    def __repr__(self) -> str:
+        return self.__str__()
+    
+    def to_html(self):
+        return super().to_html("".join(i.to_html() for i in self.items))
+    
+    def to_json(self, extras=None, **kwargs):
+        if not extras:
+            extras = {}
+        extras['items'] = [i.to_json() for i in self.items]
+        return super().to_json(extras=extras, **kwargs)

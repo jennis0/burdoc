@@ -1,11 +1,13 @@
 from typing import Any, List, Dict
 import logging
 from plotly.graph_objects import Figure
+import re
 
 from ..elements.bbox import Bbox
 from ..elements.layout_objects import LineElement, ImageElement, DrawingElement
 from ..elements.textblock import TextBlock
 from ..elements.section import PageSection
+from ..elements.element import LayoutElementGroup
 
 from .processor import Processor
 
@@ -21,12 +23,13 @@ class LayoutProcessor(Processor):
         self.block_size_threshold = 2
         self.section_margin = 5
 
-    @staticmethod
-    def requirements() -> List[str]:
+    def initialise(self):
+        return super().initialise()
+
+    def requirements(self) -> List[str]:
         return ["page_bounds", "images", "drawings", "text"]
     
-    @staticmethod
-    def generates() -> List[str]:
+    def generates(self) -> List[str]:
         return ['elements']
 
     def _create_sections(self, page_bound: Bbox, text : List[LineElement], images : List[ImageElement], drawings : List[DrawingElement]) -> List[PageSection]:
@@ -49,8 +52,7 @@ class LayoutProcessor(Processor):
         if len(images[ImageElement.ImageType.Background]) > 0:
             background = images[ImageElement.ImageType.Background][0]
 
-        #Create a section from each line break
-        small_breaks = []
+        #Split the 'default' section into chunks based on large line breaks
         sections = []
         last_y = 0
         for b in breaks:
@@ -61,28 +63,33 @@ class LayoutProcessor(Processor):
                         default=True,
                         backing_drawing=None,
                         backing_image=background,
-                        bbox = page_bound.clone(),
+                        bbox = Bbox(page_bound.x0, 
+                                    last_y, 
+                                    page_bound.x1, 
+                                    b.y1, 
+                                    page_bound.page_width, 
+                                    page_bound.page_height),
                         inline=True
                     )
                 )
-                sections[-1].bbox.y0 = last_y
-                sections[-1].bbox.y1 = b.y1
                 last_y = b.y1
-            else:
-                small_breaks.append(b)
 
-        #Create a default section
+        #Turn remaining part of the page into final default section
         sections.append(
             PageSection(
                 items=[], 
                 default=True, 
                 backing_drawing=None, 
                 backing_image=background, 
-                bbox=page_bound.clone(),
+                bbox = Bbox(page_bound.x0, 
+                            last_y, 
+                            page_bound.x1, 
+                            page_bound.y1, 
+                            page_bound.page_width, 
+                            page_bound.page_height),               
                 inline=True
-            )
+            )   
         )
-        sections[-1].bbox.y0 = last_y
 
         #Create sections from each section image
         for i in images[ImageElement.ImageType.Section]:
@@ -120,19 +127,6 @@ class LayoutProcessor(Processor):
                 )
             )
 
-        # #Divide sections based on small breaks
-        # for linebreak in small_breaks:
-        #     if linebreak.is_vertical():
-        #         continue
-        #     for i, sec in enumerate(sections[1:]):
-        #         written=False
-        #         if sec.bbox.overlap(linebreak, 'second') > 0.97:
-        #             sec.items.append(LLine(bbox=linebreak, type=LLine.LineType.Break, spans=[]))
-        #             written = True
-        #             break
-        #         if not written:
-        #             sections[0].items.append(LLine(bbox=linebreak, type=LLine.LineType.Break, spans=[]))
-
         #Assgn lines to sections
         sections.sort(key=lambda s: s.bbox.y0*1000 + s.bbox.x0)
         if len(sections) > 1:
@@ -152,7 +146,7 @@ class LayoutProcessor(Processor):
             sections[0].items += text
 
         #Filter out sections with no lines
-        sections = [s for s in sections if len(s.items) > 0]
+        sections = [s for s in sections if len(s.items) > 0 or s.default]
 
         self.logger.debug(f"Found {len(sections)} section in page")
         for i,s in enumerate(sections):
@@ -163,12 +157,22 @@ class LayoutProcessor(Processor):
     def _create_blocks(self, section: PageSection) -> List[TextBlock]:
         '''Group all of the items within a section into blocks'''
         blocks = []
+        section.items.sort(key=lambda l: l.bbox.y0*1000 + l.bbox.x0)
+        list_re = re.compile(u"^(\u2022)|^\((\d+)\.?\)|^(\d+)\.\s|^([a-z])\.\s|^\(([a-z])\)\.?", re.UNICODE)
+
 
         for line in section.items:
+            self.logger.debug(f"line: {line.get_text()}")
+            self.logger.debug(line)
+
 
             used = False
-            line_font = line.spans[0].font if len(line.spans) > 0 else None
-            
+            line_font = None
+            for s in line.spans:
+                if len(s.text.strip()) > 0:
+                    line_font = s.font
+                    break
+
             for block in blocks:
                 if used:
                     break
@@ -176,47 +180,69 @@ class LayoutProcessor(Processor):
                 if not block.open:
                     continue
 
-                block_font = block.items[-1].spans[-1].font if len(block.items[-1].spans) > 0 else None
+                self.logger.debug(f"block: {block.get_text()}")
+                self.logger.debug(block.items[-1])
+
+                for i in range(len(block.items[-1].spans)):
+                    if block.items[-1].spans[-(i+1)].text.strip() != "":
+                        block_font = block.items[-1].spans[-(i+1)].font
+                        break
 
                 ### Only allow merging with the block if it is of comparable width and
                 ### within the same distance as previous lines in this block
+
+                is_bullet = list_re.match(line.spans[0].text.lstrip()) is not None
+                line_overlap_with_block = line.bbox.x_overlap(block.bbox, 'first')
+                linegap = line.bbox.y0 - block.bbox.y1
+                block_overlap_with_line = line.bbox.x_overlap(block.bbox, 'second')
+                total_overlap = line.bbox.overlap(block.bbox, 'first')
+
                 if line_font and block_font:
-                    matched_font = (abs(line_font.size - block_font.size) < 0.2 and \
-                        line_font.bold == block_font.bold and \
-                        line_font.family == block_font.family)
+                    matched_font = abs(line_font.size - block_font.size) < 0.1 and \
+                        line_font.family == block_font.family
+                    matched_bold = (line_font.bold == block_font.bold) and (line_font.italic == block_font.italic)
+                    fuzzy_line_continuation = len(block.items) < 2 or ((abs(block.items[-1].bbox.x1 - block.bbox.x1) < 20) and (line.bbox.x0 - block.items[-1].bbox.x0) < 2)
+                    if linegap < 5:
+                        matched_font = matched_font and (fuzzy_line_continuation or matched_bold)
+                    else:
+                        matched_font = matched_font and matched_bold
                 else:
                     matched_font = True
                 
-                is_bullet = line.spans[0].text.lstrip().startswith(u"\u2022")
-                line_overlap_with_block = line.bbox.x_overlap(block.bbox, 'first')
-                linegap = line.bbox.y0 - block.bbox.y1
-                total_overlap = line.bbox.overlap(block.bbox, 'first') > 0.9
 
-                if line_overlap_with_block > 0.1:
-                    if not matched_font:
-                        block.open = False
+
+                block_linegap = 8 if len(block.items) == 1 else (block.items[1].bbox.y0 - block.items[0].bbox.y1 + 1)
+
+                self.logger.debug(f"linegap={linegap}, matched_font={matched_font}, line_overlap={line_overlap_with_block},"+\
+                                   f"block_overlap={block_overlap_with_line}, is_bullet={is_bullet}")
+
+
+                if line_overlap_with_block > 0.08:
+                    if linegap < block_linegap and matched_font and not is_bullet:
+                        block.append(line)
+                        self.logger.debug("Appending line to block")
+                        used = True
                         continue
-                    elif is_bullet:
+
+                    if total_overlap> 0.9:
+                        block.append(line)
+                        self.logger.debug("Appending line to block due to bbox overlap")
+                        used = True
+                        continue
+
+                    if linegap < block_linegap and len(line.get_text().strip()) == 1 and line.spans[0].font.size < 12:
+                        block.append(line)
+                        self.logger.debug("Appening line to block as it's single character")
+                        used = True
+
+                    if not matched_font or is_bullet:
                         block.open = False
-                        break
+                        self.logger.debug("Closing block")
+                        continue
 
-                if total_overlap:
-                    block.append(line)
-                    used = True
-                    continue
-
-                if linegap > 6:
                     block.open = False
+                    self.logger.debug("Closing block")
                     continue
-
-                if line_overlap_with_block > 0.1:
-                    block.append(line)
-                    used = True
-                    continue
-
-                ### Close blocks that this line is close to if we don't merge
-                if not used and line_overlap_with_block > 0.05:
-                    block.open = False
 
             if not used:
                 blocks.append(TextBlock(items=[line], open=True))
@@ -242,7 +268,6 @@ class LayoutProcessor(Processor):
             last_line = 0
             skip_next_i = 0
             for i,l in enumerate(b.items[1:-1]):
-
                 if skip_next_i > 0:
                     skip_next_i -= 1
                     continue
@@ -276,8 +301,6 @@ class LayoutProcessor(Processor):
                 new_blocks.append(b)
             split_blocks += new_blocks
                     
-
-
         self.logger.debug(f"Found {len(split_blocks)} blocks in section.")            
         return split_blocks
             
@@ -295,8 +318,7 @@ class LayoutProcessor(Processor):
 
         #self.logger.debug("Finished computing layout")
 
-    @staticmethod
-    def add_generated_items_to_fig(page_number:int, fig: Figure, data: Dict[str, Any]):
+    def add_generated_items_to_fig(self, page_number:int, fig: Figure, data: Dict[str, Any]):
 
         colours = {
             PageSection:"Green",
@@ -317,6 +339,9 @@ class LayoutProcessor(Processor):
                     recursive_add(fig, i)
             elif isinstance(e, TextBlock):
                 add_rect(fig, e.bbox, colours[TextBlock])
+            elif isinstance(e, LayoutElementGroup) or isinstance(e, list):
+                for i in e:
+                    recursive_add(fig, i)
 
         for e in data['elements'][page_number]:
             recursive_add(fig, e)

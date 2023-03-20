@@ -189,5 +189,4 @@ class ContentParser(object):
     def parse(self, font_statistics, toc, pages: Dict[int, List[List[LayoutElement]]]):
         self.fit_font_predictor(font_statistics)
         out = self.parse_page(pages[0])
-        print(out)
         return [],[]

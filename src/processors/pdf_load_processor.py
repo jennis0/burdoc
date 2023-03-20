@@ -21,12 +21,13 @@ class PDFLoadProcessor(Processor):
     def __init__(self, logger: logging.Logger):
         super().__init__("PDFLoad", logger)
 
-    @staticmethod
-    def requirements() -> List[str]:
+    def initialise(self):
+        return super().initialise()
+
+    def requirements(self) -> List[str]:
         return []
     
-    @staticmethod
-    def generates() -> List[str]:
+    def generates(self) -> List[str]:
         return ['page_bounds', 'text', 'images', 
                 'page_images', 'drawings']
 
@@ -64,7 +65,7 @@ class PDFLoadProcessor(Processor):
                 font_statistics[family] = {'_counts':{}}
 
             if basefont not in font_statistics[family]:
-                font_statistics[family][basefont] =  dict(id=f[0], ext=f[1], type=f[2], family=family, basefont=basefont, encoding=f[5], counts={})
+                font_statistics[family][basefont] =  dict(family=family, basefont=basefont, counts={})
 
         for t in text:
             for s in t.spans:
@@ -78,8 +79,10 @@ class PDFLoadProcessor(Processor):
                         font_statistics[s.font.family]['_counts'][size] += l
                         font_statistics[s.font.family][s.font.name]['counts'][size] += l
                 except:
-                    print(s.font)
-
+                    if s.font.family not in font_statistics:
+                        font_statistics[s.font.family] = {'_counts':{s.font.size: 1}}
+                    if s.font.name not in font_statistics[s.font.family]:
+                        font_statistics[s.font.family][s.font.name] = dict(family=s.font.family, basefont=s.font.name, counts={s.font.size: 1})
 
     def process(self, data: Dict[str, Any]):
         
@@ -97,7 +100,7 @@ class PDFLoadProcessor(Processor):
         metadata = {
             'title':os.path.basename(path),
             'pdf_metadata':pdf.metadata,
-            'font_stats': {},
+            'font_statistics': {},
             'toc':pdf.get_toc()
         }
 
@@ -119,16 +122,15 @@ class PDFLoadProcessor(Processor):
             bound = page.bound()
             data['page_bounds'][page_number] = Bbox(*bound, bound[2], bound[3])
             data['page_images'][page_number] = self.get_page_image(page)
-            data['images'][page_number] = self.imageHandler.get_page_images(page)
+            data['images'][page_number] = self.imageHandler.get_page_images(page, data['page_images'][page_number])
             data['drawings'][page_number] = self.drawingHandler.get_page_drawings(page)
 
             data['text'][page_number] = self.textHandler.get_page_text(page)
-            self.update_font_statistics(data['metadata']['font_stats'], page.get_fonts(), data['text'][page_number])
+            self.update_font_statistics(data['metadata']['font_statistics'], page.get_fonts(), data['text'][page_number])
 
         pdf.close()
 
-    @staticmethod
-    def add_generated_items_to_fig(page_number:int, fig: Figure, data: Dict[str, Any]):
+    def add_generated_items_to_fig(self, page_number:int, fig: Figure, data: Dict[str, Any]):
 
         colours = {
             ImageElement.ImageType.Primary:"DarkRed",

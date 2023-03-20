@@ -1,69 +1,50 @@
 from dataclasses import dataclass
-from typing import List, Any, Dict, Optional
+from typing import List, Optional
 
 from .textblock import TextBlock
 from .span import Span
 from .bbox import Bbox
-from .layout_objects import LineElement
 from .element import LayoutElementGroup, LayoutElement
 
+class TextListItem (LayoutElementGroup):
+    label: str
+    items: List[TextBlock]
 
-class Paragraph(LayoutElementGroup):
-    
-    def to_html(self):
-        lines = [''.join(s.to_html() for s in line) for line in self.lines]
-        return f"<p>{'</br>'.join(lines)}</p>"
+    def __init__(self, label, items):
+        super().__init__(items=items, title="TextListItem")
+        self.label = label
 
-    def to_json(self):
-        return {'type':'para', 'spans':[[s.to_json() for s in line] for line in self.lines]}
-
-
-class Column(LayoutElementGroup):
-
-    def __init__(self, bbox: Optional[Bbox] = None, items: Optional[List[LayoutElementGroup]] = None, open: Optional[bool] = False):
-        super().__init__(bbox, items, open)
-    
-    def __str__(self) -> str:
-        if len(self.items) > 0:
-            text = self.items[0].to_html() + "..."
-        else:
-            text = ""
-        return u"<Column Id="+self.id[:8]+u"... Text='"+text+u"' Bbox="+str(self.bbox)+u" N_Items="+str(len(self.items))+u">"
-    
-
-class Title(TextBlock):
-    level: int
-    
-    def to_html(self):
-        level = max(4-self.level, 1)
-        return f"<h{level}>{''.join(s.to_html() for s in self.items)}</h{level}>"
-
-    def to_json(self):
-        return {'type':'title', 'spans':[s.to_json() for s in self.items], 'level':self.level}
-
-@dataclass
-class ListItem:
-    label: Span
-    items: Paragraph
-
-@dataclass
-class TextList:
+        
+class TextList (LayoutElementGroup):
     ordered: bool
-    items: List[ListItem]
+    items: List[TextListItem]
+
+    def __init__(self, ordered: bool, bbox: Optional[Bbox] = None, items: Optional[List[LayoutElement]] = None):
+        super().__init__(bbox=bbox, items=items, open=False, title="TextList")
+        self.ordered = ordered
+
+    def to_json(self, **kwargs):
+        extras = {'ordered':self.ordered}
+        return super().to_json(extras=extras, **kwargs)
 
 @dataclass
 class TableOfContentItem:
     level: int
-    text: Paragraph
+    text: TextBlock
     id_reference: str
 
 @dataclass
-class TableOfContent:
+class TableOfContent (LayoutElementGroup):
     items: List[TableOfContentItem]
 
 @dataclass
-class Aside:
-    content: List[LayoutElement]
+class Aside (LayoutElementGroup):
+    def __init__(self, 
+                 bbox: Optional[Bbox] = None, 
+                 items: Optional[List[LayoutElement]] = None, 
+                 open: Optional[bool] = False
+                  ):
+        super().__init__(bbox, items, open, title="Aside")
 
     def to_html(self):
         text = "<div style='background:#eeeeee'>"
@@ -73,7 +54,7 @@ class Aside:
 
 @dataclass
 class CHeaderFooter:
-    paras: List[Paragraph]
+    paras: List[TextBlock]
 
     def to_html(self):
         text = "<div><small>"

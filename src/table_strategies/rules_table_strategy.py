@@ -266,7 +266,6 @@ class RulesTableStrategy(TableExtractorStrategy):
         #Typically expect consistent numbers, especially given the first col is using blocks
         #Only expect to see more in first col when it is plain text and we're picking up 
         #block breaks
-        print("LINES", c1_h_lines, h_lines)
         if len(c1_h_lines) >= 2*len(h_lines):
             return None
 

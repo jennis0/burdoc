@@ -14,6 +14,11 @@ from .processors.ml_table_processor import MLTableProcessor
 from .processors.layout_processor import LayoutProcessor
 from .processors.reading_order_processor import ReadingOrderProcessor
 from .processors.margin_processor import MarginProcessor
+from .processors.content_processor import ContentProcessor
+from .processors.json_out_processor import JSONOutProcessor
+from .processors.aggregator_processor import AggregatorProcessor
+from .processors.processor import Processor
+from .processors.rules_table_processor import RulesTableProcessor
 
 from .utils.render_pages import render_pages
 
@@ -28,19 +33,38 @@ class Burdoc(object):
             use_multiprocessing=True, suppress=['logger_tt', 'pytorch', 'timm', 'PIL']
         )
         self.logger = logger_tt.getLogger('burdoc')
-        self.min_slice_size = 4
-        self.max_slices = 20
+        self.min_slice_size = 100
+        self.max_slices = 12
         self.max_threads = None
 
-        self.mlTableProcessor = MLTableProcessor(self.logger)
+        self.processors = [
+           (PDFLoadProcessor, {}, False),
+           (MLTableProcessor, {}, False),
+           (AggregatorProcessor, {
+            'processors': [
+                MarginProcessor,
+                LayoutProcessor,
+                RulesTableProcessor,
+                ReadingOrderProcessor,
+                ContentProcessor,
+                JSONOutProcessor
+            ],
+            'render_processors': [
+                False, True, True, True, True, False
+            ],
+            'processor_args': [{}, {}, {}, {}, {}, {}]
+           }, True)
+        ]
 
+        self.return_fields = ['metadata', 'json', 'page_images', 'page_hierarchy']
 
     @staticmethod
     def _process_slice(arg_dict: Any) -> Dict[str, Any]:
         pa = arg_dict['processor_args']
         processor = arg_dict['processor'](**pa)
+        processor.initialise()
         processor.process(arg_dict['data'])
-        return arg_dict['data']
+        return {k:arg_dict['data'][k] for k in ['metadata'] + processor.generates()}
 
     def slice_data(self, data: Dict[str, Any], page_slices: List[List[int]], requirements: List[str]):
         sliced_data = [
@@ -62,8 +86,12 @@ class Burdoc(object):
         return original_data 
         
 
-    def run_mp_processor(self, processor: Processor, pages: List[int], data: Dict[str, Any]) -> Dict[str, Any]:
-        if len(pages) > 1 and (not self.max_threads or self.max_threads > 1):
+    def run_processor(self, processor: Processor, processor_args: Dict[str, Any], 
+                      pages: List[int], data: Dict[str, Any]) -> Dict[str, Any]:
+        
+        self.logger.debug(f"========================= Running {type(processor).__name__} ===========================")
+
+        if len(pages) > 1 and (not self.max_threads or self.max_threads > 1) and processor.threadable:
             slice_size = max(self.min_slice_size, int(len(pages) / self.max_slices))
             page_slices = [pages[i*slice_size:(i*slice_size)+slice_size] for i in range(int(len(pages)/slice_size))]
             if len(pages) % slice_size != 0:
@@ -73,12 +101,13 @@ class Burdoc(object):
 
         self.logger.debug(f"Page slices={page_slices}")
 
-        data_slices = self.slice_data(data, page_slices, processor.requirements())
+        proc = processor(self.logger, **processor_args)
+        data_slices = self.slice_data(data, page_slices, proc.requirements())
         thread_args = [{
             'processor':processor, 
             'processor_args': {
-                'logger':self.logger, 
-            },
+                'logger':self.logger, **processor_args
+            } ,
             'data': ds
         } for ds in data_slices]
 
@@ -88,7 +117,7 @@ class Burdoc(object):
         else:
             sliced_results = [Burdoc._process_slice(thread_args[0])]
 
-        self.merge_data(data, sliced_results, processor.generates())
+        self.merge_data(data, sliced_results, proc.generates())
 
     def read(self, path: os.PathLike, pages: Optional[List[int]]=None) -> Any:
         
@@ -98,16 +127,16 @@ class Burdoc(object):
             pdf.close()
 
         data = {'metadata':{'path':path}}
+        renderers = []
 
-        self.run_mp_processor(PDFLoadProcessor, pages, data)
-        self.mlTableProcessor.process(data)
-        self.run_mp_processor(MarginProcessor, pages, data)
-        self.run_mp_processor(LayoutProcessor, pages, data)
-        #render_pages(self.logger, data, [PDFLoadProcessor, type(self.mlTableProcessor), LayoutProcessor], pages)
-        self.run_mp_processor(ReadingOrderProcessor, pages, data)
-        render_pages(self.logger, data, [MarginProcessor, ReadingOrderProcessor], pages)
+        for p,args,render_p in self.processors:
+            self.run_processor(p, args, pages, data)
+            if render_p:
+                renderers.append(p(self.logger, **args))
 
-        return data
+        render_pages(self.logger, data, renderers)
+
+        return {k:data[k] for k in self.return_fields}
 
 
 

@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import List, Any, Optional
 
 from .bbox import Bbox
 from .element import LayoutElementGroup, LayoutElement
@@ -9,9 +9,9 @@ class PageSection(LayoutElementGroup):
     backing_image: Any=None
     inline: bool=False
 
-    def __init__(self, bbox: Bbox, items: List[LayoutElement], default: bool=False, 
-                 backing_drawing: Any=None, backing_image: Any=None, inline: bool=False):
-        super().__init__(bbox, items)
+    def __init__(self, bbox: Optional[Bbox]=None, items: Optional[List[LayoutElement]]=None, default: Optional[bool]=False, 
+                 backing_drawing: Optional[Any]=None, backing_image: Optional[Any]=None, inline: Optional[bool]=False):
+        super().__init__(bbox=bbox, items=items, title="PageSection")
         self.default = default
         self.backing_drawing = backing_drawing
         self.backing_image = backing_image
@@ -21,4 +21,8 @@ class PageSection(LayoutElementGroup):
         return "</br>".join(i.to_html() for i in self.items)
 
     def __str__(self):
-        return f"<Section Id={self.id[:8]}... Bbox={self.bbox} N_Items={self.items[0]} Default={self.default}>"
+        return self.__repr__()
+
+    def __repr__(self):
+        extras = {'Default': self.default, 'Backing':(self.backing_drawing or self.backing_image)}
+        return super()._str_rep(extras)

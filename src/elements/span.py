@@ -27,3 +27,6 @@ class Span:
 
     def __repr__(self):
         return f"<Span '{self.text}' Font={self.font}>"
+    
+    def to_json(self):
+        return {'type':'span', 'text':self.text, 'font':self.font.to_json()}

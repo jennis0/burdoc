@@ -13,7 +13,7 @@ class LineElement(LayoutElement):
     spans: List[Span]
 
     def __init__(self, bbox: Bbox, spans: List[Span]):
-        super().__init__(bbox)
+        super().__init__(bbox, title="Line")
         self.spans = spans
 
     def to_html(self):
@@ -32,7 +32,12 @@ class LineElement(LayoutElement):
         return ""
 
     def __str__(self):
-        return f"<Line Id={self.id[:8]}... Bbox={self.bbox} Text='{self.spans[0].text if len(self.spans)>0 else ''}'>"
+        extras ={"Text":self.spans[0].text if len(self.spans)>0 else ''}
+        return self._str_rep(extras)
+    
+    def to_json(self, **kwargs):
+        extras = {'spans': [s.to_json() for s in self.spans]}
+        return super().to_json(extras=extras, **kwargs)
 
 @dataclass
 class DrawingElement(LayoutElement):
@@ -45,7 +50,7 @@ class DrawingElement(LayoutElement):
     opacity: float
 
     def __init__(self, bbox: Bbox, type: DrawingType, opacity: float):
-        super().__init__(bbox)
+        super().__init__(bbox, title="Drawing")
         self.type = type
         self.opacity = opacity
 
@@ -53,7 +58,13 @@ class DrawingElement(LayoutElement):
         return ""
     
     def __str__(self):
-        return f"<Drawing Id={self.id[:8]}... Bbox={self.bbox} Type={self.type.name}>"
+        extras={"Type":self.type.name}
+        return self._str_rep(extras)
+    
+    def to_json(self, **kwargs):
+        extras = {'type':self.type.name, 'opacity':self.opacity}
+        return super().to_json(**kwargs, extras=extras, include_bbox=True)
+    
 
 @dataclass
 class ImageElement(LayoutElement):
@@ -76,7 +87,7 @@ class ImageElement(LayoutElement):
 
     def __init__(self, bbox: Bbox, original_bbox: Bbox, type: ImageType, 
                  image: PILImage, properties: Any, inline: bool=False):
-        super().__init__(bbox)
+        super().__init__(bbox, title="Image")
         self.original_bbox = original_bbox
         self.type = type
         self.image = image
@@ -87,6 +98,11 @@ class ImageElement(LayoutElement):
         return "---Image---"
     
     def __str__(self):
-        return f"<Image Id={self.id[:8]}... Bbox={self.bbox} Type={self.type.name} Image={self.image}>"
+        extras = {"Type":self.type.name, "Image":self.image}
+        return self._str_rep(extras)
+    
+    def to_json(self, **kwargs):
+        extras = {'image_type':self.type, 'image':self.image}
+        return super().to_json(extras=extras, **kwargs)
 
 

@@ -7,9 +7,12 @@ from logging import Logger
 from typing import Any, List, Dict
 import plotly.express as plt
 import PIL.ImageStat as imstat
+import numpy as np
 import math
 from enum import Enum
 import time
+
+from ..utils.image_manip import get_image_palette
 
 from .table_extractor_strategy import TableExtractorStrategy
 from ..elements.bbox import Bbox
@@ -21,7 +24,7 @@ class DetrTableStrategy(TableExtractorStrategy):
         super().__init__('detr', logger)
 
         self.margin = 25
-        self.threshold = 0.7
+        self.threshold = 0.9
         self.extractor = DetrImageProcessor()
         self.detector_model = TableTransformerForObjectDetection.from_pretrained('microsoft/table-transformer-detection')
         self.structure_model = TableTransformerForObjectDetection.from_pretrained('microsoft/table-transformer-structure-recognition')
@@ -38,7 +41,8 @@ class DetrTableStrategy(TableExtractorStrategy):
             self.batch_size = -1
 
 
-    def requirements(self) -> List[str]:
+    @staticmethod
+    def requirements() -> List[str]:
         return ['page_images']
 
 
@@ -58,15 +62,40 @@ class DetrTableStrategy(TableExtractorStrategy):
         return results
     
 
-    def _preprocess_image(self, page_images: List[Image.Image]):
+    def _preprocess_image(self, page_images: List[Image.Image], remove_background: bool):
         page_images = [i.convert("RGB") for i in page_images]
+        # if remove_background:
+        #     no_background_images = []
+
+        #     for im in page_images:
+        #         palette = get_image_palette(im, 10, n_means=10)
+        #         print(palette)
+        #         if palette[0][1] > 0.25:
+        #             im_arr = np.array(im)
+        #             mask = np.zeros(shape=im_arr.shape[:2], dtype=bool)
+        #             for p in palette:
+        #                 if p[1] <= 0.25 or np.mean(p[0]) < 170.:
+        #                     print("break on", p)
+        #                     break
+        #                 mask |= np.sqrt(np.square(im_arr - p[0]).sum(axis=2)) < 40
+
+        #             print(mask.sum())
+        #             im_arr[mask] = [250.,250.,250.]
+        #             no_background_images.append(Image.fromarray(im_arr))
+        #             no_background_images[-1].show()
+        #         else:
+        #             no_background_images.append(im)
+        #    page_images = no_background_images
+
         s = time.time()
-        encoding = self.extractor.preprocess(page_images, return_tensors='pt', do_resize=True, do_rescale=True, do_normalize=True)
+        
+        encoding = self.extractor.preprocess(page_images, return_tensors='pt', 
+                                             do_resize=True, do_rescale=True, do_normalize=True)
         self.logger.debug(f"Encoding {round(time.time() - s, 2)}")
         return encoding
 
-    def _do_extraction(self, model, images: List[Image.Image]):
-        features = self._preprocess_image(images)
+    def _do_extraction(self, model, images: List[Image.Image], remove_background: bool):
+        features = self._preprocess_image(images, remove_background)
         sizes = torch.tensor([[i.size[1], i.size[0]] for i in images])
         if self.cuda:
             features.to(self.device)
@@ -82,7 +111,9 @@ class DetrTableStrategy(TableExtractorStrategy):
         return results
 
     def _extract_tables_batch(self, page_images: List[Image.Image]) -> List[Any]:
-        results = self._do_extraction(self.detector_model, page_images)
+        results = self._do_extraction(self.detector_model, page_images, True)
+        # for r in results:
+        #     print(r)
         table_images = []
         table_pages = []
         bbox_corrections = []
@@ -105,14 +136,11 @@ class DetrTableStrategy(TableExtractorStrategy):
         if len(table_images) == 0:
             return []
 
-        results = self._do_extraction(self.structure_model, table_images)
+        results = self._do_extraction(self.structure_model, table_images, False)
 
         tables = [[] for _ in range(len(page_images))]
         for p,c,t in zip(table_pages, bbox_corrections, results):
-            tables[p].append(self._prepare_table(t,  c, *page_images[p].size))
-
-        # for i,t in enumerate(tables):
-        #     self.plot_tables(page_images[i], t)    
+            tables[p].append(self._prepare_table(t,  c, *page_images[p].size)) 
         
         return tables
 
@@ -130,40 +158,3 @@ class DetrTableStrategy(TableExtractorStrategy):
             else:
                 parts.append((TableExtractorStrategy.TableParts._value2member_map_[label], Bbox(*corrected_bb, page_width, page_height), score))
         return (table, parts)
-
-    def plot_tables(self, page_image, tables):
-        
-        colors=[
-            'Grey',
-            'RoyalBlue',
-            'Crimson',
-            'Green',
-            'Purple',
-            'Orange',            
-        ]
-
-        def add_rect(label, bbox, score):
-            fig.add_shape(dict(
-                type='rect',
-                xref='x',
-                yref='y',
-                x0=bbox.x0, y0=bbox.y0, x1=bbox.x1, y1=bbox.y1,
-                opacity=0.6,
-                line=dict(color=colors[label.value], width=3)))
-            fig.add_annotation(text=f'{label.name}: {score:0.2f}', 
-                               x=bbox.x0+1, y=bbox.y0+1)
-
-
-        fig = plt.imshow(page_image)
-        for t in tables:
-            ls = set()
-            add_rect(*t[0])
-            for label, bbox, score  in t[1]:
-                add_rect(label, bbox, score)
-                ls.add(label)
-            for l in list(ls):
-                fig.add_scatter(x=[None], y=[None], name=l.name, line=dict(width=3, color=colors[l.value]))
-        
-        fig.update_layout({'showlegend': True, 'height':1000, 'xaxis':{'showticklabels':False}, 'yaxis':{'showticklabels':False}})
-        fig.show()
-     

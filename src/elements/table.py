@@ -1,5 +1,6 @@
 from typing import List, Any, Tuple, Dict
 
+from ..table_strategies.table_extractor_strategy import TableExtractorStrategy
 from .element import LayoutElement
 from .bbox import Bbox
 
@@ -11,13 +12,17 @@ class Table(LayoutElement):
                  cells: List[List[Any]], 
                  row_headers: List[Any]=None, 
                  col_headers: List[Any]=None, 
+                 row_boxes: List[Tuple[TableExtractorStrategy.TableParts, List[Bbox]]]=None,
+                 col_boxes: List[Tuple[TableExtractorStrategy.TableParts, List[Bbox]]]=None,
                  merges: Dict[Tuple[int, int], List[Tuple[int,int]]]=None
     ):
-        super().__init__(bbox)
+        super().__init__(bbox, title='Table')
         self._cells = cells
         self.row_headers = row_headers
         self.col_headers = col_headers
         self.merges = merges
+        self.row_boxes = row_boxes
+        self.col_boxes = col_boxes
 
     def _get_cell(self, row:int, col: int):
         val = {'c':self._cells[row][col]}
@@ -46,7 +51,7 @@ class Table(LayoutElement):
     def to_html(self):
         text = "<table>"
         if self.col_headers:
-            headers = [f"<th>{ch.to_html()}</th>" for rh in self.col_headers]
+            headers = [f"<th>{ch.to_html()}</th>" for ch in self.col_headers]
             text += f"<tr>{''.join(headers)}</tr>"
 
         for i,row in enumerate(self._cells):
@@ -59,14 +64,21 @@ class Table(LayoutElement):
         text += "</table>"
         return text
     
-    def to_json(self):
-        return {
-            'bbox':self.bbox.to_json(),
-            'rh':[r.to_json() for r in self.row_headers],
-            'ch':[c.to_json() for c in self.col_headers],
-            'cells':[c.to_json() for c in self._cells],
-            'merges':self.merges
-        }
+    def to_json(self, **kwargs):
+        extras = {}
+        if self.row_headers:
+            extras['rh'] = [r.to_json() for r in self.row_headers]
+        if self.col_headers:
+            extras['ch'] = [c.to_json() for c in self.col_headers]
+        if self._cells:
+            json_cells = []
+            for row in self._cells:
+                json_cells.append([])
+                for col in row:
+                    json_cells[-1].append([l.to_json() for l in col])
+            extras['cells'] = json_cells
+
+        return super().to_json(extras=extras, **kwargs)
     
     def __str__(self):
         return f"<Table Id={self.id[:8]}... Bbox={str(self.bbox)}>"
