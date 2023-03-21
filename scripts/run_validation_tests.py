@@ -21,7 +21,7 @@ def run_validation(in_dir, out_dir):
             exit(1)
 
     files = os.listdir(in_dir)
-    for filename in files[3:]:
+    for filename in files:
         path = os.path.join(in_dir, filename)
         if not os.path.isfile(path):
             continue
@@ -34,7 +34,6 @@ def run_validation(in_dir, out_dir):
             json.dump(result, f)
 
 if __name__ == "__main__":
-    print(sys.argv)
     if len(sys.argv) != 4 and len(sys.argv) != 3:
         print("ERROR: Incorrect number of arguments. Use 'python run_validation_tests [in_dir] [out_dir] (gold)'")
         exit(1)
