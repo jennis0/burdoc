@@ -84,6 +84,9 @@ class Bbox:
 
     def y_overlap(self, b2: Bbox, normalisation: str="") -> float:
         y_overlap = max(min(self.y1, b2.y1) - max(self.y0, b2.y0), 0)
+        if y_overlap < 0.01:
+            return 0
+        
         if normalisation == "":
             h = 1
         if normalisation == "first":
@@ -96,8 +99,10 @@ class Bbox:
             h = max(self.height(), b2.height())
         elif normalisation == 'page':
             h = self.page_height
-        if h < 1 and y_overlap > 0:
+
+        if h < 1:
             return 1
+        
         return y_overlap / h
 
     def overlap(self, b2: Bbox, normalisation : str="") -> float:

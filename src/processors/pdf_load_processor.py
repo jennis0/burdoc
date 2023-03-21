@@ -114,7 +114,12 @@ class PDFLoadProcessor(Processor):
         data['metadata'] |= metadata
         data |= new_fields
 
+        page_count = pdf.page_count
+
         for page_number in slice:
+            if page_number >= page_count:
+                self.logger.info(f"Skipping page {page_number + 1} as only {page_count} pages")
+                continue
             self.logger.debug(f"Reading page {page_number}")
             page = pdf.load_page(int(page_number))
             self.logger.debug("Page loaded")

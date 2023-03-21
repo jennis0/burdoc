@@ -24,7 +24,7 @@ from .utils.render_pages import render_pages
 
 class Burdoc(object):
 
-    def __init__(self, log_level: int=logging.INFO):
+    def __init__(self, log_level: int=logging.INFO, render_pages: bool=False):
         self.log_level = log_level
 
         logger_tt.setup_logging(
@@ -36,6 +36,7 @@ class Burdoc(object):
         self.min_slice_size = 100
         self.max_slices = 12
         self.max_threads = None
+        self.render = render_pages
 
         self.processors = [
            (PDFLoadProcessor, {}, False),
@@ -56,7 +57,7 @@ class Burdoc(object):
            }, True)
         ]
 
-        self.return_fields = ['metadata', 'json', 'page_images', 'page_hierarchy']
+        self.return_fields = ['metadata', 'json', 'page_hierarchy']
 
     @staticmethod
     def _process_slice(arg_dict: Any) -> Dict[str, Any]:
@@ -121,10 +122,12 @@ class Burdoc(object):
 
     def read(self, path: os.PathLike, pages: Optional[List[int]]=None) -> Any:
         
+        pdf = fitz.open(path)
         if not pages:
-            pdf = fitz.open(path)
             pages = np.arange(0, pdf.page_count, dtype=np.int16)
-            pdf.close()
+        else:
+            pages = [p for p in pages if p < pdf.page_count]
+        pdf.close()
 
         data = {'metadata':{'path':path}}
         renderers = []
@@ -134,7 +137,8 @@ class Burdoc(object):
             if render_p:
                 renderers.append(p(self.logger, **args))
 
-        render_pages(self.logger, data, renderers)
+        if self.render:
+            render_pages(self.logger, data, renderers)
 
         return {k:data[k] for k in self.return_fields}
 

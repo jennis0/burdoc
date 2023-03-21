@@ -236,9 +236,9 @@ class ReadingOrderProcessor(Processor):
 
     def process(self, data: Any) -> Any:
         data['reading_order_bounds'] = {}
-        for pn, page_bound, elements, images, tables in self.get_page_data(data):
+        for pn, page_bound, elements, images, tables, rules_tables in self.get_page_data(data):
 
-            elements,bounds = self._flow_content(page_bound, elements, images[ImageElement.ImageType.Primary] + tables)
+            elements,bounds = self._flow_content(page_bound, elements, images[ImageElement.ImageType.Primary] + tables + rules_tables)
             data['elements'][pn] = elements
             data['reading_order_bounds'][pn] = bounds
 

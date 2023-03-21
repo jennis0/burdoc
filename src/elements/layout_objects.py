@@ -62,7 +62,7 @@ class DrawingElement(LayoutElement):
         return self._str_rep(extras)
     
     def to_json(self, **kwargs):
-        extras = {'type':self.type.name, 'opacity':self.opacity}
+        extras = {'type':self.type.name.lower(), 'opacity':self.opacity}
         return super().to_json(**kwargs, extras=extras, include_bbox=True)
     
 
@@ -102,7 +102,7 @@ class ImageElement(LayoutElement):
         return self._str_rep(extras)
     
     def to_json(self, **kwargs):
-        extras = {'image_type':self.type, 'image':self.image}
+        extras = {'image_type':self.type.name.lower(), 'image':None}#self.image}
         return super().to_json(extras=extras, **kwargs)
 
 

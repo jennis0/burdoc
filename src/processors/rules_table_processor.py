@@ -62,7 +62,7 @@ class RulesTableProcessor(Processor):
                 section.items = [i for i,keep in zip(section.items, keep_items) if keep]
                 tables[pn] += section_tables
         
-        data['tables'] = tables
+        data['rules_tables'] = tables
 
         return data     
 

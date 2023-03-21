@@ -213,6 +213,8 @@ class ContentProcessor(Processor):
 
             if isinstance(e, Aside):
                 for j,sub_e in enumerate(e.items):
+                    if not isinstance(e, TextBlock):
+                        continue
                     add_to_hierarchy(sub_e, hierarchy, i, j)
                 continue
 
