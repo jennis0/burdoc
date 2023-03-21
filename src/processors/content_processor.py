@@ -86,6 +86,7 @@ class ContentProcessor(Processor):
         for font_family in counts:
             if font_family not in self.para_size:
                 self.para_size[font_family] = self.para_size[default_font]
+        self.para_size['default'] = self.para_size[default_font]
 
             
             # fig = plt.bar(x=np.arange(0, counts[font_family].shape[0]), y=counts[font_family])
@@ -100,6 +101,8 @@ class ContentProcessor(Processor):
             return TextBlockType.Paragraph
 
         type = TextBlockType.H1
+        if fam not in self.para_size:
+            fam = 'default'
         for v,t in self.para_size[fam]:
             if fs < v:
                 type = t

@@ -4,3 +4,5 @@ e2/
 *.pyc
 *.log
 *.pdf
+burdoc.log.*
+.VSCodeCounter/

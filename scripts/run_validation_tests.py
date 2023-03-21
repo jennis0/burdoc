@@ -26,6 +26,7 @@ def run_validation(in_dir, out_dir):
         if not os.path.isfile(path):
             continue
         
+        print(f"Reading {filename}")
         result = burdoc.read(path, pages=[i for i in range(10)])
 
         json_filename = ".".join(filename.split(".")[:-1]) + ".json"
