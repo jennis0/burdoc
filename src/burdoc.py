@@ -24,7 +24,10 @@ from .utils.render_pages import render_pages
 
 class Burdoc(object):
 
-    def __init__(self, log_level: int=logging.INFO, render_pages: bool=False):
+    def __init__(self, 
+                 log_level: int=logging.INFO, 
+                 render_pages: bool=False,
+                 ):
         self.log_level = log_level
 
         logger_tt.setup_logging(

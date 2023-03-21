@@ -42,6 +42,7 @@ class ReadingOrderProcessor(Processor):
         for e in elements:
             used = False
             self.logger.debug(e)
+
             for c in columns:
                 if not c.open:
                     continue
@@ -64,12 +65,14 @@ class ReadingOrderProcessor(Processor):
                 #with it then merge
                 if dy < 0:
                     if dx_block > 0.8:
+                        self.logger.debug("Appending as elements are overlapping")
                         append = True
 
                 #Break between column/full page elements
                 if not l_aligned and (\
                     (c_full_page and not e_full_page) or \
                     (e_full_page and not c_full_page)):
+                    self.logger.debug("Won't merge as switch between column and full page")
                     stop = True
 
                 #Break between centered and non centered elements
@@ -77,13 +80,15 @@ class ReadingOrderProcessor(Processor):
                     (c_centered and not e_centered) \
                         or (e_centered and not c_centered)
                 ):
+                    self.logger.debug("Wont merge as break between centered and non-centered")
                     stop = True
 
                 #Merge if it's within ~2 lines and aligned
-                #Don't merge if column starts to the right of the element center
-                if not stop and not append and c.bbox.x0 < e.bbox.center().x:
+                #Don't merge if column starts to the right of the element center or element is to right of column center
+                if not stop and not append and c.bbox.x0 < e.bbox.center().x and e.bbox.x0 < c.bbox.center().x:
                     if abs(dy) < 30:
                         if dx_col > (0.1 if not c_full_page else 0.5) :
+                            self.logger.debug("Appending as has x overlap")
                             append = True
                     elif abs(dy) < 30:
                         if dx_col > 0.6:
@@ -144,7 +149,7 @@ class ReadingOrderProcessor(Processor):
             sections.append(current_section)
 
         sorted = []            
-        for s in sections:
+        for s in sections:                
             s.sort(key=lambda c: round(c.bbox.y0/5, 0) * 100 + c.bbox.x0)
             sorted += s
 
