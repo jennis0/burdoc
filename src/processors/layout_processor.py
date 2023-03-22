@@ -330,7 +330,7 @@ class LayoutProcessor(Processor):
     def add_generated_items_to_fig(self, page_number:int, fig: Figure, data: Dict[str, Any]):
 
         colours = {
-            PageSection:"Green",
+            PageSection:"Purple",
             TextBlock:"Black"
         }
 

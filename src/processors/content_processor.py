@@ -79,7 +79,8 @@ class ContentProcessor(Processor):
                 self.para_size[font_family] = [
                     (para_size - 2, TextBlockType.Small),
                     (para_size + 1, TextBlockType.Paragraph),
-                    (para_size + 3, TextBlockType.H3),
+                    (para_size + 2.5, TextBlockType.H4),
+                    (para_size + 4, TextBlockType.H3),
                     (para_size + 5, TextBlockType.H2)
                 ]
         
@@ -117,13 +118,21 @@ class ContentProcessor(Processor):
         return t
 
 
-    def _create_list(self, list_items: List[Tuple[str, List[TextBlock]]]) -> TextList:
+    def _create_list(self, list_items: List[Tuple[str, List[TextBlock]]]) -> List[TextList]:
         ordered = list_items[0] != u"\u2022"
-        list = TextList(bbox=list_items[0][1][0].bbox, ordered=ordered, items=[])
-        for li in list_items:
-            list.append(TextListItem(label=li[0], items=li[1]))
+
+        if ordered and len(list_items) == 1:
+            print(list_items[0][1])
+            elements = []
+            for li in list_items:
+                elements += li[1]
+            return elements
         
-        return list            
+        tl = TextList(bbox=list_items[0][1][0].bbox, ordered=ordered, items=[])
+        for li in list_items:
+            tl.append(TextListItem(label=li[0], items=li[1]))
+        
+        return [tl]
 
     def _process_text_block(self, block: TextBlock) -> List[LayoutElement]:
         block.variant = self._get_text_class(block)
@@ -155,14 +164,16 @@ class ContentProcessor(Processor):
                 if in_list and not list_match:
                     if e.items[0].bbox.x0 - list_elements[-1][1][-1].bbox.x0 > 1:
                         in_list = False
-                    if len(elements) > i+1 and isinstance(elements[i+1], TextBlock):
+                    if len(elements) > i+1 and isinstance(elements[i+1], TextBlock) and elements[i+1].variant == TextBlockType.Paragraph:
                         if list_re.match(elements[i+1].get_text()) is not None:
                             in_list = True
                         else:
                             in_list = False
+                    else:
+                        in_list = False
 
                 if not in_list and len(list_elements) > 0:
-                    proc_elements.append(self._create_list(list_elements))
+                    proc_elements += self._create_list(list_elements)
                     list_elements = []
 
 
@@ -173,7 +184,7 @@ class ContentProcessor(Processor):
                         list_elements.append((next_index, [e]))
                         continue
                     else:
-                        proc_elements.append(self._create_list(list_elements))
+                        proc_elements += self._create_list(list_elements)
                         list_elements = []
 
                 #Handle any other parts of being a text block
@@ -192,7 +203,7 @@ class ContentProcessor(Processor):
             proc_elements.append(e)
 
         if len(list_elements) > 0:
-            proc_elements.append(self._create_list(list_elements))
+            proc_elements += self._create_list(list_elements)
 
         return proc_elements
 
@@ -251,7 +262,7 @@ class ContentProcessor(Processor):
     def add_generated_items_to_fig(self, page_number:int, fig: Figure, data: Dict[str, Any]):
 
         colours = {
-            PageSection:"Green",
+            PageSection:"Purple",
             TextBlock:"Black",
             TextListItem:"Blue",
             'a': "pink",

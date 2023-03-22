@@ -252,10 +252,9 @@ class ReadingOrderProcessor(Processor):
     def add_generated_items_to_fig(self, page_number:int, fig: Figure, data: Dict[str, Any]):
 
         colours = {
-            "PageSection":"Green",
             "TextBlock":"Black",
             "ImageElement":"DarkRed",
-            "Table":"Aqua"
+            "Table":"Aqua",
         }
 
         def add_rect(fig, bbox, colour, order=None, draw=True):
@@ -277,14 +276,12 @@ class ReadingOrderProcessor(Processor):
 
         def recursive_add(colours, fig, e, item_order):
             if isinstance(e, PageSection):
-                add_rect(fig, e.bbox, colours["PageSection"])
                 for i in e:
                     item_order = recursive_add(colours, fig, i, item_order)
             elif type(e).__name__ in colours:
                 add_rect(fig, e.bbox, colours[type(e).__name__], item_order, draw=False)
                 item_order += 1
             elif isinstance(e, LayoutElementGroup):
-                add_rect(fig, e.bbox, colours['PageSection'])
                 for item in e:
                     item_order = recursive_add(colours, fig, item, item_order)
             elif isinstance(e, list) or isinstance(e, LayoutElementGroup):
@@ -296,7 +293,6 @@ class ReadingOrderProcessor(Processor):
         for e in data['elements'][page_number]:
             item_order = recursive_add(colours, fig, e, item_order)
 
-        fig.add_scatter(x=[None], y=[None], name="Section", line=dict(width=3, color=colours["PageSection"]))
-        fig.add_scatter(x=[None], y=[None], name="TextBlock", line=dict(width=3, color=colours["TextBlock"]))
-        fig.add_scatter(x=[None], y=[None], name="Table", line=dict(width=3, color=colours["Table"]))
-        fig.add_scatter(x=[None], y=[None], name="Image", line=dict(width=3, color=colours["ImageElement"]))
+        # fig.add_scatter(x=[None], y=[None], name="TextBlock", line=dict(width=3, color=colours["TextBlock"]))
+        # fig.add_scatter(x=[None], y=[None], name="Table", line=dict(width=3, color=colours["Table"]))
+        # fig.add_scatter(x=[None], y=[None], name="Image", line=dict(width=3, color=colours["ImageElement"]))

@@ -34,7 +34,6 @@ class RulesTableProcessor(Processor):
         return ['tables', 'elements']
           
     def process(self, data: Any) -> Any:
-        tables = {}
         if 'tables' not in data:
             data['tables'] = {}
         for pn, page_bound, page_elements in self.get_page_data(data):
@@ -336,24 +335,12 @@ class RulesTableProcessor(Processor):
             # print("=======================================================")
             # print()
 
-            max_col_spacing = 100
-            if len(column_bboxes) > 2:
-                max_col_spacing = column_bboxes[1].x0 - column_bboxes[0].x1
-            
             for i,c in enumerate(column_bboxes[1:]):
                 self.logger.debug(f"{column_bboxes[0].y1} {c.y1}")
                 if column_bboxes[0].y1 - c.y1 > 20:
                     columns = columns[:i+1]
                     break
 
-                col_space = column_bboxes[i].x0 - column_bboxes[i-1].x1
-                if col_space > 1.6*max_col_spacing:
-                    columns = columns[:i+1]
-                    break
-                else:
-                    max_col_spacing = max(max_col_spacing, col_space)
-
-            
             self.logger.debug(f"Filtered to {len(columns)} columns")        
      
             if len(columns) < 2:

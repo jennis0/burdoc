@@ -105,4 +105,5 @@ class DrawingHandler(object):
 
         for t in processed_drawings:
             self.logger.debug(f"Found {len(processed_drawings[t])} {t} drawings")
+
         return processed_drawings

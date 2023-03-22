@@ -42,7 +42,7 @@ class Burdoc(object):
         self.render = render_pages
 
         self.processors = [
-           (PDFLoadProcessor, {}, False),
+           (PDFLoadProcessor, {}, True),
            (MLTableProcessor, {}, False),
            (AggregatorProcessor, {
             'processors': [
