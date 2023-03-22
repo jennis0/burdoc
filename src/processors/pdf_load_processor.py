@@ -9,11 +9,12 @@ from ..pdf_handlers.drawing_handler import DrawingHandler
 from ..pdf_handlers.image_handler import ImageHandler
 from ..pdf_handlers.text_handler import TextHandler
 
-from ..elements.layout_objects import LineElement
+from ..elements.layout_objects import LineElement, DrawingElement, ImageElement
+
+from ..elements.span import Span
 
 from .processor import Processor
 from ..elements.bbox import Bbox
-from ..elements.layout_objects import ImageElement, DrawingElement
     
 
 class PDFLoadProcessor(Processor):
@@ -129,11 +130,30 @@ class PDFLoadProcessor(Processor):
             data['page_images'][page_number] = self.get_page_image(page)
             data['images'][page_number] = self.imageHandler.get_page_images(page, data['page_images'][page_number])
             data['drawings'][page_number] = self.drawingHandler.get_page_drawings(page)
-
             data['text'][page_number] = self.textHandler.get_page_text(page)
+
+            self.merge_bullets_into_text(data['drawings'][page_number][DrawingElement.DrawingType.Bullet], data['text'][page_number])
             self.update_font_statistics(data['metadata']['font_statistics'], page.get_fonts(), data['text'][page_number])
 
         pdf.close()
+
+    def merge_bullets_into_text(self, bullets: List[DrawingElement], text: List[LineElement]):
+        if len(bullets) == 0:
+            return
+        
+        b_used = [False for _ in bullets]
+        for t in text:
+            for i,b in enumerate(bullets):
+                if b_used[i]:
+                    continue
+
+                if t.bbox.y_overlap(b.bbox, 'second') > 0.6 and abs(t.bbox.x0 - b.bbox.x1) < 25:
+                    t.spans.insert(0, Span(t.spans[0].font, u"\u2022"))
+                    t.bbox = Bbox.merge([t.bbox, b.bbox])
+                    b_used[i] = True
+                    break
+            if all(b_used):
+                break
 
     def add_generated_items_to_fig(self, page_number:int, fig: Figure, data: Dict[str, Any]):
 
@@ -143,6 +163,7 @@ class PDFLoadProcessor(Processor):
             ImageElement.ImageType.Section:"Pink",
             DrawingElement.DrawingType.Line:"DarkBlue",
             DrawingElement.DrawingType.Rect:"Blue",
+            DrawingElement.DrawingType.Bullet:"LightBlue",
             "text":"Grey",
         }
 
@@ -165,8 +186,8 @@ class PDFLoadProcessor(Processor):
                 fig.add_scatter(x=[None], y=[None], name=f"{im_type.name}", line=dict(width=3, color=colour))
 
         for dr_type in data['drawings'][page_number]:
-            colour = colours[dr_type]
             if dr_type in colours:
+                colour = colours[dr_type]
                 for dr in data['drawings'][page_number][dr_type]:
                     add_rect(fig, dr.bbox, colour)
                 fig.add_scatter(x=[None], y=[None], name=f"{dr_type.name}", line=dict(width=3, color=colour))

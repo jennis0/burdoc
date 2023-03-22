@@ -135,6 +135,8 @@ class LayoutGraph(object):
 
         self.root.down.sort(key=lambda n:n[1])
 
+        self.matrix = matrix
+
 
 
     def __init__(self, logger: logging.Logger, pagebound: Bbox, elements: List[LayoutElement]):
@@ -142,6 +144,7 @@ class LayoutGraph(object):
         self.pagebound = pagebound
         self.root = LayoutGraph.Node(0, LayoutElement(Bbox(0, -2, pagebound.x1, -1, pagebound.x1, pagebound.y1)))
         self.nodes = [self.root]
+        self.matrix = None
         for i,e in enumerate(elements):
             n = LayoutGraph.Node(i+1, e)
             self.nodes.append(n)

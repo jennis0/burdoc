@@ -30,6 +30,17 @@ class DrawingHandler(object):
 
         processed_drawings = {t:[] for t in DrawingElement.DrawingType}
         for d in self.page.get_cdrawings():
+            if d['type'] == 'f' and d['fill_opacity'] > 0.9 and len(d['items']) > 2:
+                width = d['rect'][2] - d['rect'][0]
+                height = d['rect'][3] - d['rect'][1]
+                if abs(width/height - 1) < 0.1 and width < 5:
+                    drawing =  DrawingElement(bbox = Bbox(*d['rect'], bound[2], bound[3]), 
+                                    type=DrawingElement.DrawingType.Bullet, opacity=d['fill_opacity']
+                                )
+                    processed_drawings[drawing.type].append(drawing)
+                    self.logger.debug(f"Found bullet with box {drawing.bbox}")
+                    continue
+                
             if d['type'] == 'f':
                 if d['fill_opacity'] < 0.1:
                     self.logger.debug("Filtered drawing due to low fill opacity")
@@ -46,13 +57,13 @@ class DrawingHandler(object):
                     if overlap > 0:
                         self.logger.debug(f"Found line {len(processed_drawings[DrawingElement.DrawingType.Line])} with box {drawing.bbox}")
                         drawing.type = DrawingElement.DrawingType.Line
-                        processed_drawings[DrawingElement.DrawingType.Line].append(drawing)
+                        processed_drawings[drawing.type].append(drawing)
                         continue
                 
                 if overlap > 0.001 and overlap < 0.55:
                     self.logger.debug(f"Found rectangle {len(processed_drawings[DrawingElement.DrawingType.Rect])} with box {drawing.bbox}")
                     drawing.type = DrawingElement.DrawingType.Rect
-                    processed_drawings[DrawingElement.DrawingType.Rect].append(drawing)
+                    processed_drawings[drawing.type].append(drawing)
 
         #Merge boxes with significant overlap
         if self.merge_rects:

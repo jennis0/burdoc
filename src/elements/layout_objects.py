@@ -44,6 +44,7 @@ class DrawingElement(LayoutElement):
     class DrawingType(Enum):
         Line = auto()
         Rect = auto()
+        Bullet = auto()
     
     type: DrawingType
     bbox: Bbox

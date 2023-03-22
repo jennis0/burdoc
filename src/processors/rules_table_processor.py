@@ -184,6 +184,13 @@ class RulesTableProcessor(Processor):
 
         tables = []
 
+        #If there are no pieces of text crossing the centre of the page, assume we
+        #are dealing with a 2 column layout.
+        if lg.matrix.sum(axis=1)[int(lg.matrix.shape[0] / 2)] == 0:
+            boundary = lg.matrix.shape[0] / 2
+        else:
+            boundary = lg.matrix.shape[0] + 10
+
         for b in lg.nodes[1:]:
             # if used_nodes[b.id]:
             #     continue
@@ -209,7 +216,7 @@ class RulesTableProcessor(Processor):
                 self.logger.debug(f"Skipping as seed as no aligned right text")
                 continue
 
-            #Build first row by pushing as far down as possible in a straight line
+            #Build first column by pushing as far down as possible in a straight line
             last_size = candidate.element.items[0].spans[0].font.size
             last_length = sum([len(l.get_text()) for l in candidate.element.items])
             while(True):
@@ -260,7 +267,9 @@ class RulesTableProcessor(Processor):
             candidate = lg.get_node(columns[0][0].right[0])
             while (True):
                 self.logger.debug(f"Considering {candidate.element} for header row")
-
+                if columns[0][0].element.bbox.x0 < boundary and candidate.element.bbox.x1 > boundary:
+                    self.logger.debug("Skipping as crosses x boundary")
+                    break
                 if len(candidate.element.items) == 0 or len(candidate.element.items[0].spans) == 0:
                     self.logger.debug(f"Skipping as empty")
                     break
@@ -286,7 +295,7 @@ class RulesTableProcessor(Processor):
             if len(columns) < 2:
                 continue
 
-            column_bboxes = [Bbox.merge([n.element.bbox for n in columns[0]])]
+            column_bboxes = [Bbox.merge([n.element.bbox for n in columns[0]])] 
 
             for i,col in enumerate(columns[1:]):
                 n = col[0]
@@ -327,10 +336,23 @@ class RulesTableProcessor(Processor):
             # print("=======================================================")
             # print()
 
+            max_col_spacing = 100
+            if len(column_bboxes) > 2:
+                max_col_spacing = column_bboxes[1].x0 - column_bboxes[0].x1
+            
             for i,c in enumerate(column_bboxes[1:]):
                 self.logger.debug(f"{column_bboxes[0].y1} {c.y1}")
                 if column_bboxes[0].y1 - c.y1 > 20:
                     columns = columns[:i+1]
+                    break
+
+                col_space = column_bboxes[i].x0 - column_bboxes[i-1].x1
+                if col_space > 1.6*max_col_spacing:
+                    columns = columns[:i+1]
+                    break
+                else:
+                    max_col_spacing = max(max_col_spacing, col_space)
+
             
             self.logger.debug(f"Filtered to {len(columns)} columns")        
      

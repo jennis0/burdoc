@@ -15,7 +15,7 @@ class TextHandler(object):
             return lines
 
         skip = [False for l in range(len(lines))]
-        lines.sort(key=lambda l: (l.bbox.y0/10)*10000 + l.bbox.x0)
+        lines.sort(key=lambda l: round(l.bbox.y0/5, 0)*100 + l.bbox.x0)
 
         for i,l1 in enumerate(lines):
             if skip[i]:
@@ -48,7 +48,7 @@ class TextHandler(object):
                         break
                     l2 = lines[i+j]
                 if l2:
-                    if abs(l1.bbox.y0 - l2.bbox.y0) < 5:
+                    if l2.bbox.y_overlap(l1.bbox, 'second') > 0.5 and abs(l1.bbox.x1 - l2.bbox.x0) < 20:
                         l2.spans.insert(0, l1.spans[0])
                         l2.bbox = Bbox.merge([l1.bbox, l2.bbox])
                         skip[i] = True

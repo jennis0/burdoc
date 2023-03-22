@@ -112,13 +112,16 @@ class MLTableProcessor(Processor):
                         table._cells[candidate_row_index][candidate_col_index].append(line)
                         continue
                         
+                    elif table_line_x_overlap > 0.5 and table_line_y_overlap > 0.5:
+                        bad_lines[table_index] += 10
+
                     elif table_line_x_overlap > 0.1 and table_line_y_overlap > 0.1:
                         bad_lines[table_index] += 1
 
             for line_index,z in enumerate(zip(page_tables, bad_lines)):
                 table = z[0]
                 bl = z[1]
-                if bl >= 3:
+                if bl >= 2:
                     used_text[used_text == line_index] = -1
                     continue
 
