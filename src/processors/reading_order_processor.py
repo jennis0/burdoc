@@ -6,6 +6,7 @@ from plotly.graph_objects import Figure
 from ..elements.bbox import Bbox
 from ..elements.layout_objects import ImageElement
 from ..elements.section import PageSection
+from ..elements.table import Table
 from ..elements.element import LayoutElement, LayoutElementGroup
 
 from ..utils.layout_graph import LayoutGraph
@@ -189,9 +190,11 @@ class ReadingOrderProcessor(Processor):
 
         return sorted
 
-    def _flow_content(self, page_bound: Bbox, sections: List[PageSection], images: List[ImageElement]):
+    def _flow_content(self, page_bound: Bbox, sections: List[PageSection], images: List[ImageElement], tables: List[Table]):
         default_sections = [s for s in sections if s.default]
         other_sections = [s for s in sections if not s.default]
+
+        images += tables
 
         used_images = set()
 
@@ -240,8 +243,7 @@ class ReadingOrderProcessor(Processor):
                     continue
 
                 if im.bbox.overlap(section.bbox, 'first') > 0.9:
-
-                    if isinstance(im, ImageElement) and im.bbox.width(norm=True) > 0.6 or im.bbox.height(norm=True) > 0.6:
+                    if isinstance(im, ImageElement) and (im.bbox.width(norm=True) > 0.6 or im.bbox.height(norm=True) > 0.6):
                         outline_images.append(PageSection(im.bbox, [im]))
                         used_images.add(i)
                         continue
@@ -278,7 +280,7 @@ class ReadingOrderProcessor(Processor):
         data['reading_order_bounds'] = {}
         for pn, page_bound, elements, images, tables in self.get_page_data(data):
 
-            elements,bounds = self._flow_content(page_bound, elements, images[ImageElement.ImageType.Primary] + tables)
+            elements,bounds = self._flow_content(page_bound, elements, images[ImageElement.ImageType.Primary], tables)
             data['elements'][pn] = elements
             data['reading_order_bounds'][pn] = bounds
 

@@ -29,6 +29,7 @@ class DrawingHandler(object):
         _,_,self.width,self.height = page.bound()
 
         processed_drawings = {t:[] for t in DrawingElement.DrawingType}
+        print(processed_drawings)
         for d in self.page.get_cdrawings():
             if d['type'] == 'f' and d['fill_opacity'] > 0.9 and len(d['items']) > 2:
                 width = d['rect'][2] - d['rect'][0]
@@ -66,7 +67,7 @@ class DrawingHandler(object):
                     processed_drawings[drawing.type].append(drawing)
 
         #Merge boxes with significant overlap
-        if self.merge_rects:
+        if self.merge_rects and DrawingElement.DrawingType.Rect:
             did_merge = True
             to_process = processed_drawings[DrawingElement.DrawingType.Rect]
             while did_merge:

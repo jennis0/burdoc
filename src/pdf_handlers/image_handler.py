@@ -1,4 +1,6 @@
 from PIL import Image as PILImage
+from PIL.ImageFilter import GaussianBlur
+
 import fitz
 import numpy as np
 import logging
@@ -8,6 +10,8 @@ from ..elements.bbox import Bbox
 from ..elements.layout_objects import ImageElement
 
 from ..utils.image_manip import get_image_palette
+
+import plotly.express as plt
 
 
 class ImageHandler(object):
@@ -58,13 +62,22 @@ class ImageHandler(object):
         page_coverage =  x_coverage * y_coverage
 
         image = np.asarray(imageData.image)[:,:,:3]
-        x_variance = round(np.median(image.var(axis=0), axis=0).mean(), 2)
-        y_variance = round(np.median(image.var(axis=1), axis=0).mean(), 2)
 
-        extrema = imageData.image.getextrema()
+        x_dims = int(0.25*image.shape[0]), int(0.75*image.shape[0])
+        y_dims = int(0.25*image.shape[1]), int(0.75*image.shape[1])
+
+        
+        filter = GaussianBlur(radius=10)
+        blurred_image = imageData.image.filter(filter)
+        reduced_image = np.asarray(blurred_image)[x_dims[0]:x_dims[1],y_dims[0]:y_dims[1]]
+
+        x_variance = round(np.median(reduced_image.var(axis=0), axis=0).mean(), 2)
+        y_variance = round(np.median(reduced_image.var(axis=1), axis=0).mean(), 2)
+
+        extrema = blurred_image.getextrema()
         if len(extrema) == 2:
             extrema = [extrema]
-        maxExtrema = max([b-a for a,b in extrema])
+        maxExtrema = max([b-a for a,b in extrema[:3]])
         
         imageData.properties['variance'] = {'x':x_variance, 'y':y_variance}
         imageData.properties['coverage'] = {'x':x_coverage, 'y':y_coverage, 'page':page_coverage}
@@ -82,16 +95,18 @@ class ImageHandler(object):
             return ImageElement.ImageType.Invisible
 
         #If thin in one dimension, treat as line rather than image
-        if (imageData.bbox.y0 > 0.1 and imageData.bbox.y1 < 0.9) and \
-            ((x_coverage < 0.05 and y_coverage > 0.1) or (x_coverage > 0.1 and y_coverage < 0.05)):
-            return ImageElement.ImageType.Line
+        if ((x_coverage < 0.05 and y_coverage > 0.1) or (x_coverage > 0.1 and y_coverage < 0.05)):
+            if (imageData.bbox.y1 / self.page_bbox.y1) > 0.1 and (imageData.bbox.y0 / self.page_bbox.y1) < 0.9:
+                return ImageElement.ImageType.Line
+            else:
+                return ImageElement.ImageType.Decorative
 
         #If it's too small in any particular dimension it can't be a meaningful image
         if x_coverage < 0.05 or y_coverage < 0.05 or page_coverage < 0.05:
             return ImageElement.ImageType.Decorative
 
         #If complexity is low it could be either a full page background or a section
-        if x_variance < 50 and y_variance < 50 and maxExtrema < 100:
+        if x_variance + y_variance < 200:
             if page_coverage > 0.9:
                 return ImageElement.ImageType.Background
             elif page_coverage > 0.1 and imageData.properties['colour_offset'] > 15:
@@ -120,8 +135,8 @@ class ImageHandler(object):
         new_x0 = max(orig_bbox.x0 + new_bbox[0]*scale_factor_x, 0)
         new_y0 = max(orig_bbox.y0 + new_bbox[1]*scale_factor_y, 0)
 
-        new_width = min((new_bbox[2] - new_bbox[0]) * scale_factor_x, page_bound.x1)
-        new_height = min((new_bbox[3] - new_bbox[1]) * scale_factor_y, page_bound.y1)
+        new_width = min((new_bbox[2] - new_bbox[0]) * scale_factor_x, page_bound.x1 - new_x0)
+        new_height = min((new_bbox[3] - new_bbox[1]) * scale_factor_y, page_bound.y1 - new_y0)
 
         crop_bbox = image.getbbox()
         image = image.crop(crop_bbox)
@@ -200,7 +215,8 @@ class ImageHandler(object):
                 im.type = self._classify_image(im, page_colour)
                 processed_images[im.type].append(im)
 
-        processed_images[ImageElement.ImageType.Primary] = self.merge_images(processed_images[ImageElement.ImageType.Primary])
+        if ImageElement.ImageType.Primary in processed_images:
+            processed_images[ImageElement.ImageType.Primary] = self.merge_images(processed_images[ImageElement.ImageType.Primary])
 
         for t in processed_images:
             self.logger.debug(f"Found {len(processed_images[t])} {t} images")

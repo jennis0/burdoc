@@ -132,7 +132,8 @@ class PDFLoadProcessor(Processor):
             data['drawings'][page_number] = self.drawingHandler.get_page_drawings(page)
             data['text'][page_number] = self.textHandler.get_page_text(page)
 
-            self.merge_bullets_into_text(data['drawings'][page_number][DrawingElement.DrawingType.Bullet], data['text'][page_number])
+            if DrawingElement.DrawingType.Bullet in data['drawings'][page_number]:
+                self.merge_bullets_into_text(data['drawings'][page_number][DrawingElement.DrawingType.Bullet], data['text'][page_number])
             self.update_font_statistics(data['metadata']['font_statistics'], page.get_fonts(), data['text'][page_number])
 
         pdf.close()

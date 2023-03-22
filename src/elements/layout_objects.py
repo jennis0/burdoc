@@ -102,11 +102,11 @@ class ImageElement(LayoutElement):
         return "---Image---"
     
     def __str__(self):
-        extras = {"Type":self.type.name, "Image":self.image}
+        extras = {"Type":self.type.name.lower() if self.type else 'none', "Image":self.image}
         return self._str_rep(extras)
     
     def to_json(self, **kwargs):
-        extras = {'image_type':self.type.name.lower(), 'image':None}#self.image}
+        extras = {'image_type':self.type.name.lower() if self.type else 'none', 'image':None}#self.image}
         return super().to_json(extras=extras, **kwargs)
 
 

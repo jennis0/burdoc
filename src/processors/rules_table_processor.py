@@ -117,7 +117,7 @@ class RulesTableProcessor(Processor):
                             used_text[element_index] = table_index
                             break
                             
-                        elif table_element_x_overlap * table_element_y_overlap > 0.2:
+                        elif table_element_x_overlap * table_element_y_overlap > 0.02:
                             bad_lines[table_index] += 1
 
 
