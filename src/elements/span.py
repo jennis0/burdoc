@@ -13,7 +13,7 @@ class Span:
     def from_dict(s: Any):
         font_family = s['font'].split("-")[0].split("_")[0]
         return Span(
-            font = Font(s['font'], font_family, round(s['size'],1), s['color'], s['flags'] & 16 == 16, s['flags'] & 2 == 2, s['flags'] & 1 == 1),
+            font = Font(s['font'], font_family, round(s['size'],1), str(s['color']), s['flags'] & 16 == 16, s['flags'] & 2 == 2, s['flags'] & 1 == 1),
             text = unicodedata.normalize('NFKC', s['text']),
         )
 

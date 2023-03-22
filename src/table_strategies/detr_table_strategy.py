@@ -45,7 +45,6 @@ class DetrTableStrategy(TableExtractorStrategy):
     def requirements() -> List[str]:
         return ['page_images']
 
-
     def extract_tables(self, page_numbers: List[int], page_images: Dict[int, Image.Image]) -> Dict[int, Any]:
 
         i = 0

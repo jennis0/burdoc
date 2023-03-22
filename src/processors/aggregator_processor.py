@@ -6,10 +6,15 @@ from .processor import Processor
 
 class AggregatorProcessor(Processor):
 
-    def __init__(self, logger: Logger, processors: List[Processor], processor_args: List[Any], render_processors=List[bool]):
+    def __init__(self, logger: Logger, 
+                 processors: List[Processor], 
+                 processor_args: List[Any], 
+                 render_processors=List[bool],
+                 additional_reqs = List[str]):
         super().__init__("Aggregator", logger)
         self.processors = [p(self.logger, **pa) for p,pa in zip(processors, processor_args)]
         self.render_processors = render_processors
+        self.additional_reqs = additional_reqs
 
     def initialise(self):
         for p in self.processors:
@@ -24,7 +29,7 @@ class AggregatorProcessor(Processor):
                 if r not in gens:
                     reqs.add(r)
             gens |= set(p.generates())
-        return list(reqs)
+        return list(reqs) + self.additional_reqs
 
     def generates(self) -> List[str]:
         gens = set()

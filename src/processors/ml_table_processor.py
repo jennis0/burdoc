@@ -10,7 +10,6 @@ from ..elements.layout_objects import *
 from ..elements.bbox import Bbox
 
 from ..table_strategies.detr_table_strategy import DetrTableStrategy
-from ..table_strategies.rules_table_strategy import RulesTableStrategy
 from ..table_strategies.table_extractor_strategy import TableExtractorStrategy
 from ..elements.table import Table
 
@@ -31,7 +30,6 @@ class MLTableProcessor(Processor):
 
         if strategy == MLTableProcessor.Strategies.DETR:
             self.strategy_type = DetrTableStrategy
-
 
     def initialise(self):
         self.strategy = self.strategy_type(self.logger)
@@ -80,14 +78,14 @@ class MLTableProcessor(Processor):
                 # shrunk_bbox.x0 += 0
                 # shrunk_bbox.x1 -= 0
                 shrunk_bbox.y0 += 2
-                shrunk_bbox.y1 -= 5
+                if shrunk_bbox.height() > 8:
+                    shrunk_bbox.y1 -= 5
                 #print(line)
                 #print(line.bbox, shrunk_bbox)
                 for table_index,table in enumerate(page_tables):
                     table_line_x_overlap = shrunk_bbox.x_overlap(table.bbox, 'first')
                     table_line_y_overlap = shrunk_bbox.y_overlap(table.bbox, 'first')
-                    overlap = table_line_x_overlap * table_line_y_overlap
-                    
+  
                     if table_line_x_overlap > 0.93 and table_line_y_overlap > 0.93:
 
                         candidate_row_index = -1
@@ -97,6 +95,7 @@ class MLTableProcessor(Processor):
                                 candidate_row_index = row_index
                                 break
                         if candidate_row_index < 0:
+                            bad_lines[table_index] += 1
                             continue
 
                         candidate_col_index = -1
@@ -106,13 +105,14 @@ class MLTableProcessor(Processor):
                                 candidate_col_index = col_index
                                 break
                         if candidate_col_index < 0:
+                            bad_lines[table_index] += 1
                             continue
                         
                         used_text[line_index] = table_index
                         table._cells[candidate_row_index][candidate_col_index].append(line)
                         continue
                         
-                    elif overlap > 0.2:
+                    elif table_line_x_overlap > 0.1 and table_line_y_overlap > 0.1:
                         bad_lines[table_index] += 1
 
             for line_index,z in enumerate(zip(page_tables, bad_lines)):
@@ -151,8 +151,6 @@ class MLTableProcessor(Processor):
         for t in data['tables'][page_number]:
             add_rect(fig, t.bbox, colours["table"])
 
-            row_bboxes = [r[1] for r in t.row_boxes]
-            col_bboxes = [c[1] for c in t.col_boxes]
             for rb in t.row_boxes:
                 add_rect(fig, rb[1], colours['row'])
             for cb in t.col_boxes:

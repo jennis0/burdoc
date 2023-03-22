@@ -86,12 +86,9 @@ class ContentProcessor(Processor):
         for font_family in counts:
             if font_family not in self.para_size:
                 self.para_size[font_family] = self.para_size[default_font]
-        self.para_size['default'] = self.para_size[default_font]
 
-            
-            # fig = plt.bar(x=np.arange(0, counts[font_family].shape[0]), y=counts[font_family])
-            # fig.add_annotation(x=10, y=10, showarrow=False, text=font_family)
-            # fig.show()      
+        if default_font:
+            self.para_size['default'] = self.para_size[default_font]
 
     def _get_text_class(self, block: TextBlock):
         fs = block.items[-1].spans[-1].font.size

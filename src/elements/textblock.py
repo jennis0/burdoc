@@ -49,6 +49,9 @@ class TextBlock(LayoutElementGroup):
     def to_json(self, **kwargs) -> Dict[str, Any]:
         return super().to_json(extras={"variant":self.variant.name}, **kwargs)
 
+    def __str__(self) -> str:
+        return self.__repr__()
+
     def __repr__(self) -> str:
         if len(self.items) > 0 and len(self.items[0].spans) > 0:
             text = self.items[0].spans[0].text + "..."

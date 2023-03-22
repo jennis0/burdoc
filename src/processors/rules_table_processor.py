@@ -2,6 +2,8 @@ from typing import Any, List, Optional, Dict
 from logging import Logger
 import numpy as np
 
+import plotly.express as plt
+
 from plotly.graph_objects import Figure
 
 from ..elements.bbox import Bbox
@@ -10,6 +12,8 @@ from ..elements.section import PageSection
 from ..elements.textblock import TextBlock
 from ..elements.table import Table
 from ..elements.element import LayoutElement, LayoutElementGroup
+
+from ..table_strategies.table_extractor_strategy import TableExtractorStrategy
 
 from .processor import Processor
 
@@ -27,14 +31,17 @@ class RulesTableProcessor(Processor):
         return ['page_bounds', 'elements']
     
     def generates(self) -> List[str]:
-        return ['rules_tables', 'elements']
-       
+        return ['tables', 'elements']
+          
     def process(self, data: Any) -> Any:
         tables = {}
-        for pn, page_bound, elements in self.get_page_data(data):
-            tables[pn] = []
+        if 'tables' not in data:
+            data['tables'] = {}
+        for pn, page_bound, page_elements in self.get_page_data(data):
+            if pn not in data['tables']:
+                data['tables'][pn] = []
 
-            for section in elements:
+            for section in page_elements:
                 table_candidates = self._generate_table_candidates(page_bound, [i for i in section.items if isinstance(i, TextBlock)])
                 table_candidates.sort(key=lambda c: c[0][0].bbox.y0*10 + c[0][0].bbox.x0)
                 
@@ -42,29 +49,99 @@ class RulesTableProcessor(Processor):
                 for cand in table_candidates:
                     skip = False
                     for tab in section_tables:
-                        if cand[0][0].bbox.overlap(tab.bbox):
+                        if cand[0][0].bbox.overlap(tab[0][1]):
                             skip=True
                             break
                     if not skip:
-                        tab = self._create_table_from_candidate(cand)
-                        if tab:
-                            section_tables.append(tab)
+                        tab_parts = self._create_table_from_candidate(cand)
+                        if tab_parts:
+                            section_tables.append(tab_parts)
 
-                keep_items = [True for _ in section.items]
-                for i,item in enumerate(section.items):
-                    if isinstance(item, TextBlock):
-                        for t in section_tables:
-                            if i.bbox.overlap(t.bbox, 'first') > 0.9:
-                                keep_items[i] = False
-                                break
+                if len(section_tables) == 0:
+                    continue
 
-                #Remove any used text blocks
-                section.items = [i for i,keep in zip(section.items, keep_items) if keep]
-                tables[pn] += section_tables
-        
-        data['rules_tables'] = tables
+                table_elements = []
+                for table_bbox, structure in section_tables:
+                    row_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.RowHeader]
+                    rows = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.Row]
+                    col_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.ColumnHeader]
+                    cols = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.Column]
+                
+                    rs = col_headers + rows
+                    cs = row_headers + cols
 
-        return data     
+                    if len(cs) == 2:
+                        if cs[0][1].width() / cs[1][1].width() > 0.9:
+                            continue
+
+                    merges  = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.SpanningCell]
+
+                    table_elements.append(Table(table_bbox[1], [[[] for _ in cs] for _ in rs], 
+                                            row_boxes=rs, col_boxes=cs, merges=merges))
+                
+
+                bad_lines = np.array([0 for _ in table_elements])
+                used_text = np.array([-1 for _ in section.items])
+                for element_index,element in enumerate(section.items):
+                    e_bbox = element.bbox
+
+                    if not isinstance(element, TextBlock):
+                        continue
+
+                    for table_index,table in enumerate(table_elements):
+                        table_element_x_overlap = e_bbox.x_overlap(table.bbox, 'first')
+                        table_element_y_overlap = e_bbox.y_overlap(table.bbox, 'first')
+
+                        if table_element_x_overlap > 0.9 and table_element_y_overlap > 0.9:
+                            
+                            for line in element.items:
+                                candidate_row_index = -1
+                                for row_index,row in enumerate(table.row_boxes):
+                                    if line.bbox.y_overlap(row[1], 'first') > 0.8:
+                                        candidate_row_index = row_index
+                                        break
+                                if candidate_row_index < 0:
+                                    bad_lines[table_index] += 1
+                                    continue
+
+                                candidate_col_index = -1
+                                for col_index,col in enumerate(table.col_boxes):
+                                    if line.bbox.x_overlap(col[1], 'first') > 0.8:
+                                        candidate_col_index = col_index
+                                        break
+                                if candidate_col_index < 0:
+                                    bad_lines[table_index] += 1
+                                    continue
+
+                                table._cells[candidate_row_index][candidate_col_index].append(line)
+                            
+                            used_text[element_index] = table_index
+                            break
+                            
+                        elif table_element_x_overlap * table_element_y_overlap > 0.2:
+                            bad_lines[table_index] += 1
+
+
+                for element_index,z in enumerate(zip(table_elements, bad_lines)):
+                    table = z[0]
+                    bl = z[1]
+                    if bl > 0:
+                        used_text[used_text == element_index] = -1
+                        continue
+
+                    skip = False
+                    for row in table._cells:
+                        if len(row[0]) == 0:
+                            skip = True
+                            break
+                    if skip:
+                        used_text[used_text == element_index] = -1
+                        continue
+
+                    data['tables'][pn].append(table)
+
+                # Remove any items that have been pulled into the table
+                section.items = [i for i,u in zip(section.items, used_text) if u < 0]
 
 
     def add_generated_items_to_fig(self, page_number:int, fig: Figure, data: Dict[str, Any]):
@@ -124,8 +201,11 @@ class RulesTableProcessor(Processor):
                 continue
 
             col_edge = min([1000] + [lg.get_node(c).element.bbox.x0 for c in candidate.right])
+            top_edge = candidate.element.bbox.y0
+            top_center = candidate.element.bbox.center().y
 
-            if abs(lg.get_node(candidate.right[0]).element.bbox.y0 - candidate.element.bbox.y0) > 20:
+            if abs(lg.get_node(candidate.right[0]).element.bbox.y0 - top_edge) > 5 \
+             and abs(lg.get_node(candidate.right[0]).element.bbox.center().y - top_center) > 5:
                 self.logger.debug(f"Skipping as seed as no aligned right text")
                 continue
 
@@ -144,22 +224,27 @@ class RulesTableProcessor(Processor):
                         break
                 
                 candidate = lg.get_node(candidate.down[0])
-                self.logger.debug(f"Considering {candidate.element} for first column")
+                self.logger.debug(f"Considering {candidate.element} for next column")
                 
+                #If its an empty element we're at end of table
                 if len(candidate.element.items) == 0:
                     break
 
+                #If there's an increase in font size we're at end of table or if amount of
+                # text changes drastically
                 if len(candidate.element.items[0].spans) != 0:
                     size = candidate.element.items[0].spans[0].font.size
                     if size > last_size+0.5:
+                        self.logger.debug("Skipping due to text size increasing")
                         break
 
                     length = sum([len(l.get_text()) for l in candidate.element.items])
-                    if length > 4*last_length:
+                    if length > 4*last_length and length > 20:
+                        self.logger.debug("Skipping due to text length disparity")
                         break
                     last_length = max(length, last_length)
 
-
+                #If col width would intersect with right edge we're at end of table
                 if candidate.element.bbox.x1 > col_edge:
                     self.logger.debug(f"Skipping as it hits column edge")
                     break
@@ -281,8 +366,8 @@ class RulesTableProcessor(Processor):
         #Build array from individual lines so we can look for gaps
         arr = np.zeros(shape=(int(dims.y1 - dims.y0), int(dims.x1 - dims.x0)))
         for col in candidate:
-            for b in col:
-                for n in b.items:
+            for block in col:
+                for n in block.items:
                     arr[
                         int(n.bbox.y0 - dims.y0):int(n.bbox.y1 - dims.y0),
                         int(n.bbox.x0 - dims.x0):int(n.bbox.x1 - dims.x0),
@@ -292,12 +377,13 @@ class RulesTableProcessor(Processor):
         #Do the same for the first column to enable later comparisons - note we use
         #block granularity not line granularity to minimise possible number
         c1_arr = np.zeros(shape=(int(dims.y1 - dims.y0), int(dims.x1 - dims.x0)))
-        for b in candidate[0]:
-            c1_arr[
-                int(b.bbox.y0 - dims.y0):int(b.bbox.y1 - dims.y0),
-                int(b.bbox.x0 - dims.x0):int(b.bbox.x1 - dims.x0),
-                
-            ] = 1
+        for block in candidate[0]:
+            for line in block:
+                c1_arr[
+                    int(line.bbox.y0 - dims.y0):int(line.bbox.y1 - dims.y0),
+                    int(line.bbox.x0 - dims.x0):int(line.bbox.x1 - dims.x0),
+                    
+                ] = 1
       
         #Calculate all of the possible horizontal lines
         horizontal_array = np.zeros(arr.shape)
@@ -348,16 +434,15 @@ class RulesTableProcessor(Processor):
         #block breaks
         if len(c1_h_lines) >= 2*len(h_lines):
             return None
-
-
+        
         #Filter line breaks out of low density tables
         self.logger.debug(f"Found line candidates - {h_lines}")
         line_width = np.max([h[1] for h in h_lines])
         if line_width > 4:
             self.logger.debug("Filtering lines from low density table")
-            h_lines = [h[0] + h[1]/2 + dims.y0 for h in h_lines if h[1] >= 3] + [100000]
+            h_lines = [dims.y0]  + [h[0] + h[1]/2 + dims.y0 for h in h_lines if h[1] >= 3] + [dims.y1]
         else:
-            h_lines = [h[0] + h[1]/2 + dims.y0 for h in h_lines] + [100000]
+            h_lines = [dims.y0] + [h[0] + h[1]/2 + dims.y0 for h in h_lines] + [dims.y1]
 
         self.logger.debug(f"Found horizontal lines at {h_lines}")
 
@@ -373,15 +458,45 @@ class RulesTableProcessor(Processor):
             self.logger.debug(f"Table creation failed as row too large")
             return None
 
-        # vertical_array = np.zeros(arr.shape)
-        # vertical_array = arr.sum(axis=0) == 0
-        #ah = np.repeat(horizontal_array[:,np.newaxis], arr.shape[1], axis=1)
-        #av = np.repeat(vertical_array[np.newaxis,:], arr.shape[0], axis=0)
-        #fig = plt.imshow(5*(ah + av) + arr)
-        #fig.show()
+        vertical_array = np.zeros(arr.shape)
+        vertical_array = arr.sum(axis=0) == 0
 
-        # results = {
-        #     'scores':[1.0],
-        #     'boxes':[dims.to_rect()],
-        #     'labels':['table']
-        # }
+        #Calculate all of the possible vertical lines
+        v_lines = []
+        current_run = -1
+        current_run_length = 0
+        for i,v in enumerate(vertical_array):
+            if v > 0.5:
+                if current_run >= 0:
+                    current_run_length += 1
+                else:
+                    current_run_length = 1
+                    current_run = i
+            else:
+                if current_run >= 0:
+                    v_lines.append((current_run, current_run_length))
+                    current_run = -1
+
+        if current_run >= 0:
+            v_lines.append((current_run, current_run_length))
+
+        v_lines = [dims.x0] + [v[0] + v[1]/2 + dims.x0 for v in v_lines] + [dims.x1]
+
+        # ah = np.repeat(horizontal_array[:,np.newaxis], arr.shape[1], axis=1)
+        # av = np.repeat(vertical_array[np.newaxis,:], arr.shape[0], axis=0)
+        # fig = plt.imshow(5*(ah + av) + arr)
+        # fig.show()
+
+        table = [TableExtractorStrategy.TableParts.Table, dims.clone()]
+        parts = []
+        for i in range(len(h_lines) - 1):
+            parts.append(
+                [TableExtractorStrategy.TableParts.Row, Bbox(dims.x0, h_lines[i], dims.x1, h_lines[i+1], dims.page_width, dims.page_height)]
+            )
+
+        for i in range(len(v_lines) - 1):
+            parts.append(
+                [TableExtractorStrategy.TableParts.Column, Bbox(v_lines[i], dims.y0, v_lines[i+1], dims.y1, dims.page_width, dims.page_height)]
+            )
+
+        return (table, parts)

@@ -92,10 +92,13 @@ class LayoutElementGroup(LayoutElement):
             raise StopIteration()
         self._index += 1
         return self.items[self._index - 1]
-
-    def __str__(self) -> str:
-        extras = {"N_Items":len(self.items)}
-        return self._str_rep(extras)
+    
+    def _str_rep(self, extras=None) -> str:
+        if extras:
+            extras['N_items'] =len(self.items)
+        else:
+            extras = {'N_items':len(self.items)}
+        return super()._str_rep(extras) 
     
     def __repr__(self) -> str:
         return self.__str__()

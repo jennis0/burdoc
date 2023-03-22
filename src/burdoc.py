@@ -54,10 +54,11 @@ class Burdoc(object):
                 JSONOutProcessor
             ],
             'render_processors': [
-                False, True, True, True, True, False
+                True, True, True, True, True, False
             ],
-            'processor_args': [{}, {}, {}, {}, {}, {}]
-           }, True)
+            'processor_args': [{}, {}, {}, {}, {}, {}],
+            'additional_reqs': ['tables']
+           }, True, )
         ]
 
         self.return_fields = ['metadata', 'json', 'page_hierarchy']
