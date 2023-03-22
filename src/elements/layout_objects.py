@@ -11,10 +11,12 @@ class LineElement(LayoutElement):
 
     bbox: Bbox
     spans: List[Span]
+    rotation: List[float]
 
-    def __init__(self, bbox: Bbox, spans: List[Span]):
+    def __init__(self, bbox: Bbox, spans: List[Span], rotation:List[float]):
         super().__init__(bbox, title="Line")
         self.spans = spans
+        self.rotation = rotation
 
     def to_html(self):
         return " ".join(s.to_html() for s in self.spans)
@@ -23,7 +25,8 @@ class LineElement(LayoutElement):
     def from_dict(l: Any, page_width, page_height):
         return LineElement(
             spans=[Span.from_dict(s) for s in l['spans']],
-            bbox=Bbox(*l['bbox'], page_width, page_height)
+            bbox=Bbox(*l['bbox'], page_width, page_height),
+            rotation=l['dir']
         )
 
     def get_text(self):

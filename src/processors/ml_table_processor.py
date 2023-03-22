@@ -63,6 +63,9 @@ class MLTableProcessor(Processor):
                 rs = col_headers + rows
                 cs = row_headers + cols
 
+                print("rows", rs)
+                print("cols", cs)
+
                 merges  = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.SpanningCell]
 
                 if len(cols) < 2:
@@ -91,21 +94,27 @@ class MLTableProcessor(Processor):
                         candidate_row_index = -1
                         for row_index,row in enumerate(table.row_boxes):
                             #print("row", row_index, shrunk_bbox.y_overlap(row[1], 'first'), row[1])
-                            if shrunk_bbox.y_overlap(row[1], 'first') > 0.8:
+                            if shrunk_bbox.overlap(row[1], 'first') > 0.85:
                                 candidate_row_index = row_index
                                 break
                         if candidate_row_index < 0:
-                            bad_lines[table_index] += 1
+                            if table_line_x_overlap > 0.99 and table_line_y_overlap > 0.99:
+                                bad_lines[table_index] += 10
+                            else:
+                                bad_lines[table_index] += 1   
                             continue
 
                         candidate_col_index = -1
                         for col_index,col in enumerate(table.col_boxes):
                             #print("col", col_index, shrunk_bbox.x_overlap(col[1], 'first'), row[1])
-                            if line.bbox.x_overlap(col[1], 'first') > 0.8:
+                            if line.bbox.overlap(col[1], 'first') > 0.85:
                                 candidate_col_index = col_index
                                 break
                         if candidate_col_index < 0:
-                            bad_lines[table_index] += 1
+                            if table_line_x_overlap > 0.99 and table_line_y_overlap > 0.99:
+                                bad_lines[table_index] += 10
+                            else:
+                                bad_lines[table_index] += 1
                             continue
                         
                         used_text[line_index] = table_index
@@ -121,7 +130,7 @@ class MLTableProcessor(Processor):
             for line_index,z in enumerate(zip(page_tables, bad_lines)):
                 table = z[0]
                 bl = z[1]
-                if bl >= 2:
+                if bl >= 3:
                     used_text[used_text == line_index] = -1
                     continue
 

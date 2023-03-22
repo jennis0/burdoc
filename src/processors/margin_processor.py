@@ -8,6 +8,8 @@ from .processor import Processor
 from ..elements.layout_objects import LineElement
 from ..elements.bbox import Bbox
 
+from ..utils.layout_graph import LayoutGraph
+
 class MarginProcessor(Processor):
 
     def __init__(self, logger: Logger):
@@ -26,11 +28,6 @@ class MarginProcessor(Processor):
     def _process_text(self, page_bound: Bbox, text: List[LineElement]) -> Dict[str, Any]:
         page_width = page_bound.width()
         page_height = page_bound.height()
-        header_box = Bbox(0, 0, page_width, page_height*0.05, page_width, page_height)
-        footer_box = Bbox(0, page_height*0.95, page_width, page_height, page_width, page_height)
-        left_box = Bbox(0, 0, page_width*0.05, page_height, page_width, page_height)
-        right_box = Bbox(page_width*0.95, 0, page_width, page_height, page_width, page_height)
-        num_box = Bbox(0, page_height*0.92, page_width, page_height, page_width, page_height)
         res = {
             'headers':[],
             'footers':[],
@@ -39,17 +36,46 @@ class MarginProcessor(Processor):
             'extracted_page_number':None,
             'text':[]
         }
-        for t in text:
-            if t.bbox.overlap(header_box, 'first') > 0.95:
+
+        lg = LayoutGraph(self.logger, page_bound, text)
+        for node in lg.nodes[1:]:
+            t = node.element
+
+            if len(node.up) > 0:
+                nearest_up = node.up[0][1]
+            else:
+                nearest_up = 10000
+            
+            if len(node.down) > 0:
+                nearest_down = node.down[0][1]
+            else:
+                nearest_down = 10000
+
+            nearest = min(nearest_down, nearest_up)
+
+            top = t.bbox.y1 / page_height
+            bottom = t.bbox.y0 / page_height
+            left = t.bbox.x1 / page_width
+            right = t.bbox.x0 / page_width
+            
+            if top < 0.05 and nearest > 5:
                 res['headers'].append(t)
-            elif t.bbox.overlap(num_box, 'first') > 0.95 and str.isnumeric(t.get_text()):
-                res['extracted_page_number'] = int(t.get_text())
-            elif t.bbox.overlap(footer_box, "first") > 0.95:
-                res['footers'].append(t)
-            elif t.bbox.overlap(left_box, 'first') > 0.95:
-                res['left_sidebar'].append(t)
-            elif t.bbox.overlap(right_box, 'first') > 0.95:
+
+            elif top < 0.1 and nearest > 10 and t.spans[0].font.size < 10:
+                res['headers'].append(t)
+
+            elif bottom > 0.9 and nearest > 5:
+                if str.isnumeric(t.get_text()):
+                    res['extracted_page_number'] = int(t.get_text())
+                else:
+                    res['footers'].append(t)
+
+            elif right > 0.95 or t.rotation[0] < 0.7 and right > 0.9:
                 res['right_sidebar'].append(t)
+
+            elif left < 0.05 or t.rotation[0] < 0.7 and left < 0.1:
+                res['left_sidebar'].append(t)
+
             else:
                 res['text'].append(t)     
 
