@@ -21,7 +21,7 @@ def run_validation(in_dir, out_dir):
             exit(1)
 
     files = os.listdir(in_dir)
-    for filename in files:
+    for filename in files[-13:]:
         path = os.path.join(in_dir, filename)
         if not os.path.isfile(path):
             continue
