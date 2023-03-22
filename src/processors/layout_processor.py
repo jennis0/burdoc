@@ -43,6 +43,7 @@ class LayoutProcessor(Processor):
             d.bbox for d in drawings[DrawingElement.DrawingType.Line]
         ]
         for line in images[ImageElement.ImageType.Line]:
+            line.image.save("test.png")
             b = line.bbox
             if b.y0/page_height < 0.95 and b.y0/page_height > 0.05:
                 breaks.append(Bbox(max(b.x0,0), b.y0, b.x1, b.y0+1, page_bound.page_width, page_bound.page_height))
@@ -55,6 +56,7 @@ class LayoutProcessor(Processor):
         #Split the 'default' section into chunks based on large line breaks
         sections = []
         last_y = 0
+
         for b in breaks:
             if b.width() / page_width > 0.75:
                 sections.append(

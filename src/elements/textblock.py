@@ -13,6 +13,7 @@ class TextBlockType(Enum):
     H2 = auto()
     H3 = auto()
     H4 = auto()
+    H5 = auto()
     Emphasis = auto()
 
 class TextBlock(LayoutElementGroup):
@@ -42,12 +43,13 @@ class TextBlock(LayoutElementGroup):
             TextBlockType.H2:"h2",
             TextBlockType.H3:"h3",
             TextBlockType.H4:"h4",
+            TextBlockType.H5:"h5"
         }
         type = variant_lookup[self.type]
         return f"<{type}>" + "\n".join(l.to_html() for l in self.items) + f"</{type}>"
 
     def to_json(self, **kwargs) -> Dict[str, Any]:
-        return super().to_json(extras={"variant":self.variant.name}, **kwargs)
+        return super().to_json(extras={"variant":self.variant.name.lower()}, **kwargs)
 
     def __str__(self) -> str:
         return self.__repr__()

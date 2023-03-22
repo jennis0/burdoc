@@ -8,6 +8,8 @@ from ..elements.layout_objects import ImageElement
 from ..elements.section import PageSection
 from ..elements.element import LayoutElement, LayoutElementGroup
 
+from ..utils.layout_graph import LayoutGraph
+
 from .processor import Processor
 
 class ReadingOrderProcessor(Processor):
@@ -149,9 +151,41 @@ class ReadingOrderProcessor(Processor):
             sections.append(current_section)
 
         sorted = []            
-        for s in sections:                
-            s.sort(key=lambda c: round(c.bbox.y0/5, 0) * 100 + c.bbox.x0)
-            sorted += s
+        for s in sections: 
+            ### Within each section, do left-to-right, depth-first traversal of elements
+            sec_sorted = []               
+            lg = LayoutGraph(self.logger, page_bound, s)
+
+            backtrack = list()
+            used = set([0])
+            node = lg.nodes[0]
+            while True:
+                if len(node.down) > 0:
+                    children = [lg.get_node(n) for n in node.down if n[0] not in used]
+                    if len(children) > 0:
+                        children.sort(key=lambda c: c.element.bbox.x0)
+                        sec_sorted += children[0].element
+                        node = children[0]
+                        used.add(node.id)
+                        backtrack += reversed(children[1:])
+                        continue
+                
+                if len(backtrack) > 0:
+                    node = backtrack.pop()
+                    while node.id in used and len(backtrack) > 0:
+                        node = backtrack.pop()
+                        if len(backtrack) == 0 and node.id in used:
+                            node = None
+                            break
+                    if node:
+                        sec_sorted += node.element
+                        used.add(node.id)
+                        continue
+
+                break
+
+            #s.sort(key=lambda c: round(c.bbox.y0/50, 0) * 1000 + c.bbox.x0)
+            sorted.append(sec_sorted)
 
         return sorted
 
@@ -225,6 +259,7 @@ class ReadingOrderProcessor(Processor):
 
             columns = self._flow_items(page_bound, section.items + inline_images)
             columns = self._flow_columns(page_bound, columns + outline_images)
+
             items = []
             for c in columns:
                 items += c

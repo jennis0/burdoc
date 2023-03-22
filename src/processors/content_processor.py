@@ -18,6 +18,8 @@ class ContentProcessor(Processor):
 
     def __init__(self, logger: Logger):
         self.para_size = {}
+        self.list_regex = re.compile(u"^(\u2022)|^\((\d+)\.?\)|^(\d+)\.\s|^([a-z])\.\s|^\(([a-z])\)\.?", re.UNICODE)
+
         super().__init__("Content", logger)
 
     def initialise(self):
@@ -78,10 +80,11 @@ class ContentProcessor(Processor):
                 para_size = int(counts[font_family].argmax()) + 1
                 self.para_size[font_family] = [
                     (para_size - 2, TextBlockType.Small),
-                    (para_size + 1, TextBlockType.Paragraph),
-                    (para_size + 2.5, TextBlockType.H4),
-                    (para_size + 4, TextBlockType.H3),
-                    (para_size + 5, TextBlockType.H2)
+                    (para_size + 0.5, TextBlockType.Paragraph),
+                    (para_size + 2, TextBlockType.H5),
+                    (para_size + 4, TextBlockType.H4),
+                    (para_size + 6, TextBlockType.H3),
+                    (para_size + 10, TextBlockType.H2)
                 ]
         
         for font_family in counts:
@@ -92,8 +95,8 @@ class ContentProcessor(Processor):
             self.para_size['default'] = self.para_size[default_font]
 
     def _get_text_class(self, block: TextBlock):
-        fs = block.items[-1].spans[-1].font.size
-        fam = block.items[-1].spans[-1].font.family
+        fs = block.items[0].spans[-1].font.size
+        fam = block.items[0].spans[-1].font.family
 
         if len(block.items) > 3:
             return TextBlockType.Paragraph
@@ -114,12 +117,12 @@ class ContentProcessor(Processor):
                     break
             if all_italic:
                 return TextBlockType.Emphasis
-            
-        return t
+
+        return type
 
 
     def _create_list(self, list_items: List[Tuple[str, List[TextBlock]]]) -> List[TextList]:
-        ordered = list_items[0] != u"\u2022"
+        ordered = list_items[0][0] != u"\u2022"
 
         if ordered and len(list_items) == 1:
             print(list_items[0][1])
@@ -130,13 +133,15 @@ class ContentProcessor(Processor):
         
         tl = TextList(bbox=list_items[0][1][0].bbox, ordered=ordered, items=[])
         for li in list_items:
+            label_match = self.list_regex.match(li[1][0].items[0].spans[0].text)
+            li[1][0].items[0].spans[0].text = li[1][0].items[0].spans[0].text[label_match.span()[1]:].lstrip()
             tl.append(TextListItem(label=li[0], items=li[1]))
         
         return [tl]
 
-    def _process_text_block(self, block: TextBlock) -> List[LayoutElement]:
+    def _process_text_block(self, block: TextBlock) -> TextBlock:
         block.variant = self._get_text_class(block)
-        return [block]
+        return block
 
     def _preprocess(self, elements: List[LayoutElement]) -> List[LayoutElement]:
         proc_elements = []
@@ -144,11 +149,11 @@ class ContentProcessor(Processor):
         in_list = False
         list_elements = []
 
-        list_re = re.compile(u"^(\u2022)|^\((\d+)\.?\)|^(\d+)\.\s|^([a-z])\.\s|^\(([a-z])\)\.?", re.UNICODE)
-
         for i,e in enumerate(elements):
             if isinstance(e, TextBlock):
-                list_match = list_re.match(e.get_text()[:10].strip())
+                list_match = self.list_regex.match(e.get_text()[:10].strip())
+
+                processed_tb = self._process_text_block(e)
 
                 ### Does the box start with something that looks like a list/bullet point
                 if not in_list and list_match:
@@ -162,11 +167,12 @@ class ContentProcessor(Processor):
 
                 ### If we're processing a list, do we think we're still in it?
                 if in_list and not list_match:
-                    if e.items[0].bbox.x0 - list_elements[-1][1][-1].bbox.x0 > 1:
-                        in_list = False
-                    if len(elements) > i+1 and isinstance(elements[i+1], TextBlock) and elements[i+1].variant == TextBlockType.Paragraph:
-                        if list_re.match(elements[i+1].get_text()) is not None:
-                            in_list = True
+                    if e.items[0].bbox.x0 - list_elements[-1][1][-1].bbox.x0 > 30 or \
+                        abs(e.bbox.y0 - list_elements[-1][1][-1].bbox.y1) > 3:
+                            in_list = False
+                    elif len(elements) > i+1 and isinstance(elements[i+1], TextBlock) and processed_tb.variant == TextBlockType.Paragraph:
+                        if self.list_regex.match(elements[i+1].get_text()) is not None:
+                            in_list = True  
                         else:
                             in_list = False
                     else:
@@ -175,7 +181,6 @@ class ContentProcessor(Processor):
                 if not in_list and len(list_elements) > 0:
                     proc_elements += self._create_list(list_elements)
                     list_elements = []
-
 
                 ### Parse block line by line looking for 
                 if in_list and list_match:
@@ -188,7 +193,7 @@ class ContentProcessor(Processor):
                         list_elements = []
 
                 #Handle any other parts of being a text block
-                proc_elements += self._process_text_block(e)
+                proc_elements.append(processed_tb)
                 continue
 
             if isinstance(e, PageSection):

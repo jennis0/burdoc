@@ -82,7 +82,8 @@ class ImageHandler(object):
             return ImageElement.ImageType.Invisible
 
         #If thin in one dimension, treat as line rather than image
-        if (x_coverage < 0.05 and y_coverage > 0.1) or (x_coverage > 0.1 and y_coverage < 0.05):
+        if (imageData.bbox.y0 > 0.1 and imageData.bbox.y1 < 0.9) and \
+            ((x_coverage < 0.05 and y_coverage > 0.1) or (x_coverage > 0.1 and y_coverage < 0.05)):
             return ImageElement.ImageType.Line
 
         #If it's too small in any particular dimension it can't be a meaningful image

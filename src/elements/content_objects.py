@@ -14,6 +14,10 @@ class TextListItem (LayoutElementGroup):
         super().__init__(items=items, title="TextListItem")
         self.label = label
 
+    def to_json(self, **kwargs):
+        extras = {'label':self.label}
+        return super().to_json(extras=extras, **kwargs)
+
         
 class TextList (LayoutElementGroup):
     ordered: bool
