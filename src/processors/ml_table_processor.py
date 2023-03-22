@@ -62,10 +62,7 @@ class MLTableProcessor(Processor):
             
                 rs = col_headers + rows
                 cs = row_headers + cols
-
-                print("rows", rs)
-                print("cols", cs)
-
+                
                 merges  = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.SpanningCell]
 
                 if len(cols) < 2:

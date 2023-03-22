@@ -5,8 +5,10 @@ from plotly.graph_objects import Figure
 
 
 from .processor import Processor
+from ..elements.element import LayoutElement
 from ..elements.layout_objects import LineElement
 from ..elements.bbox import Bbox
+from ..elements.textblock import TextBlock
 
 from ..utils.layout_graph import LayoutGraph
 
@@ -20,12 +22,12 @@ class MarginProcessor(Processor):
         return super().initialise()
 
     def requirements(self) -> List[str]:
-        return ["page_bounds", 'text']
+        return ["page_bounds", 'text', 'tables']
     
     def generates(self) -> List[str]:
         return ['text', 'headers', 'footers', 'left_sidebar', 'right_sidebar', 'extracted_page_number']
     
-    def _process_text(self, page_bound: Bbox, text: List[LineElement]) -> Dict[str, Any]:
+    def _process_text(self, page_bound: Bbox, text: List[LineElement], other_elements: List[LayoutElement]) -> Dict[str, Any]:
         page_width = page_bound.width()
         page_height = page_bound.height()
         res = {
@@ -37,9 +39,11 @@ class MarginProcessor(Processor):
             'text':[]
         }
 
-        lg = LayoutGraph(self.logger, page_bound, text)
+        lg = LayoutGraph(self.logger, page_bound, text + other_elements)
         for node in lg.nodes[1:]:
             t = node.element
+            if not isinstance(t, LineElement):
+                continue
 
             if len(node.up) > 0:
                 nearest_up = node.up[0][1]
@@ -88,8 +92,8 @@ class MarginProcessor(Processor):
         data['right_sidebar'] = {}
         data['extracted_page_number'] = {}
 
-        for page_number, page_bound, text in self.get_page_data(data):
-            res = self._process_text(page_bound, text)
+        for page_number, page_bound, text, tables in self.get_page_data(data):
+            res = self._process_text(page_bound, text, tables)
             for t in res:
                 data[t][page_number] = res[t]
 

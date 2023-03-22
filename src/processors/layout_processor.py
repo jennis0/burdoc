@@ -168,13 +168,24 @@ class LayoutProcessor(Processor):
 
             used = False
             line_font = None
+
             for s in line.spans:
                 if len(s.text.strip()) > 0:
                     line_font = s.font
                     break
 
+            superscript = len(line.get_text()) < 3 and line.spans[0].font.size < 7
+
             for block in blocks:
                 if used:
+                    break
+
+                last_real_item = block.items[-1]
+                for i in range(len(block.items)):
+                    l = block.items[-i]
+                    if len(l.get_text()) < 3 and l.spans[0].font.size < 7:
+                        continue
+                    last_real_item = l
                     break
 
                 if not block.open:
@@ -184,8 +195,8 @@ class LayoutProcessor(Processor):
                 self.logger.debug(block.items[-1])
 
                 for i in range(len(block.items[-1].spans)):
-                    if block.items[-1].spans[-(i+1)].text.strip() != "":
-                        block_font = block.items[-1].spans[-(i+1)].font
+                    if last_real_item.spans[-(i+1)].text.strip() != "":
+                        block_font = last_real_item.spans[-(i+1)].font
                         break
 
                 ### Only allow merging with the block if it is of comparable width and
@@ -197,21 +208,19 @@ class LayoutProcessor(Processor):
                 block_overlap_with_line = line.bbox.x_overlap(block.bbox, 'second')
                 total_overlap = line.bbox.overlap(block.bbox, 'first')
 
-                if line_font and block_font:
+                if line_font and block_font and not superscript:
                     matched_font = abs(line_font.size - block_font.size) < 0.1 and \
                         line_font.family == block_font.family
                     matched_bold = (line_font.bold == block_font.bold) and (line_font.italic == block_font.italic)
-                    fuzzy_line_continuation = len(block.items) < 2 or ((abs(block.items[-1].bbox.x1 - block.bbox.x1) < 20) and (line.bbox.x0 - block.items[-1].bbox.x0) < 2)
+                    fuzzy_line_continuation = len(block.items) < 2 or ((abs(last_real_item.bbox.x1 - block.bbox.x1) < 20) and (line.bbox.x0 - last_real_item.bbox.x0) < 2)
                     if linegap < 5:
                         matched_font = matched_font and (fuzzy_line_continuation or matched_bold)
                     else:
                         matched_font = matched_font and matched_bold
                 else:
                     matched_font = True
-                
 
-
-                block_linegap = 8 if len(block.items) == 1 else (block.items[1].bbox.y0 - block.items[0].bbox.y1 + 1)
+                block_linegap = 8 if len(block.items) == 1 else max(block.items[1].bbox.y0 - block.items[0].bbox.y1 + 1, 3)
 
                 self.logger.debug(f"linegap={linegap}, matched_font={matched_font}, line_overlap={line_overlap_with_block},"+\
                                    f"block_overlap={block_overlap_with_line}, is_bullet={is_bullet}")
@@ -274,7 +283,7 @@ class LayoutProcessor(Processor):
 
                 compare_to = i+2
                 finish=False
-                while b.items[compare_to].bbox.y1 < (l.bbox.y1 + 3):
+                while b.items[compare_to].bbox.y1 < (l.bbox.y1 + 3) or len(b.items[compare_to].get_text()) < 3:
                     compare_to += 1
                     skip_next_i += 1
 
