@@ -2,6 +2,7 @@ from PIL import Image as PILImage
 from PIL.ImageFilter import GaussianBlur
 
 import fitz
+import hashlib
 import numpy as np
 import logging
 import io
@@ -153,11 +154,12 @@ class ImageHandler(object):
         self.logger.debug(f"New Bbox: {new_bbox}")
         return (image, new_bbox)
     
-    def merge_images(self, images: List[ImageElement]):
+    def merge_images(self, images: List[ImageElement], image_store: List[PILImage.Image]):
         used_images = [False for i in images]
 
         for i in range(len(images)):
             im1 = images[i]
+            im1_pil = image_store[im1.image]
 
             if im1.bbox.width(norm=True) > 0.95 and im1.bbox.height(norm=True) > 0.95:
                 continue
@@ -171,19 +173,21 @@ class ImageHandler(object):
                 if im2.bbox.width(norm=True) > 0.95 and im2.bbox.height(norm=True) > 0.95:
                     continue
 
+                im2_pil = image_store[im2.image]
+
                 if im2.bbox.overlap(im1.bbox, "first") > 0.7:
-                    im1.image.paste(
-                        im2.image, (int(im2.bbox.x0-im1.bbox.x0), int(im2.bbox.y0-im1.bbox.y0))
+                    im1_pil.paste(
+                        im2_pil, (int(im2.bbox.x0-im1.bbox.x0), int(im2.bbox.y0-im1.bbox.y0))
                     )
                     im1.bbox = Bbox.merge([im1.bbox, im2.bbox])
                     im1.original_bbox = Bbox.merge([im1.original_bbox, im2.original_bbox])
                     used_images[j+i+1] = True
                     images[i] = im1
                 elif im2.bbox.overlap(im1.bbox, "second") > 0.7:
-                    im2.image.paste(
-                        im1.image, (int(im1.bbox.x0-im2.bbox.x0), int(im1.bbox.y0-im2.bbox.y0))
+                    im2_pil.paste(
+                        im1_pil, (int(im1.bbox.x0-im2.bbox.x0), int(im1.bbox.y0-im2.bbox.y0))
                     )
-                    im1.image = im2.image
+                    im1_pil = im2_pil
                     im1.bbox = Bbox.merge([im1.bbox, im2.bbox])
                     im1.original_bbox = Bbox.merge([im1.original_bbox, im2.original_bbox])
                     used_images[j+i] = True
@@ -202,6 +206,8 @@ class ImageHandler(object):
         images = page.get_image_info(hashes=False, xrefs=True)
         processed_images = {t:[] for t in ImageElement.ImageType}
 
+        image_store = []
+
         for i in images:
             image = self._get_image(i['xref'])
 
@@ -215,10 +221,17 @@ class ImageHandler(object):
                 im.type = self._classify_image(im, page_colour)
                 processed_images[im.type].append(im)
 
+                hash = hashlib.md5(im.image.tobytes()).hexdigest()
+                if hash not in self.cache:
+                    image_store.append(im.image)
+                    self.cache[hash] = len(image_store) - 1
+
+                im.image = self.cache[hash]
+
         if ImageElement.ImageType.Primary in processed_images:
-            processed_images[ImageElement.ImageType.Primary] = self.merge_images(processed_images[ImageElement.ImageType.Primary])
+            processed_images[ImageElement.ImageType.Primary] = self.merge_images(processed_images[ImageElement.ImageType.Primary], image_store)
 
         for t in processed_images:
             self.logger.debug(f"Found {len(processed_images[t])} {t} images")
 
-        return processed_images
+        return processed_images, image_store

@@ -85,7 +85,7 @@ class ImageElement(LayoutElement):
 
     type: ImageType
     original_bbox: Bbox #Bbox representing true size
-    image: PILImage
+    image: int
     properties: Any
     inline: bool = False
 
@@ -106,7 +106,7 @@ class ImageElement(LayoutElement):
         return self._str_rep(extras)
     
     def to_json(self, **kwargs):
-        extras = {'image_type':self.type.name.lower() if self.type else 'none', 'image':None}#self.image}
+        extras = {'image_type':self.type.name.lower() if self.type else 'none', 'image':self.image}
         return super().to_json(extras=extras, **kwargs)
 
 

@@ -125,7 +125,6 @@ class ContentProcessor(Processor):
         ordered = list_items[0][0] != u"\u2022"
 
         if ordered and len(list_items) == 1:
-            print(list_items[0][1])
             elements = []
             for li in list_items:
                 elements += li[1]

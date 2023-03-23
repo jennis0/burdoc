@@ -57,11 +57,11 @@ class Burdoc(object):
                 True, True, True, True, True, False
             ],
             'processor_args': [{}, {}, {}, {}, {}, {}],
-            'additional_reqs': ['tables']
+            'additional_reqs': ['tables', 'image_store']
            }, True, )
         ]
 
-        self.return_fields = ['metadata', 'json', 'page_hierarchy']
+        self.return_fields = ['metadata', 'content', 'page_hierarchy', 'image_store']
 
     @staticmethod
     def _process_slice(arg_dict: Any) -> Dict[str, Any]:
@@ -128,9 +128,9 @@ class Burdoc(object):
         
         pdf = fitz.open(path)
         if not pages:
-            pages = np.arange(0, pdf.page_count, dtype=np.int16)
+            pages = np.arange(int(0), int(pdf.page_count), dtype=int)
         else:
-            pages = [p for p in pages if p < pdf.page_count]
+            pages = [int(p) for p in pages if p < pdf.page_count]
         pdf.close()
 
         data = {'metadata':{'path':path}}

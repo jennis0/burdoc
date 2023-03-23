@@ -30,7 +30,7 @@ class PDFLoadProcessor(Processor):
     
     def generates(self) -> List[str]:
         return ['page_bounds', 'text', 'images', 
-                'page_images', 'drawings']
+                'page_images', 'drawings', 'image_store']
 
     def _read_pdf(self, path:os.PathLike):
         self.logger.debug(f'Loading {path}')
@@ -108,6 +108,7 @@ class PDFLoadProcessor(Processor):
         new_fields = {
             'page_bounds': {},
             'images':{},
+            'image_store':{},
             'page_images':{},
             'text':{},
             'drawings':{},
@@ -118,6 +119,7 @@ class PDFLoadProcessor(Processor):
         page_count = pdf.page_count
 
         for page_number in slice:
+            page_number = int(page_number)
             if page_number >= page_count:
                 self.logger.info(f"Skipping page {page_number + 1} as only {page_count} pages")
                 continue
@@ -128,7 +130,9 @@ class PDFLoadProcessor(Processor):
             bound = page.bound()
             data['page_bounds'][page_number] = Bbox(*bound, bound[2], bound[3])
             data['page_images'][page_number] = self.get_page_image(page)
-            data['images'][page_number] = self.imageHandler.get_page_images(page, data['page_images'][page_number])
+            images, image_store = self.imageHandler.get_page_images(page, data['page_images'][page_number])
+            data['images'][int(page_number)] = images
+            data['image_store'][int(page_number)] = image_store
             data['drawings'][page_number] = self.drawingHandler.get_page_drawings(page)
             data['text'][page_number] = self.textHandler.get_page_text(page)
 
