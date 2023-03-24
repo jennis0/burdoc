@@ -29,7 +29,6 @@ class DrawingHandler(object):
         _,_,self.width,self.height = page.bound()
 
         processed_drawings = {t:[] for t in DrawingElement.DrawingType}
-        print(processed_drawings)
         for d in self.page.get_cdrawings():
             if d['type'] == 'f' and d['fill_opacity'] > 0.9 and len(d['items']) > 2:
                 width = d['rect'][2] - d['rect'][0]

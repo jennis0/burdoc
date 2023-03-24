@@ -6,3 +6,4 @@ e2/
 *.pdf
 burdoc.log.*
 .VSCodeCounter/
+burdoc.ipynb
