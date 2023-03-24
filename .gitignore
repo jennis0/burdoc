@@ -7,3 +7,5 @@ e2/
 burdoc.log.*
 .VSCodeCounter/
 burdoc.ipynb
+*.egg-info
+data/

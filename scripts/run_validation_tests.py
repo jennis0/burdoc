@@ -4,10 +4,10 @@ import json
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from src.burdoc import Burdoc
+from src.burdoc import BurdocParser
 
 def run_validation(in_dir, out_dir):
-    burdoc = Burdoc()
+    burdoc = BurdocParser()
 
     if not os.path.exists(in_dir) and os.path.isdir(in_dir):
         print(f"ERROR: {in_dir} does not exist or is not a director")
