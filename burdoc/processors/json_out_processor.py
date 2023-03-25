@@ -10,7 +10,7 @@ from .processor import Processor
 
 class JSONOutProcessor(Processor):
 
-    def __init__(self, log_level: Optional[int]=logging.INFO):
+    def __init__(self, log_level: int=logging.INFO):
         super().__init__("json-out", log_level=log_level)
 
     def initialise(self):

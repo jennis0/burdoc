@@ -7,27 +7,28 @@ from ..utils.logging import get_logger
 
 
 class TableExtractorStrategy(abc.ABC):
+    """Abstract base class defining the interface for table extraction methods. This is consistent between ML and rules based methods"""
 
     class TableParts(Enum):
-        Table = 0
-        Column = 1
-        Row = 2
-        ColumnHeader = 3
-        RowHeader = 4
-        SpanningCell = 5
+        """Enum defining the different parts of a table that can be extracted"""
+        TABLE = 0
+        COLUMN = 1
+        ROW = 2
+        COLUMNHEADER = 3
+        ROWHEADER = 4
+        SPANNINGCELL = 5
 
-    def __init__(self, name: str, log_level: Optional[int]=logging.INFO):
+    def __init__(self, name: str, log_level: int=logging.INFO):
         self.name = name
         self.log_level = log_level
         self.logger = get_logger(name, log_level=log_level)
 
 
     @abc.abstractmethod
-    def requirements(self) -> List[str]:
+    @staticmethod
+    def requirements() -> List[str]:
         '''Return list of data requirements for this strategy'''
-        pass
 
     @abc.abstractmethod
     def extract_tables(self, **kwargs) -> List[Dict[int, Any]]:
         '''Extracts tables and returns them in a complex JSON format'''
-        pass

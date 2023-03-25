@@ -14,7 +14,7 @@ from .processor import Processor
 
 class LayoutProcessor(Processor):
 
-    def __init__(self, log_level: Optional[int]=logging.INFO):
+    def __init__(self, log_level: int=logging.INFO):
         super().__init__("layout", log_level=log_level)
 
         self.block_graph_max_radius = 250

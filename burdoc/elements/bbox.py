@@ -31,7 +31,7 @@ class Bbox:
     def y1_norm(self) -> float:
         return self.y1 / self.page_height
 
-    def center(self, norm: bool=False) -> Point:
+    def center(self, norm: bool = False) -> Point:
         if norm:
             return Point(
                 (self.x0 + 0.5*(self.x1-self.x0)) / self.page_width, 
@@ -43,13 +43,13 @@ class Bbox:
                 self.y0 + 0.5*(self.y1-self.y0)
             )
 
-    def width(self, norm: bool=False) -> float:
+    def width(self, norm: bool = False) -> float:
         if norm:
             return (self.x1 - self.x0) / self.page_width
         else:
             return self.x1 - self.x0
 
-    def height(self, norm: bool=False) -> float:
+    def height(self, norm: bool = False) -> float:
         if norm:
             return (self.y1 - self.y0) / self.page_height
         else:
@@ -64,7 +64,7 @@ class Bbox:
     def clone(self):
         return Bbox(*self.to_rect(), self.page_width, self.page_height)
 
-    def x_overlap(self, b2: Bbox, normalisation: str="") -> float:
+    def x_overlap(self, b2: Bbox, normalisation: str = "") -> float:
         x_overlap = max(min(self.x1, b2.x1) - max(self.x0, b2.x0), 0)
         if normalisation == "":
             w = 1
@@ -82,8 +82,7 @@ class Bbox:
             return 1
         return x_overlap / w
 
-
-    def y_overlap(self, b2: Bbox, normalisation: str="") -> float:
+    def y_overlap(self, b2: Bbox, normalisation: str = "") -> float:
         y_overlap = max(min(self.y1, b2.y1) - max(self.y0, b2.y0), 0)
         if y_overlap < 0.01:
             return 0
@@ -92,7 +91,7 @@ class Bbox:
             h = 1
         if normalisation == "first":
             h = self.height()
-        elif normalisation ==  "second":
+        elif normalisation == "second":
             h = b2.height()
         elif normalisation == 'min':
             h = min(self.height(), b2.height())
@@ -106,8 +105,9 @@ class Bbox:
         
         return y_overlap / h
 
-    def overlap(self, b2: Bbox, normalisation : str="") -> float:
-        return self.x_overlap(b2, normalisation) * self.y_overlap(b2, normalisation)
+    def overlap(self, b2: Bbox, normalisation: str = "") -> float:
+        return self.x_overlap(b2, normalisation) * \
+            self.y_overlap(b2, normalisation)
 
     def x_distance(self, b2: Bbox) -> float:
         '''Returns positive if b2 is below this Bbox.'''

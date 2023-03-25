@@ -14,7 +14,7 @@ from .processor import Processor
 
 class RulesTableProcessor(Processor):
 
-    def __init__(self, log_level: Optional[int]=logging.INFO):
+    def __init__(self, log_level: int=logging.INFO):
         super().__init__("rules-table", log_level=log_level)
 
     def initialise(self):
@@ -54,10 +54,10 @@ class RulesTableProcessor(Processor):
 
                 table_elements = []
                 for table_bbox, structure in section_tables:
-                    row_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.RowHeader]
-                    rows = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.Row]
-                    col_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.ColumnHeader]
-                    cols = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.Column]
+                    row_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.ROWHEADER]
+                    rows = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.ROW]
+                    col_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.COLUMNHEADER]
+                    cols = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.COLUMN]
                 
                     rs = col_headers + rows
                     cs = row_headers + cols
@@ -66,7 +66,7 @@ class RulesTableProcessor(Processor):
                         if cs[0][1].width() / cs[1][1].width() > 0.9:
                             continue
 
-                    merges  = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.SpanningCell]
+                    merges  = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.SPANNINGCELL]
 
                     table_elements.append(Table(table_bbox[1], [[[] for _ in cs] for _ in rs], 
                                             row_boxes=rs, col_boxes=cs, merges=merges))
@@ -473,16 +473,16 @@ class RulesTableProcessor(Processor):
         # fig = plt.imshow(5*(ah + av) + arr)
         # fig.show()
 
-        table = [TableExtractorStrategy.TableParts.Table, dims.clone()]
+        table = [TableExtractorStrategy.TableParts.TABLE, dims.clone()]
         parts = []
         for i in range(len(h_lines) - 1):
             parts.append(
-                [TableExtractorStrategy.TableParts.Row, Bbox(dims.x0, h_lines[i], dims.x1, h_lines[i+1], dims.page_width, dims.page_height)]
+                [TableExtractorStrategy.TableParts.ROW, Bbox(dims.x0, h_lines[i], dims.x1, h_lines[i+1], dims.page_width, dims.page_height)]
             )
 
         for i in range(len(v_lines) - 1):
             parts.append(
-                [TableExtractorStrategy.TableParts.Column, Bbox(v_lines[i], dims.y0, v_lines[i+1], dims.y1, dims.page_width, dims.page_height)]
+                [TableExtractorStrategy.TableParts.COLUMN, Bbox(v_lines[i], dims.y0, v_lines[i+1], dims.y1, dims.page_width, dims.page_height)]
             )
 
         return (table, parts)

@@ -10,7 +10,7 @@ from ..utils.logging import get_logger
 
 class DrawingHandler(object):
 
-    def __init__(self, pdf: fitz.Document, log_level: Optional[int]=logging.INFO):
+    def __init__(self, pdf: fitz.Document, log_level: int=logging.INFO):
         self.logger = get_logger('drawing-handler', log_level=log_level)
         self.page_bbox = None
         self.page = None

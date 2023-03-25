@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 
@@ -46,7 +46,7 @@ class LayoutGraph(object):
         
         return False
 
-    def __get_next_overlaps_from_projection(self, node: Node, slice: np.array, transpose: bool=False):
+    def __get_next_overlaps_from_projection(self, node: Node, matrix_slice: np.array, transpose: bool=False):
 
             if not transpose:
                 if node.element.bbox.y1 >= self.pagebound.y1 - 1:
@@ -60,16 +60,16 @@ class LayoutGraph(object):
                 overlap_func = lambda e1, e2: e1.element.bbox.y_overlap(e2.element.bbox, 'min')
                 reject_overlap_func = lambda e1: node.element.bbox.x_overlap(e1.element.bbox)
                 distance_func = lambda e1, e2: max(e2.element.bbox.x0 - e1.element.bbox.x1, 0)
-                slice = slice.T
+                matrix_slice = matrix_slice.T
 
             #Find intersections with other nodes  
-            intersects = slice[
-                range(slice.shape[0]),
-                 (slice != 0).argmax(axis=1)
+            intersects = matrix_slice[
+                range(matrix_slice.shape[0]),
+                 (matrix_slice != 0).argmax(axis=1)
                 ]
             
             #Get distance to each intersecting node 
-            node_distances = []
+            node_distances: List[Tuple[int, float]] = []
             for i in np.unique(intersects):
                 if i == 0:
                     continue
@@ -82,17 +82,17 @@ class LayoutGraph(object):
             node_distances.sort(key=lambda d: d[1] + 0.01*self.nodes[d[0]].element.bbox.y0)
 
             #Remove nodes which would intersect with closer ones
-            non_overlapping_nodes = []
-            for d in node_distances:
+            none_overlapping_nodes: List[Tuple[int, float]] = []
+            for distance in node_distances:
                 no_overlap = True
-                for d2 in non_overlapping_nodes:
-                    if overlap_func(self.nodes[d[0]], self.nodes[d2[0]]) > 0.1:
+                for d2 in none_overlapping_nodes:
+                    if overlap_func(self.nodes[distance[0]], self.nodes[d2[0]]) > 0.1:
                         no_overlap = False
                         break
                 if no_overlap:
-                    non_overlapping_nodes.append(d)
+                    none_overlapping_nodes.append(distance)
 
-            return non_overlapping_nodes
+            return none_overlapping_nodes
 
     def __build_graph(self):
         matrix = np.zeros(shape=(int(self.pagebound.x1), int(self.pagebound.y1)), dtype=np.int16)
@@ -105,29 +105,29 @@ class LayoutGraph(object):
 
         for e in self.nodes[1:]:
             #Get downwards elements
-            slice = matrix[
+            matrix_slice = matrix[
                 int(e.element.bbox.x0):int(e.element.bbox.x1),
                 int(e.element.bbox.y1):
             ]
-            e.down = self.__get_next_overlaps_from_projection(e, slice)
+            e.down = self.__get_next_overlaps_from_projection(e, matrix_slice)
             
             #Get leftwards elements
-            slice = matrix[
+            matrix_slice = matrix[
                 int(e.element.bbox.x1):,
                 int(e.element.bbox.y0):int(e.element.bbox.y1)
             ]
-            e.right = self.__get_next_overlaps_from_projection(e, slice, True)
+            e.right = self.__get_next_overlaps_from_projection(e, matrix_slice, True)
 
         for node in self.nodes[1:]:
             if len(node.up) == 0:
                 node.up.append([self.root.id, node.element.bbox.y0])
                 self.root.down.append((node.id, node.element.bbox.y0))
 
-            for n,d in node.down:
-                self.nodes[n].up.append([node.id, d])
+            for down_node, down_node_distance in node.down:
+                self.nodes[down_node].up.append([node.id, down_node_distance])
             
-            for n,d in node.right:
-                self.nodes[n].left.append([node.id, d])
+            for right_node, right_node_distance in node.right:
+                self.nodes[right_node].left.append([node.id, right_node_distance])
 
         for node in self.nodes:
             node.up.sort(key=lambda n: n[1])

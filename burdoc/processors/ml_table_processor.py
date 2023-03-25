@@ -22,7 +22,7 @@ class MLTableProcessor(Processor):
 
     strategy: TableExtractorStrategy
 
-    def __init__(self, strategy: Strategies=Strategies.DETR, log_level: Optional[int]=logging.INFO):
+    def __init__(self, strategy: Strategies=Strategies.DETR, log_level: int=logging.INFO):
         super().__init__('ml-tables', log_level=log_level)
         self.log_level = log_level
 
@@ -53,15 +53,15 @@ class MLTableProcessor(Processor):
         for page in extracted_tables:
             page_tables = []
             for table_bbox, structure in extracted_tables[page]:
-                row_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.RowHeader]
-                rows = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.Row]
-                col_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.ColumnHeader]
-                cols = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.Column]
+                row_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.ROWHEADER]
+                rows = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.ROW]
+                col_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.COLUMNHEADER]
+                cols = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.COLUMN]
             
                 rs = col_headers + rows
                 cs = row_headers + cols
                 
-                merges  = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.SpanningCell]
+                merges  = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.SPANNINGCELL]
 
                 if len(cols) < 2:
                     continue

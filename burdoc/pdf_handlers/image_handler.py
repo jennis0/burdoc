@@ -16,7 +16,7 @@ from ..utils.logging import get_logger
 
 class ImageHandler(object):
 
-    def __init__(self, pdf: fitz.Document, log_level: Optional[int]=logging.INFO):
+    def __init__(self, pdf: fitz.Document, log_level: int=logging.INFO):
         self.cache = {}
         self.page_bbox = None
         self.logger = get_logger('image-handler', log_level=log_level)

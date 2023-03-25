@@ -6,7 +6,7 @@ import logger_tt
 
 set_logging = False
 
-def get_logger(name:str, log_path: os.PathLike=".burdoc.log", log_level: Optional[int]=logging.INFO):
+def get_logger(name:str, log_path: os.PathLike=".burdoc.log", log_level: int=logging.INFO):
     global set_logging
     if not set_logging:
         logger_tt.setup_logging(

@@ -13,7 +13,7 @@ from .processor import Processor
 
 class MarginProcessor(Processor):
 
-    def __init__(self, log_level: Optional[int]=logging.INFO):
+    def __init__(self, log_level: int=logging.INFO):
         super().__init__("margin", log_level=log_level)
 
     

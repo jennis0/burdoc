@@ -17,7 +17,7 @@ from .processor import Processor
 
 class PDFLoadProcessor(Processor):
 
-    def __init__(self, log_level: Optional[int]=logging.INFO):
+    def __init__(self, log_level: int=logging.INFO):
         super().__init__("pdf-load", log_level=log_level)
         self.log_level = log_level
 

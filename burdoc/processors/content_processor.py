@@ -14,7 +14,7 @@ from .processor import Processor
 
 class ContentProcessor(Processor):
 
-    def __init__(self, log_level: Optional[int]=logging.INFO):
+    def __init__(self, log_level: int=logging.INFO):
         self.para_size = {}
         self.list_regex = re.compile(u"^(\u2022)|^\((\d+)\.?\)|^(\d+)\.\s|^([a-z])\.\s|^\(([a-z])\)\.?", re.UNICODE)
 

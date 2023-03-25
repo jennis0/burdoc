@@ -13,7 +13,7 @@ class AggregatorProcessor(Processor):
                  processor_args: List[Any],
                  render_processors: List[bool],
                  additional_reqs: List[str],
-                 log_level: Optional[int]=logging.INFO
+                 log_level: int=logging.INFO
                 ):
         super().__init__("aggregator", log_level=log_level)
         self.processors = [p(**pa, log_level=log_level) for p,pa in zip(processors, processor_args)]

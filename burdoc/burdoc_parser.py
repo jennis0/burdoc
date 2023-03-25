@@ -1,7 +1,7 @@
 import logging
 import multiprocessing as mp
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 import fitz
 
@@ -17,9 +17,9 @@ from .processors.rules_table_processor import RulesTableProcessor
 
 try:
     from .processors.ml_table_processor import MLTableProcessor
-    _has_transformers = True
-except:
-    _has_transformers = False
+    _HAS_TRANSFORMERS = True
+except ImportError:
+    _HAS_TRANSFORMERS = False
 
 from .utils.logging import get_logger
 from .utils.render_pages import render_pages
@@ -29,8 +29,8 @@ class BurdocParser(object):
 
  
     def __init__(self, 
-                 log_level: Optional[int]=logging.INFO, 
-                 render_pages: Optional[bool]=False,
+                 log_level: int=logging.INFO, 
+                 do_render_pages: bool=False,
                  max_threads: Optional[int]=None
                  ):
         self.log_level = log_level
@@ -38,12 +38,12 @@ class BurdocParser(object):
         self.min_slice_size = 100
         self.max_slices = 12
         self.max_threads = max_threads
-        self.render = render_pages
+        self.render = do_render_pages
 
-        self.processors = [
+        self.processors: List[Tuple[Type[Processor], Dict, bool]] = [
            (PDFLoadProcessor, {}, True),
         ]
-        if _has_transformers:
+        if _HAS_TRANSFORMERS:
             self.processors.append(
                 (MLTableProcessor, {}, False)
             )
@@ -96,8 +96,8 @@ class BurdocParser(object):
         return original_data 
         
 
-    def run_processor(self, processor: Processor, processor_args: Dict[str, Any], 
-                      pages: List[int], data: Dict[str, Any]) -> Dict[str, Any]:
+    def run_processor(self, processor: Type[Processor], processor_args: Dict[str, Any], 
+                      pages: List[int], data: Dict[str, Any]):
         
         self.logger.debug(f"========================= Running {type(processor).__name__} ===========================")
 
@@ -147,7 +147,7 @@ class BurdocParser(object):
                 renderers.append(p(**args, log_level=self.log_level))
 
         if self.render:
-            render_pages(self.logger, data, renderers)
+            render_pages(data, renderers)
 
         return {k:data[k] for k in self.return_fields}
 

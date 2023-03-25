@@ -29,7 +29,7 @@ class Table(LayoutElement):
         if self.row_headers:
             val['rh'] = self.row_headers[row]
         if self.col_headers:
-            val['ch'] = self.col_headrs[col]
+            val['ch'] = self.col_headers[col]
 
         return val
 

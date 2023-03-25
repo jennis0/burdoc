@@ -11,7 +11,7 @@ class Processor(abc.ABC):
 
     threadable = True
 
-    def __init__(self, name: str, log_level: Optional[int]=logging.INFO, max_threads: Optional[int]=None):
+    def __init__(self, name: str, log_level: int=logging.INFO, max_threads: Optional[int]=None):
         self.name = name
         self.logger = get_logger(name, log_level=log_level)
         self.max_threads = max_threads

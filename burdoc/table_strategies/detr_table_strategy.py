@@ -1,4 +1,3 @@
-
 import logging
 import time
 from typing import Any, Dict, List, Optional
@@ -14,7 +13,7 @@ from .table_extractor_strategy import TableExtractorStrategy
 class DetrTableStrategy(TableExtractorStrategy):
 
 
-    def __init__(self, log_level: Optional[int]=logging.INFO):
+    def __init__(self, log_level: int=logging.INFO):
         super().__init__('detr', log_level=log_level)
 
         self.margin = 25
@@ -55,7 +54,7 @@ class DetrTableStrategy(TableExtractorStrategy):
         return results
     
 
-    def _preprocess_image(self, page_images: List[Image.Image], remove_background: bool):
+    def _preprocess_image(self, page_images: List[Image.Image]):
         page_images = [i.convert("RGB") for i in page_images]
         s = time.time()
         encoding = self.extractor.preprocess(page_images, return_tensors='pt', 
@@ -63,9 +62,9 @@ class DetrTableStrategy(TableExtractorStrategy):
         self.logger.debug(f"Encoding {round(time.time() - s, 2)}")
         return encoding
 
-    def _do_extraction(self, model, images: List[Image.Image], remove_background: bool):
-        features = self._preprocess_image(images, remove_background)
-        sizes = torch.tensor([[i.size[1], i.size[0]] for i in images])
+    def _do_extraction(self, model, images: List[Image.Image]):
+        features = self._preprocess_image(images)
+        sizes = torch.Tensor([[i.size[1], i.size[0]] for i in images])
         if self.cuda:
             features.to(self.device)
             sizes = sizes.to(self.device)
@@ -80,7 +79,7 @@ class DetrTableStrategy(TableExtractorStrategy):
         return results
 
     def _extract_tables_batch(self, page_images: List[Image.Image]) -> List[Any]:
-        results = self._do_extraction(self.detector_model, page_images, True)
+        results = self._do_extraction(self.detector_model, page_images)
 
         table_images = []
         table_pages = []
@@ -104,7 +103,7 @@ class DetrTableStrategy(TableExtractorStrategy):
         if len(table_images) == 0:
             return []
 
-        results = self._do_extraction(self.structure_model, table_images, False)
+        results = self._do_extraction(self.structure_model, table_images)
 
         tables = [[] for _ in range(len(page_images))]
         for p,c,t in zip(table_pages, bbox_corrections, results):
@@ -121,7 +120,7 @@ class DetrTableStrategy(TableExtractorStrategy):
             corrected_bb = [bbox[0]+corrections[0]-bbox_offset_x, bbox[1]+corrections[1]-bbox_offset_y, 
                             bbox[2]+corrections[0]+bbox_offset_x, bbox[3]+corrections[1]+bbox_offset_y]
             part_type = TableExtractorStrategy.TableParts._value2member_map_[label]
-            if part_type == TableExtractorStrategy.TableParts.Table:
+            if part_type == TableExtractorStrategy.TableParts.TABLE:
                 table = (TableExtractorStrategy.TableParts._value2member_map_[label], Bbox(*corrected_bb, page_width, page_height), score)
             else:
                 parts.append((TableExtractorStrategy.TableParts._value2member_map_[label], Bbox(*corrected_bb, page_width, page_height), score))
