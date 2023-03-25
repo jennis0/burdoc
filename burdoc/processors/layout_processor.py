@@ -186,7 +186,7 @@ class LayoutProcessor(Processor):
         list_re = re.compile("^(\u2022)|^\((\d+)\.?\)|^(\d+)\.\s|^([a-z])\.\s|^\(([a-z])\)\.?", re.UNICODE)
 
 
-        for line in section.items: #type:LineElement
+        for line in section.items: #type:LineElement #type:ignore
             self.logger.debug("line: %s", line.get_text())
             self.logger.debug(line)
 

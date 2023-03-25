@@ -146,7 +146,7 @@ class ImageHandler(object):
             page_bound.page_width,
             page_bound.page_height
         )
-        self.logger.debug("Scaled image with factors (%d,%d)", scale_factor_x, scale_factor_y)
+        self.logger.debug("Scaled image with factors (%f,%f)", scale_factor_x, scale_factor_y)
         self.logger.debug("Original Bbox: %s", str(orig_bbox))
         self.logger.debug("New Bbox: %s", str(new_bbox))
         return (image, new_bbox)

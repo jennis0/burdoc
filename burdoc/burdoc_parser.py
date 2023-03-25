@@ -244,7 +244,7 @@ class BurdocParser(object):
             render_pages(data, renderers)
             
         if self.print_performance:
-            self.print_performance_info(data['performance'])
+            self.print_performance_info(data['performance']) #type:ignore
 
         return {k:data[k] for k in self.return_fields}
 

@@ -58,14 +58,11 @@ class ReadingOrderProcessor(Processor):
                 dx_block = c.bbox.x_overlap(e.bbox, 'second')
                 append = False
 
-                self.logger.debug("dy: {dy}, col: {dx_col}, block: {dx_block}, col_full_page: {c_full_page}, el_full_page: {e_full_page}, col_centered: {c_centered}, el_centered: {e_centered}",
-                                  dy=dy,
-                                  dx_col=dx_col,
-                                  dx_block=dx_block,
-                                  c_full_page=c_full_page,
-                                  e_full_page=e_full_page,
-                                  c_centered=c_centered,
-                                  e_centered=e_centered)
+                self.logger.debug("dy: %f, col: %f, block: %f, col_full_page: %f,"+\
+                    "el_full_page: %d, col_centered: %d, el_centered: %d",
+                                  dy, dx_col, dx_block,
+                                  c_full_page, e_full_page,
+                                  c_centered, e_centered)
 
                 stop = False
                 #If element starts above column end and the majority of the element overlaps
@@ -156,21 +153,21 @@ class ReadingOrderProcessor(Processor):
         if len(current_section) > 0:
             sections.append(current_section)
 
-        sorted = []            
-        for s in sections: 
+        full_sorted_elements: List[List[LayoutElement]] = []
+        for section in sections:
             ### Within each section, do left-to-right, depth-first traversal of elements
-            sec_sorted = []               
-            lg = LayoutGraph(self.logger, page_bound, s)
+            section_sorted_elements: List[LayoutElement] = []
+            layout_graph = LayoutGraph(self.logger, page_bound, section)
 
-            backtrack = list()
+            backtrack: List[LayoutGraph.Node] = []
             used = set([0])
-            node = lg.nodes[0]
+            node = layout_graph.nodes[0]
             while True:
                 if len(node.down) > 0:
-                    children = [lg.get_node(n) for n in node.down if n[0] not in used]
+                    children = [layout_graph.get_node(n) for n in node.down if n[0] not in used]
                     if len(children) > 0:
                         children.sort(key=lambda c: c.element.bbox.x0)
-                        sec_sorted += children[0].element
+                        section_sorted_elements += children[0].element
                         node = children[0]
                         used.add(node.id)
                         backtrack += reversed(children[1:])
@@ -184,22 +181,22 @@ class ReadingOrderProcessor(Processor):
                             node = None
                             break
                     if node:
-                        sec_sorted += node.element
+                        section_sorted_elements += node.element
                         used.add(node.id)
                         continue
 
                 break
 
             #s.sort(key=lambda c: round(c.bbox.y0/50, 0) * 1000 + c.bbox.x0)
-            sorted.append(sec_sorted)
+            full_sorted_elements.append(section_sorted_elements)
 
-        return sorted
+        return full_sorted_elements
 
     def _flow_content(self, page_bound: Bbox, sections: List[PageSection], images: List[ImageElement], tables: List[Table]):
         default_sections = [s for s in sections if s.default]
         other_sections = [s for s in sections if not s.default]
 
-        global_elements: Sequence[LayoutElement] = images + tables
+        global_elements: Sequence[LayoutElement] = images + tables #type:ignore
 
         used_images = set()
 

@@ -46,7 +46,7 @@ class MLTableProcessor(Processor):
     def generates(self) -> List[str]:
         return ['tables', 'text_elements']
     
-    def _process(self, data: Any) -> Table:
+    def _process(self, data: Any) -> Optional[Table]:
         reqs = self.strategy.requirements()
         fields = {r:data[r] for r in self.strategy.requirements()}
         fields['page_numbers'] = list(data[reqs[0]].keys())
@@ -57,9 +57,9 @@ class MLTableProcessor(Processor):
         if len(extracted_tables) == 0:
             return
         
-        for page in extracted_tables:
+        for page, table_parts in extracted_tables.items():
             page_tables = []
-            for table_bbox, structure in extracted_tables[page]:
+            for table_bbox, structure in table_parts:
                 row_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.ROWHEADER]
                 rows = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.ROW]
                 col_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.COLUMNHEADER]
@@ -84,14 +84,14 @@ class MLTableProcessor(Processor):
                 if shrunk_bbox.height() > 8:
                     shrunk_bbox.y1 -= 5
  
-                for table_index,table in enumerate(page_tables):
-                    table_line_x_overlap = shrunk_bbox.x_overlap(table.bbox, 'first')
-                    table_line_y_overlap = shrunk_bbox.y_overlap(table.bbox, 'first')
+                for table_index,table_parts in enumerate(page_tables):
+                    table_line_x_overlap = shrunk_bbox.x_overlap(table_parts.bbox, 'first')
+                    table_line_y_overlap = shrunk_bbox.y_overlap(table_parts.bbox, 'first')
   
                     if table_line_x_overlap > 0.93 and table_line_y_overlap > 0.93:
 
                         candidate_row_index = -1
-                        for row_index,row in enumerate(table.row_boxes):
+                        for row_index,row in enumerate(table_parts.row_boxes):
                             if shrunk_bbox.overlap(row[1], 'first') > 0.85:
                                 candidate_row_index = row_index
                                 break
@@ -103,7 +103,7 @@ class MLTableProcessor(Processor):
                             continue
 
                         candidate_col_index = -1
-                        for col_index,col in enumerate(table.col_boxes):
+                        for col_index,col in enumerate(table_parts.col_boxes):
                             if line.bbox.overlap(col[1], 'first') > 0.85:
                                 candidate_col_index = col_index
                                 break
@@ -115,7 +115,7 @@ class MLTableProcessor(Processor):
                             continue
                         
                         used_text[line_index] = table_index
-                        table._cells[candidate_row_index][candidate_col_index].append(line)
+                        table_parts._cells[candidate_row_index][candidate_col_index].append(line)
                         continue
                         
                     elif table_line_x_overlap > 0.5 and table_line_y_overlap > 0.5:
@@ -125,13 +125,13 @@ class MLTableProcessor(Processor):
                         bad_lines[table_index] += 1
 
             for line_index,z in enumerate(zip(page_tables, bad_lines)):
-                table = z[0]
+                table_parts = z[0]
                 bl = z[1]
                 if bl >= 3:
                     used_text[used_text == line_index] = -1
                     continue
 
-                data['tables'][page].append(table)
+                data['tables'][page].append(table_parts)
 
             keep_text = []
             for line,u in zip(data['text_elements'][page], used_text):

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from ..table_strategies.table_extractor_strategy import TableExtractorStrategy
 from .bbox import Bbox
@@ -10,14 +10,14 @@ class Table(LayoutElement):
     def __init__(self, 
                  bbox: Bbox, 
                  cells: List[List[Any]], 
-                 row_headers: List[Any]=None, 
-                 col_headers: List[Any]=None, 
-                 row_boxes: List[Tuple[TableExtractorStrategy.TableParts, List[Bbox]]]=None,
-                 col_boxes: List[Tuple[TableExtractorStrategy.TableParts, List[Bbox]]]=None,
-                 merges: Dict[Tuple[int, int], List[Tuple[int,int]]]=None
+                 row_headers: Optional[List[Any]]=None,
+                 col_headers: Optional[List[Any]]=None,
+                 row_boxes: Optional[List[Tuple[TableExtractorStrategy.TableParts, List[Bbox]]]]=None,
+                 col_boxes: Optional[List[Tuple[TableExtractorStrategy.TableParts, List[Bbox]]]]=None,
+                 merges: Optional[Dict[Tuple[int, int], List[Tuple[int,int]]]]=None
     ):
         super().__init__(bbox, title='Table')
-        self._cells = cells
+        self.cells = cells
         self.row_headers = row_headers
         self.col_headers = col_headers
         self.merges = merges
@@ -25,7 +25,7 @@ class Table(LayoutElement):
         self.col_boxes = col_boxes
 
     def _get_cell(self, row:int, col: int):
-        val = {'c':self._cells[row][col]}
+        val = {'c':self.cells[row][col]}
         if self.row_headers:
             val['rh'] = self.row_headers[row]
         if self.col_headers:
@@ -38,11 +38,11 @@ class Table(LayoutElement):
         if (row, col) in self.merges:
             for r,c in self.merges[(row, col)]:
                 cell = self._get_cell(r, c)
-                for k in cell:
+                for k,cell_item in cell.items():
                     if k not in val:
-                        val[k] = [cell[k]]
+                        val[k] = [cell_item]
                     else:
-                        val[k].append(cell[k])
+                        val[k].append(cell_item)
         else:
             val = self._get_cell(row, col)
 
@@ -54,7 +54,7 @@ class Table(LayoutElement):
             headers = [f"<th>{ch.to_html()}</th>" for ch in self.col_headers]
             text += f"<tr>{''.join(headers)}</tr>"
 
-        for i,row in enumerate(self._cells):
+        for i,row in enumerate(self.cells):
             cells = []
             if self.row_headers:
                 cells.append(f"<th>{self.row_headers[i]}</th>")
@@ -70,9 +70,9 @@ class Table(LayoutElement):
             extras['rh'] = [r.to_json() for r in self.row_headers]
         if self.col_headers:
             extras['ch'] = [c.to_json() for c in self.col_headers]
-        if self._cells:
+        if self.cells:
             json_cells = []
-            for row in self._cells:
+            for row in self.cells:
                 json_cells.append([])
                 for col in row:
                     json_cells[-1].append([l.to_json() for l in col])

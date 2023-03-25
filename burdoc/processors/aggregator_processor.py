@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Type
 
 from plotly.graph_objects import Figure
 
@@ -12,7 +12,7 @@ class AggregatorProcessor(Processor):
     name: str = "aggregator"
 
     def __init__(self,
-                 processors: List[Processor],
+                 processors: List[Type[Processor]],
                  processor_args: List[Any],
                  render_processors: List[bool],
                  additional_reqs: List[str],
