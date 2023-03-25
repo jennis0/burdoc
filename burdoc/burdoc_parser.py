@@ -44,7 +44,7 @@ class BurdocParser(object):
         
         self.log_level = log_level
         self.logger = get_logger("burdoc_parser", log_level=log_level)
-        self.min_slice_size = 2
+        self.min_slice_size = 5
         self.max_slices = 12
         self.max_threads = max_threads
         self.render = do_render_pages
