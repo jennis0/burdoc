@@ -140,10 +140,10 @@ class ContentProcessor(Processor):
         return block
 
     def _preprocess(self, elements: List[LayoutElement]) -> List[LayoutElement]:
-        proc_elements = []
+        proc_elements: List[LayoutElement] = []
 
         in_list = False
-        list_elements = []
+        list_elements: List[Tuple[str, List[TextBlock]]] = []
 
         for i,e in enumerate(elements):
             if isinstance(e, TextBlock):
@@ -167,7 +167,7 @@ class ContentProcessor(Processor):
                         abs(e.bbox.y0 - list_elements[-1][1][-1].bbox.y1) > 3:
                             in_list = False
                     elif len(elements) > i+1 and isinstance(elements[i+1], TextBlock) and processed_tb.variant == TextBlockType.Paragraph:
-                        if self.list_regex.match(elements[i+1].get_text()) is not None:
+                        if self.list_regex.match(elements[i+1].get_text()) is not None: #type:ignore
                             in_list = True  
                         else:
                             in_list = False
@@ -197,7 +197,7 @@ class ContentProcessor(Processor):
                     proc_elements += self._preprocess(e.items)
                     continue
                 else:
-                    proc_elements.append(Aside(e.bbox, self._preprocess(e.items), False))
+                    proc_elements.append(Aside(e.bbox, self._preprocess(e.items)))
                     continue
 
             ###If not a list
@@ -211,42 +211,42 @@ class ContentProcessor(Processor):
             
     def _build_page_hierarchy(self, page_number: int, elements: List[LayoutElement]) -> List[Any]:
 
-        def add_to_hierarchy(e: LayoutElement, hierarchy: List[LayoutElement], index: int, sub_index: int):
-            if e.variant in [TextBlockType.Paragraph, TextBlockType.Emphasis, TextBlockType.Small]:
+        def add_to_hierarchy(textblock: TextBlock, hierarchy: List[Dict[str, Any]], index: int, sub_index: Optional[int]=None):
+            if textblock.variant in [TextBlockType.Paragraph, TextBlockType.Emphasis, TextBlockType.Small]:
                 return
 
-            size = e.items[0].spans[0].font.size
+            size = textblock.items[0].spans[0].font.size
             hierarchy.append(
-                    {'page':page_number, 'index':[index, sub_index], 'text':e.get_text(), 'size': size}
+                    {'page':page_number, 'index':[index, sub_index], 'text':textblock.get_text(), 'size': size}
                 )
 
-        hierarchy = []
+        hierarchy: List[Dict[str, Any]] = []
         for i,e in enumerate(elements):
 
             if isinstance(e, Aside):
                 for j,sub_e in enumerate(e.items):
                     if not isinstance(e, TextBlock):
                         continue
-                    add_to_hierarchy(sub_e, hierarchy, i, j)
+                    add_to_hierarchy(sub_e, hierarchy, i, j) #type:ignore
                 continue
 
             if not isinstance(e, TextBlock):
                 continue
 
-            add_to_hierarchy(e, hierarchy, i, None)
+            add_to_hierarchy(e, hierarchy, i)
 
         return hierarchy
 
 
-    def _process_page(self, elements: List[LayoutElement]) -> Dict[str, List[Any]]:
+    def _process_page(self, elements: List[LayoutElement]) -> List[LayoutElement]:
         elements = self._preprocess(elements)
 
         proc_elements = []
-        for e in elements:
-            if isinstance(e, PageSection):
-                proc_elements += e.items
+        for element in elements:
+            if isinstance(element, PageSection):
+                proc_elements += element.items
             else:
-                proc_elements.append(e)
+                proc_elements.append(element)
 
         return proc_elements
 

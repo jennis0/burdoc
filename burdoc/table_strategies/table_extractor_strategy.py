@@ -23,9 +23,8 @@ class TableExtractorStrategy(abc.ABC):
         self.log_level = log_level
         self.logger = get_logger(name, log_level=log_level)
 
-
-    @abc.abstractmethod
     @staticmethod
+    @abc.abstractmethod
     def requirements() -> List[str]:
         '''Return list of data requirements for this strategy'''
 

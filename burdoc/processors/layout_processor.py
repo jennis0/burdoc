@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from plotly.graph_objects import Figure
 
@@ -288,46 +288,46 @@ class LayoutProcessor(Processor):
                     block.items.sort(key=lambda l: l.bbox.y0*5 + l.bbox.x0)
                     block_used[i+j+1] = True
 
-        blocks = [b for i,b in enumerate(blocks) if not block_used[i]] 
+        blocks = [b for i,b in enumerate(blocks) if not block_used[i]]
 
         split_blocks = []
         for large_block in blocks: #type: TextBlock
             new_blocks = []
-            line_start = block.items[0].bbox.x0
+            line_start = large_block.items[0].bbox.x0
             last_line = 0
             skip_next_i = 0
-            for i,l in enumerate(block.items[1:-1]):
+            for i,l in enumerate(large_block.items[1:-1]):
                 if skip_next_i > 0:
                     skip_next_i -= 1
                     continue
 
                 compare_to = i+2
                 finish=False
-                while block.items[compare_to].bbox.y1 < (l.bbox.y1 + 3) or len(large_block.items[compare_to].get_text()) < 3: #type:ignore
+                while large_block.items[compare_to].bbox.y1 < (l.bbox.y1 + 3) or len(large_block.items[compare_to].get_text()) < 3: #type:ignore
                     compare_to += 1
                     skip_next_i += 1
 
-                    if compare_to == len(block.items):
+                    if compare_to == len(large_block.items):
                         finish=True
                         break
                 if finish:
                     break
 
-                if (l.bbox.x0 - line_start) > 1 and (block.items[compare_to].bbox.x0 - line_start) < 1:
+                if (l.bbox.x0 - line_start) > 1 and (large_block.items[compare_to].bbox.x0 - line_start) < 1:
                     new_blocks.append(
                         TextBlock(items=large_block.items[last_line:i+1])
                     )
                     last_line = i+1
-                    line_start = block.items[compare_to].bbox.x0
+                    line_start = large_block.items[compare_to].bbox.x0
                 else:
                     line_start = l.bbox.x0
 
-            if last_line > 0  and last_line != len(block.items) - 1:
+            if last_line > 0  and last_line != len(large_block.items) - 1:
                 new_blocks.append(
                     TextBlock(items=large_block.items[last_line:])
                 )
             elif last_line == 0:
-                new_blocks.append(block)
+                new_blocks.append(large_block)
             split_blocks += new_blocks
                     
         self.logger.debug(f"Found {len(split_blocks)} blocks in section.")            
