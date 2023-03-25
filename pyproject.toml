@@ -26,6 +26,9 @@ dependencies = [
 [tool.setuptools]
 packages=["burdoc"]
 
+[project.scripts]
+burdoc="burdoc.scripts.burdoc:run"
+
 [project.optional-dependencies]
 transformers=["torch>=1.13","transformers>=4.26"]
 
