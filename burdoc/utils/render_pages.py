@@ -1,7 +1,10 @@
-import plotly.express as plt
-from typing import Optional, Dict, Any,List
 from logging import Logger
+from typing import Any, Dict, List, Optional
+
+import plotly.express as plt
+
 from ..processors.processor import Processor
+
 
 def render_pages(logger: Logger, data: Dict[str, Any], processors: Processor, pages: Optional[List[int]]=None):
         '''Render an image of the page to the screen, highlighting elements'''

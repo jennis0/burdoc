@@ -1,15 +1,16 @@
-from typing import Any, List, Dict, Optional
 import logging
-from plotly.graph_objects import Figure
 import re
+from typing import Any, Dict, List, Optional
+
+from plotly.graph_objects import Figure
 
 from ..elements.bbox import Bbox
-from ..elements.layout_objects import LineElement, ImageElement, DrawingElement
-from ..elements.textblock import TextBlock
-from ..elements.section import PageSection
 from ..elements.element import LayoutElementGroup
-
+from ..elements.layout_objects import DrawingElement, ImageElement, LineElement
+from ..elements.section import PageSection
+from ..elements.textblock import TextBlock
 from .processor import Processor
+
 
 class LayoutProcessor(Processor):
 

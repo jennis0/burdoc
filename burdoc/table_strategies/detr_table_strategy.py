@@ -1,14 +1,15 @@
 
-from transformers import DetrImageProcessor, TableTransformerForObjectDetection
-from PIL import Image
 import logging
-import torch
-from typing import Any, List, Dict, Optional
-
 import time
+from typing import Any, Dict, List, Optional
 
-from .table_extractor_strategy import TableExtractorStrategy
+import torch
+from PIL import Image
+from transformers import DetrImageProcessor, TableTransformerForObjectDetection
+
 from ..elements.bbox import Bbox
+from .table_extractor_strategy import TableExtractorStrategy
+
 
 class DetrTableStrategy(TableExtractorStrategy):
 

@@ -1,17 +1,16 @@
-from typing import Any, List, Dict, Optional
 import logging
+from typing import Any, Dict, List, Optional
 
 from plotly.graph_objects import Figure
 
 from ..elements.bbox import Bbox
+from ..elements.element import LayoutElement, LayoutElementGroup
 from ..elements.layout_objects import ImageElement
 from ..elements.section import PageSection
 from ..elements.table import Table
-from ..elements.element import LayoutElement, LayoutElementGroup
-
 from ..utils.layout_graph import LayoutGraph
-
 from .processor import Processor
+
 
 class ReadingOrderProcessor(Processor):
 

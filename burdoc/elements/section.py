@@ -1,7 +1,8 @@
-from typing import List, Any, Optional
+from typing import Any, List, Optional
 
 from .bbox import Bbox
-from .element import LayoutElementGroup, LayoutElement
+from .element import LayoutElement, LayoutElementGroup
+
 
 class PageSection(LayoutElementGroup):
     default: bool=False

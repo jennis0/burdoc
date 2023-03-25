@@ -1,10 +1,11 @@
 import abc
+import logging
+from typing import Any, Dict, List, Optional
+
 from plotly.graph_objects import Figure
 
-from typing import Any, List, Dict, Optional
-
-import logging
 from ..utils.logging import get_logger
+
 
 class Processor(abc.ABC):
 

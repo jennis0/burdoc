@@ -1,11 +1,12 @@
-from PIL.Image import Image
-from PIL.ImageFilter import GaussianBlur
+from typing import List, Tuple
+
 import numpy as np
 import scipy
-import scipy.misc
 import scipy.cluster
+import scipy.misc
+from PIL.Image import Image
+from PIL.ImageFilter import GaussianBlur
 
-from typing import List,Tuple
 
 def get_image_palette(im: Image, n_colours: int, n_means: int=5) -> List[Tuple[float, float, float]]:
     im = im.resize((150, 150))      # optional, to reduce time

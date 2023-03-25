@@ -1,17 +1,18 @@
+import hashlib
+import io
+import logging
+from typing import List, Optional, Tuple
+
+import fitz
+import numpy as np
 from PIL import Image as PILImage
 from PIL.ImageFilter import GaussianBlur
 
-import fitz
-import hashlib
-import numpy as np
-import logging
-import io
-from typing import List, Tuple, Optional
 from ..elements.bbox import Bbox
 from ..elements.layout_objects import ImageElement
-
 from ..utils.image_manip import get_image_palette
 from ..utils.logging import get_logger
+
 
 class ImageHandler(object):
 

@@ -1,18 +1,16 @@
-from typing import Any, List, Optional, Dict
 import logging
-import numpy as np
+from typing import Any, Dict, List, Optional
 
+import numpy as np
 from plotly.graph_objects import Figure
 
 from ..elements.bbox import Bbox
-from ..elements.textblock import TextBlock
 from ..elements.table import Table
-
+from ..elements.textblock import TextBlock
 from ..table_strategies.table_extractor_strategy import TableExtractorStrategy
-
+from ..utils.layout_graph import LayoutGraph
 from .processor import Processor
 
-from ..utils.layout_graph import LayoutGraph
 
 class RulesTableProcessor(Processor):
 

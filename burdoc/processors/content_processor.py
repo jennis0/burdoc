@@ -1,17 +1,15 @@
 import logging
-from typing import Dict, List, Any, Tuple, Optional
 import re
-from plotly.graph_objects import Figure
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
+from plotly.graph_objects import Figure
 
+from ..elements.content_objects import Aside, TextList, TextListItem
 from ..elements.element import LayoutElement
-from .processor import Processor
-
-from ..elements.textblock import TextBlock, TextBlockType
 from ..elements.section import PageSection
-from ..elements.content_objects import TextList, TextListItem, Aside
-
-import plotly.express as plt
+from ..elements.textblock import TextBlock, TextBlockType
+from .processor import Processor
 
 
 class ContentProcessor(Processor):

@@ -1,24 +1,29 @@
 import logging
-import os
 import multiprocessing as mp
-import fitz
-
+import os
 from typing import Any, Dict, List, Optional
 
-from .processors.processor import Processor
-from .processors.pdf_load_processor import PDFLoadProcessor
-from .processors.ml_table_processor import MLTableProcessor
-from .processors.layout_processor import LayoutProcessor
-from .processors.reading_order_processor import ReadingOrderProcessor
-from .processors.margin_processor import MarginProcessor
+import fitz
+
+from .processors.aggregator_processor import AggregatorProcessor
 from .processors.content_processor import ContentProcessor
 from .processors.json_out_processor import JSONOutProcessor
-from .processors.aggregator_processor import AggregatorProcessor
+from .processors.layout_processor import LayoutProcessor
+from .processors.margin_processor import MarginProcessor
+from .processors.pdf_load_processor import PDFLoadProcessor
 from .processors.processor import Processor
+from .processors.reading_order_processor import ReadingOrderProcessor
 from .processors.rules_table_processor import RulesTableProcessor
+
+try:
+    from .processors.ml_table_processor import MLTableProcessor
+    _has_transformers = True
+except:
+    _has_transformers = False
 
 from .utils.logging import get_logger
 from .utils.render_pages import render_pages
+
 
 class BurdocParser(object):
 
@@ -37,7 +42,13 @@ class BurdocParser(object):
 
         self.processors = [
            (PDFLoadProcessor, {}, True),
-           (MLTableProcessor, {}, False),
+        ]
+        if _has_transformers:
+            self.processors.append(
+                (MLTableProcessor, {}, False)
+            )
+
+        self.processors.append(
            (AggregatorProcessor, {
             'processors': [
                 MarginProcessor,
@@ -53,7 +64,7 @@ class BurdocParser(object):
             'processor_args': [{}, {}, {}, {}, {}, {}],
             'additional_reqs': ['tables', 'image_store']
            }, True, )
-        ]
+        )
 
         self.return_fields = ['metadata', 'content', 'page_hierarchy', 'image_store']
 

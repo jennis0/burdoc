@@ -1,7 +1,8 @@
-import logger_tt
 import logging
 import os
 from typing import Optional
+
+import logger_tt
 
 set_logging = False
 

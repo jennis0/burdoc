@@ -1,9 +1,10 @@
 import argparse
-import os
 import json
 import logging
+import os
 
 from ..burdoc_parser import BurdocParser
+
 
 def run():
     argparser = argparse.ArgumentParser()

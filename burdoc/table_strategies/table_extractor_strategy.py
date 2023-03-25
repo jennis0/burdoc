@@ -1,9 +1,10 @@
 import abc
 import logging
 from enum import Enum
-from typing import Any, List, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from ..utils.logging import get_logger
+
 
 class TableExtractorStrategy(abc.ABC):
 

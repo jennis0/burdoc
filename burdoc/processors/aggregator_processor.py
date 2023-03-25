@@ -1,8 +1,10 @@
 import logging
-from typing import List, Any, Dict, Optional
+from typing import Any, Dict, List, Optional
+
 from plotly.graph_objects import Figure
 
 from .processor import Processor
+
 
 class AggregatorProcessor(Processor):
 

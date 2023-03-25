@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from .textblock import TextBlock
-from .span import Span
 from .bbox import Bbox
-from .element import LayoutElementGroup, LayoutElement
+from .element import LayoutElement, LayoutElementGroup
+from .textblock import TextBlock
+
 
 class TextListItem (LayoutElementGroup):
     label: str

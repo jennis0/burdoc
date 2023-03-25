@@ -1,9 +1,12 @@
 import logging
-from typing import List, Dict, Any, Optional
-from plotly.graph_objects import Figure
 import os
+from typing import Any, Dict, List, Optional
+
+from plotly.graph_objects import Figure
+
 from ..elements.element import LayoutElement
 from .processor import Processor
+
 
 class JSONOutProcessor(Processor):
 

@@ -1,12 +1,12 @@
 from __future__ import annotations
-from typing import List
-from uuid import uuid4
 
-from ..elements.element import LayoutElement
-from ..elements.bbox import Bbox
-import numpy as np
 import logging
-from timeit import timeit
+from typing import List
+
+import numpy as np
+
+from ..elements.bbox import Bbox
+from ..elements.element import LayoutElement
 
 
 class LayoutGraph(object):

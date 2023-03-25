@@ -1,6 +1,6 @@
-from dataclasses import dataclass
 from enum import Enum, auto
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from .bbox import Bbox
 from .element import LayoutElementGroup
 from .layout_objects import LineElement

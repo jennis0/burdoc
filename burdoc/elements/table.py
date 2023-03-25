@@ -1,8 +1,8 @@
-from typing import List, Any, Tuple, Dict
+from typing import Any, Dict, List, Tuple
 
 from ..table_strategies.table_extractor_strategy import TableExtractorStrategy
-from .element import LayoutElement
 from .bbox import Bbox
+from .element import LayoutElement
 
 
 class Table(LayoutElement):

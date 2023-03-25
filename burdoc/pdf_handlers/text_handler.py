@@ -1,10 +1,12 @@
 import logging
-import fitz
 from typing import List, Optional
-from ..elements.layout_objects import LineElement
-from ..elements.bbox import Bbox
 
+import fitz
+
+from ..elements.bbox import Bbox
+from ..elements.layout_objects import LineElement
 from ..utils.logging import get_logger
+
 
 class TextHandler(object):
 

@@ -1,21 +1,19 @@
-from PIL import Image
 import logging
-import fitz
 import os
-from typing import Any, List, Dict, Optional
+from typing import Any, Dict, List, Optional
+
+import fitz
+from PIL import Image
 from plotly.graph_objects import Figure
 
+from ..elements.bbox import Bbox
+from ..elements.layout_objects import DrawingElement, ImageElement, LineElement
+from ..elements.span import Span
 from ..pdf_handlers.drawing_handler import DrawingHandler
 from ..pdf_handlers.image_handler import ImageHandler
 from ..pdf_handlers.text_handler import TextHandler
-
-from ..elements.layout_objects import LineElement, DrawingElement, ImageElement
-
-from ..elements.span import Span
-
 from .processor import Processor
-from ..elements.bbox import Bbox
-    
+
 
 class PDFLoadProcessor(Processor):
 

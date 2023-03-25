@@ -1,15 +1,15 @@
 
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from plotly.graph_objects import Figure
 
-
-from .processor import Processor
+from ..elements.bbox import Bbox
 from ..elements.element import LayoutElement
 from ..elements.layout_objects import LineElement
-from ..elements.bbox import Bbox
-
 from ..utils.layout_graph import LayoutGraph
+from .processor import Processor
+
 
 class MarginProcessor(Processor):
 

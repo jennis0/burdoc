@@ -1,10 +1,10 @@
-from typing import List, Any, Optional
 import logging
+from typing import Any, List, Optional
+
 import fitz
 
-from ..elements.layout_objects import DrawingElement
 from ..elements.bbox import Bbox
-
+from ..elements.layout_objects import DrawingElement
 from ..utils.logging import get_logger
 
 

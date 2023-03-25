@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import List, Any
+from typing import Any, List
+
 from PIL.Image import Image as PILImage
 
-from .span import Span
 from .bbox import Bbox
 from .element import LayoutElement
+from .span import Span
+
 
 class LineElement(LayoutElement):
 

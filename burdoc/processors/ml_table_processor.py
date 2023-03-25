@@ -1,19 +1,16 @@
-
 import logging
-from typing import List, Any, Dict, Optional
 from enum import Enum, auto
+from typing import Any, Dict, List, Optional
+
 import numpy as np
+from plotly.graph_objects import Figure
 
-from .processor import Processor
-
-from ..elements.layout_objects import *
 from ..elements.bbox import Bbox
-
+from ..elements.layout_objects import *
+from ..elements.table import Table
 from ..table_strategies.detr_table_strategy import DetrTableStrategy
 from ..table_strategies.table_extractor_strategy import TableExtractorStrategy
-from ..elements.table import Table
-
-from plotly.graph_objects import Figure
+from .processor import Processor
 
 
 class MLTableProcessor(Processor):

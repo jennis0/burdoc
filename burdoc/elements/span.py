@@ -1,6 +1,7 @@
 import unicodedata
 from dataclasses import dataclass
 from typing import Any
+
 from .font import Font
 
 
