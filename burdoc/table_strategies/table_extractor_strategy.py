@@ -1,7 +1,9 @@
 import abc
 import logging
 from enum import Enum
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
+
+from ..utils.logging import get_logger
 
 class TableExtractorStrategy(abc.ABC):
 
@@ -13,9 +15,10 @@ class TableExtractorStrategy(abc.ABC):
         RowHeader = 4
         SpanningCell = 5
 
-    def __init__(self, name: str, logger: logging.Logger):
+    def __init__(self, name: str, log_level: Optional[int]=logging.INFO):
         self.name = name
-        self.logger = logger
+        self.log_level = log_level
+        self.logger = get_logger(name, log_level=log_level)
 
 
     @abc.abstractmethod

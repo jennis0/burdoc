@@ -6,21 +6,19 @@ import hashlib
 import numpy as np
 import logging
 import io
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from ..elements.bbox import Bbox
 from ..elements.layout_objects import ImageElement
 
 from ..utils.image_manip import get_image_palette
-
-import plotly.express as plt
-
+from ..utils.logging import get_logger
 
 class ImageHandler(object):
 
-    def __init__(self, logger: logging.Logger, pdf: fitz.Document):
+    def __init__(self, pdf: fitz.Document, log_level: Optional[int]=logging.INFO):
         self.cache = {}
         self.page_bbox = None
-        self.logger = logger.getChild('imagehandler')
+        self.logger = get_logger('image-handler', log_level=log_level)
         self.pdf = pdf
 
     def _get_image(self, xref: str) -> ImageElement:

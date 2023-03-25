@@ -2,7 +2,7 @@ from PIL import Image
 import logging
 import fitz
 import os
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 from plotly.graph_objects import Figure
 
 from ..pdf_handlers.drawing_handler import DrawingHandler
@@ -19,8 +19,9 @@ from ..elements.bbox import Bbox
 
 class PDFLoadProcessor(Processor):
 
-    def __init__(self, logger: logging.Logger):
-        super().__init__("PDFLoad", logger)
+    def __init__(self, log_level: Optional[int]=logging.INFO):
+        super().__init__("pdf-load", log_level=log_level)
+        self.log_level = log_level
 
     def initialise(self):
         return super().initialise()
@@ -43,9 +44,9 @@ class PDFLoadProcessor(Processor):
         return pdf
 
     def _load_handlers(self, pdf: fitz.Document):
-        self.textHandler = TextHandler(self.logger, pdf)
-        self.imageHandler = ImageHandler(self.logger, pdf)
-        self.drawingHandler = DrawingHandler(self.logger, pdf)
+        self.textHandler = TextHandler(pdf, self.log_level)
+        self.imageHandler = ImageHandler(pdf, self.log_level)
+        self.drawingHandler = DrawingHandler(pdf, self.log_level)
 
     def get_page_image(self, page: fitz.Page) -> Image:
         pix = page.get_pixmap()
@@ -89,8 +90,8 @@ class PDFLoadProcessor(Processor):
         
         path = data['metadata']['path']
         slice = data['slice']
-        self.logger.info(path)
-        self.logger.info(slice)
+        self.logger.debug(f"Loading path {path}")
+        self.logger.debug(f"Loading slice {slice}")
 
         pdf = self._read_pdf(path)
         if not pdf:

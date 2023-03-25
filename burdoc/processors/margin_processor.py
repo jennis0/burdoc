@@ -1,6 +1,6 @@
 
-from logging import Logger
-from typing import List, Dict, Any
+import logging
+from typing import List, Dict, Any, Optional
 from plotly.graph_objects import Figure
 
 
@@ -8,14 +8,13 @@ from .processor import Processor
 from ..elements.element import LayoutElement
 from ..elements.layout_objects import LineElement
 from ..elements.bbox import Bbox
-from ..elements.textblock import TextBlock
 
 from ..utils.layout_graph import LayoutGraph
 
 class MarginProcessor(Processor):
 
-    def __init__(self, logger: Logger):
-        super().__init__("Margin", logger)
+    def __init__(self, log_level: Optional[int]=logging.INFO):
+        super().__init__("margin", log_level=log_level)
 
     
     def initialise(self):

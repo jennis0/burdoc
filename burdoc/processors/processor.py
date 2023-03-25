@@ -1,16 +1,18 @@
-import logging
 import abc
 from plotly.graph_objects import Figure
 
 from typing import Any, List, Dict, Optional
 
+import logging
+from ..utils.logging import get_logger
+
 class Processor(abc.ABC):
 
     threadable = True
 
-    def __init__(self, name: str, logger: logging.Logger, max_threads: Optional[int]=None):
+    def __init__(self, name: str, log_level: Optional[int]=logging.INFO, max_threads: Optional[int]=None):
         self.name = name
-        self.logger = logger
+        self.logger = get_logger(name, log_level=log_level)
         self.max_threads = max_threads
 
     def initialise(self):

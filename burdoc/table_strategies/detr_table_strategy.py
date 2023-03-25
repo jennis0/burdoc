@@ -1,18 +1,11 @@
 
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 from PIL import Image
-import PIL.ImageOps as imops
+import logging
 import torch
-from logging import Logger
-from typing import Any, List, Dict
-import plotly.express as plt
-import PIL.ImageStat as imstat
-import numpy as np
-import math
-from enum import Enum
-import time
+from typing import Any, List, Dict, Optional
 
-from ..utils.image_manip import get_image_palette
+import time
 
 from .table_extractor_strategy import TableExtractorStrategy
 from ..elements.bbox import Bbox
@@ -20,8 +13,8 @@ from ..elements.bbox import Bbox
 class DetrTableStrategy(TableExtractorStrategy):
 
 
-    def __init__(self, logger: Logger):
-        super().__init__('detr', logger)
+    def __init__(self, log_level: Optional[int]=logging.INFO):
+        super().__init__('detr', log_level=log_level)
 
         self.margin = 25
         self.threshold = 0.9
@@ -63,31 +56,7 @@ class DetrTableStrategy(TableExtractorStrategy):
 
     def _preprocess_image(self, page_images: List[Image.Image], remove_background: bool):
         page_images = [i.convert("RGB") for i in page_images]
-        # if remove_background:
-        #     no_background_images = []
-
-        #     for im in page_images:
-        #         palette = get_image_palette(im, 10, n_means=10)
-        #         print(palette)
-        #         if palette[0][1] > 0.25:
-        #             im_arr = np.array(im)
-        #             mask = np.zeros(shape=im_arr.shape[:2], dtype=bool)
-        #             for p in palette:
-        #                 if p[1] <= 0.25 or np.mean(p[0]) < 170.:
-        #                     print("break on", p)
-        #                     break
-        #                 mask |= np.sqrt(np.square(im_arr - p[0]).sum(axis=2)) < 40
-
-        #             print(mask.sum())
-        #             im_arr[mask] = [250.,250.,250.]
-        #             no_background_images.append(Image.fromarray(im_arr))
-        #             no_background_images[-1].show()
-        #         else:
-        #             no_background_images.append(im)
-        #    page_images = no_background_images
-
         s = time.time()
-        
         encoding = self.extractor.preprocess(page_images, return_tensors='pt', 
                                              do_resize=True, do_rescale=True, do_normalize=True)
         self.logger.debug(f"Encoding {round(time.time() - s, 2)}")
@@ -111,8 +80,7 @@ class DetrTableStrategy(TableExtractorStrategy):
 
     def _extract_tables_batch(self, page_images: List[Image.Image]) -> List[Any]:
         results = self._do_extraction(self.detector_model, page_images, True)
-        # for r in results:
-        #     print(r)
+
         table_images = []
         table_pages = []
         bbox_corrections = []

@@ -1,4 +1,4 @@
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 import logging
 from plotly.graph_objects import Figure
 import re
@@ -13,8 +13,8 @@ from .processor import Processor
 
 class LayoutProcessor(Processor):
 
-    def __init__(self, logger: logging.Logger):
-        super().__init__("Layout", logger)
+    def __init__(self, log_level: Optional[int]=logging.INFO):
+        super().__init__("layout", log_level=log_level)
 
         self.block_graph_max_radius = 250
         self.block_vgap_threshold = 2

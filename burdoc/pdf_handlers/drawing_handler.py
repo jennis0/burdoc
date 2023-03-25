@@ -1,15 +1,17 @@
-from typing import List, Any
+from typing import List, Any, Optional
 import logging
 import fitz
 
 from ..elements.layout_objects import DrawingElement
 from ..elements.bbox import Bbox
 
+from ..utils.logging import get_logger
+
 
 class DrawingHandler(object):
 
-    def __init__(self, logger: logging.Logger, pdf: fitz.Document):
-        self.logger = logger.getChild('drawinghandler')
+    def __init__(self, pdf: fitz.Document, log_level: Optional[int]=logging.INFO):
+        self.logger = get_logger('drawing-handler', log_level=log_level)
         self.page_bbox = None
         self.page = None
         self.page_bbox = None

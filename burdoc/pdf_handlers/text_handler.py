@@ -1,13 +1,15 @@
 import logging
 import fitz
-from typing import List, Any
+from typing import List, Optional
 from ..elements.layout_objects import LineElement
 from ..elements.bbox import Bbox
 
+from ..utils.logging import get_logger
+
 class TextHandler(object):
 
-    def __init__(self, logger: logging.Logger, pdf: fitz.Document):
-        self.logger = logger.getChild('texthandler')
+    def __init__(self, pdf: fitz.Document, log_level: Optional[int]=logging.INFO):
+        self.logger = get_logger('text-handler', log_level=log_level)
         self.pdf = pdf
 
     def _remove_line_duplicates(self, lines: List[LineElement]) -> List[LineElement]:

@@ -1,18 +1,20 @@
-from logging import Logger
-from typing import List, Any, Dict
+import logging
+from typing import List, Any, Dict, Optional
 from plotly.graph_objects import Figure
 
 from .processor import Processor
 
 class AggregatorProcessor(Processor):
 
-    def __init__(self, logger: Logger, 
-                 processors: List[Processor], 
-                 processor_args: List[Any], 
-                 render_processors=List[bool],
-                 additional_reqs = List[str]):
-        super().__init__("Aggregator", logger)
-        self.processors = [p(self.logger, **pa) for p,pa in zip(processors, processor_args)]
+    def __init__(self,
+                 processors: List[Processor],
+                 processor_args: List[Any],
+                 render_processors: List[bool],
+                 additional_reqs: List[str],
+                 log_level: Optional[int]=logging.INFO
+                ):
+        super().__init__("aggregator", log_level=log_level)
+        self.processors = [p(**pa, log_level=log_level) for p,pa in zip(processors, processor_args)]
         self.render_processors = render_processors
         self.additional_reqs = additional_reqs
 

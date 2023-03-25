@@ -1,6 +1,6 @@
 
 import logging
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Optional
 from enum import Enum, auto
 import numpy as np
 
@@ -25,14 +25,15 @@ class MLTableProcessor(Processor):
 
     strategy: TableExtractorStrategy
 
-    def __init__(self, logger: logging.Logger, strategy: Strategies=Strategies.DETR):
-        super().__init__('tables', logger)
+    def __init__(self, strategy: Strategies=Strategies.DETR, log_level: Optional[int]=logging.INFO):
+        super().__init__('ml-tables', log_level=log_level)
+        self.log_level = log_level
 
         if strategy == MLTableProcessor.Strategies.DETR:
             self.strategy_type = DetrTableStrategy
 
     def initialise(self):
-        self.strategy = self.strategy_type(self.logger)
+        self.strategy = self.strategy_type(self.log_level)
         return super().initialise()
 
     def requirements(self) -> List[str]:
@@ -75,13 +76,10 @@ class MLTableProcessor(Processor):
             used_text = np.array([-1 for _ in data['text'][page]])
             for line_index,line in enumerate(data['text'][page]):
                 shrunk_bbox = line.bbox.clone()
-                # shrunk_bbox.x0 += 0
-                # shrunk_bbox.x1 -= 0
                 shrunk_bbox.y0 += 2
                 if shrunk_bbox.height() > 8:
                     shrunk_bbox.y1 -= 5
-                #print(line)
-                #print(line.bbox, shrunk_bbox)
+ 
                 for table_index,table in enumerate(page_tables):
                     table_line_x_overlap = shrunk_bbox.x_overlap(table.bbox, 'first')
                     table_line_y_overlap = shrunk_bbox.y_overlap(table.bbox, 'first')
@@ -90,7 +88,6 @@ class MLTableProcessor(Processor):
 
                         candidate_row_index = -1
                         for row_index,row in enumerate(table.row_boxes):
-                            #print("row", row_index, shrunk_bbox.y_overlap(row[1], 'first'), row[1])
                             if shrunk_bbox.overlap(row[1], 'first') > 0.85:
                                 candidate_row_index = row_index
                                 break
@@ -103,7 +100,6 @@ class MLTableProcessor(Processor):
 
                         candidate_col_index = -1
                         for col_index,col in enumerate(table.col_boxes):
-                            #print("col", col_index, shrunk_bbox.x_overlap(col[1], 'first'), row[1])
                             if line.bbox.overlap(col[1], 'first') > 0.85:
                                 candidate_col_index = col_index
                                 break

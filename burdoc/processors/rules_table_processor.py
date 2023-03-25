@@ -1,17 +1,12 @@
 from typing import Any, List, Optional, Dict
-from logging import Logger
+import logging
 import numpy as np
-
-import plotly.express as plt
 
 from plotly.graph_objects import Figure
 
 from ..elements.bbox import Bbox
-from ..elements.layout_objects import ImageElement
-from ..elements.section import PageSection
 from ..elements.textblock import TextBlock
 from ..elements.table import Table
-from ..elements.element import LayoutElement, LayoutElementGroup
 
 from ..table_strategies.table_extractor_strategy import TableExtractorStrategy
 
@@ -21,8 +16,8 @@ from ..utils.layout_graph import LayoutGraph
 
 class RulesTableProcessor(Processor):
 
-    def __init__(self, logger: Logger):
-        super().__init__("rules_table", logger)
+    def __init__(self, log_level: Optional[int]=logging.INFO):
+        super().__init__("rules-table", log_level=log_level)
 
     def initialise(self):
         return super().initialise()
@@ -327,14 +322,6 @@ class RulesTableProcessor(Processor):
                 self.logger.debug(f"Added {len(col) - 1} blocks to column {i+1}")
                 column_bboxes.append(Bbox.merge([n.element.bbox for n in col]))
 
-            # print("=======================================================")
-            # for col in columns:
-            #     for n in col:
-            #         print(n.element, n.element.bbox)
-            #     print("---------------------------------------------------")
-            # print("=======================================================")
-            # print()
-
             for i,c in enumerate(column_bboxes[1:]):
                 self.logger.debug(f"{column_bboxes[0].y1} {c.y1}")
                 if column_bboxes[0].y1 - c.y1 > 20:
@@ -345,14 +332,6 @@ class RulesTableProcessor(Processor):
      
             if len(columns) < 2:
                 continue
-
-            # print("=======================================================")
-            # for col in columns:
-            #     for n in col:
-            #         print(n.element, n.element.bbox)
-            #     print("---------------------------------------------------")
-            # print("=======================================================")
-            # print()
 
             for c in columns:
                 for i,n in enumerate(c):

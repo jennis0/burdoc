@@ -1,5 +1,5 @@
-from logging import Logger
-from typing import Dict, List, Any, Tuple
+import logging
+from typing import Dict, List, Any, Tuple, Optional
 import re
 from plotly.graph_objects import Figure
 import numpy as np
@@ -16,11 +16,11 @@ import plotly.express as plt
 
 class ContentProcessor(Processor):
 
-    def __init__(self, logger: Logger):
+    def __init__(self, log_level: Optional[int]=logging.INFO):
         self.para_size = {}
         self.list_regex = re.compile(u"^(\u2022)|^\((\d+)\.?\)|^(\d+)\.\s|^([a-z])\.\s|^\(([a-z])\)\.?", re.UNICODE)
 
-        super().__init__("Content", logger)
+        super().__init__("content", log_level=log_level)
 
     def initialise(self):
         return super().initialise()
@@ -75,7 +75,6 @@ class ContentProcessor(Processor):
 
         self.para_size = {}
         for font_family in counts:
-            #print(font_family, counts.keys())
             if counts[font_family].sum() / total_lines > 0.2:
                 para_size = int(counts[font_family].argmax()) + 1
                 self.para_size[font_family] = [

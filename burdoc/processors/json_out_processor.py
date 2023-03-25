@@ -1,5 +1,5 @@
-from logging import Logger
-from typing import List, Dict, Any
+import logging
+from typing import List, Dict, Any, Optional
 from plotly.graph_objects import Figure
 import os
 from ..elements.element import LayoutElement
@@ -7,8 +7,8 @@ from .processor import Processor
 
 class JSONOutProcessor(Processor):
 
-    def __init__(self, logger: Logger):
-        super().__init__("json-out", logger)
+    def __init__(self, log_level: Optional[int]=logging.INFO):
+        super().__init__("json-out", log_level=log_level)
 
     def initialise(self):
         return super().initialise()

@@ -1,12 +1,9 @@
 import logging
 import os
 import multiprocessing as mp
-import logger_tt
 import fitz
-import numpy as np
 
 from typing import Any, Dict, List, Optional
-
 
 from .processors.processor import Processor
 from .processors.pdf_load_processor import PDFLoadProcessor
@@ -20,25 +17,22 @@ from .processors.aggregator_processor import AggregatorProcessor
 from .processors.processor import Processor
 from .processors.rules_table_processor import RulesTableProcessor
 
+from .utils.logging import get_logger
 from .utils.render_pages import render_pages
 
 class BurdocParser(object):
 
+ 
     def __init__(self, 
-                 log_level: int=logging.INFO, 
-                 render_pages: bool=False,
+                 log_level: Optional[int]=logging.INFO, 
+                 render_pages: Optional[bool]=False,
+                 max_threads: Optional[int]=None
                  ):
         self.log_level = log_level
-
-        logger_tt.setup_logging(
-            log_path="burdoc.log", suppress_level_below=log_level,
-            full_context=2,
-            use_multiprocessing=True, suppress=['logger_tt', 'pytorch', 'timm', 'PIL']
-        )
-        self.logger = logger_tt.getLogger('burdoc')
+        self.logger = get_logger("burdoc_parser", log_level=log_level)
         self.min_slice_size = 100
         self.max_slices = 12
-        self.max_threads = None
+        self.max_threads = max_threads
         self.render = render_pages
 
         self.processors = [
@@ -106,12 +100,12 @@ class BurdocParser(object):
 
         self.logger.debug(f"Page slices={page_slices}")
 
-        proc = processor(self.logger, **processor_args)
+        proc = processor(**processor_args, log_level=self.log_level)
         data_slices = self.slice_data(data, page_slices, proc.requirements())
         thread_args = [{
             'processor':processor, 
             'processor_args': {
-                'logger':self.logger, **processor_args
+                **processor_args, 'log_level': self.log_level
             } ,
             'data': ds
         } for ds in data_slices]
@@ -128,7 +122,7 @@ class BurdocParser(object):
         
         pdf = fitz.open(path)
         if not pages:
-            pages = np.arange(int(0), int(pdf.page_count), dtype=int)
+            pages = [i for i in range(pdf.page_count)]
         else:
             pages = [int(p) for p in pages if p < pdf.page_count]
         pdf.close()
@@ -139,7 +133,7 @@ class BurdocParser(object):
         for p,args,render_p in self.processors:
             self.run_processor(p, args, pages, data)
             if render_p:
-                renderers.append(p(self.logger, **args))
+                renderers.append(p(**args, log_level=self.log_level))
 
         if self.render:
             render_pages(self.logger, data, renderers)
