@@ -2,6 +2,7 @@ data/
 env/
 dist/
 .VSCodeCounter/
+.vscode/
 __pycache__/
 *.pyc
 *.pdf

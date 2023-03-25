@@ -27,7 +27,7 @@ class LineElement(LayoutElement):
     def from_dict(l: Any, page_width, page_height):
         return LineElement(
             spans=[Span.from_dict(s) for s in l['spans']],
-            bbox=Bbox(*l['bbox'], page_width, page_height),
+            bbox=Bbox(l['bbox'][0], l['bbox'][1], l['bbox'][2], l['bbox'][3], page_width, page_height),
             rotation=l['dir']
         )
 

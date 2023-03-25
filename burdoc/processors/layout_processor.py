@@ -13,6 +13,9 @@ from .processor import Processor
 
 
 class LayoutProcessor(Processor):
+    """The LayoutProcessor handles dividing the page into sections, assigning text within each section 
+    and 'blocking' lines into paragraphs.
+    """
 
     def __init__(self, log_level: int=logging.INFO):
         super().__init__("layout", log_level=log_level)
@@ -24,17 +27,28 @@ class LayoutProcessor(Processor):
         self.block_size_threshold = 2
         self.section_margin = 5
 
-    def initialise(self):
-        return super().initialise()
-
     def requirements(self) -> List[str]:
         return ["page_bounds", "images", "drawings", "text"]
     
     def generates(self) -> List[str]:
         return ['elements']
 
-    def _create_sections(self, page_bound: Bbox, text : List[LineElement], images : List[ImageElement], drawings : List[DrawingElement]) -> List[PageSection]:
-        '''Create sections based on drawn boxes, images, and page dividing lines then assign each text element to a section'''
+    def _create_sections(self, page_bound: Bbox, 
+                        text : List[LineElement], 
+                        images : Dict[ImageElement.ImageType, List[ImageElement]],
+                        drawings : Dict[DrawingElement.DrawingType, List[DrawingElement]]) -> List[PageSection]:
+        """Create sections based on drawn boxes, images, and page dividing lines then assign each text element to a section
+
+        Args:
+            page_bound (Bbox): Overall bbox of hte page
+            text (List[LineElement]): Text elements to be assigned to sections
+            images (Dict[ImageElement.ImageType, List[ImageElement]]): Images
+            drawings (Dict[DrawingElement.DrawingType, List[DrawingElement]]): Drawings
+
+        Returns:
+            List[PageSection]: List of page sections with text elements assigned
+        """
+        
 
         page_height = page_bound.height()
         page_width = page_bound.width()
@@ -43,9 +57,8 @@ class LayoutProcessor(Processor):
         breaks = [
             d.bbox for d in drawings[DrawingElement.DrawingType.Line]
         ]
-        for line in images[ImageElement.ImageType.Line]:
-            line.image.save("test.png")
-            b = line.bbox
+        for line_image in images[ImageElement.ImageType.Line]:
+            b = line_image.bbox
             if b.y0/page_height < 0.95 and b.y0/page_height > 0.05:
                 breaks.append(Bbox(max(b.x0,0), b.y0, b.x1, b.y0+1, page_bound.page_width, page_bound.page_height))
                 breaks.append(Bbox(max(b.x0,0), b.y1, b.x1, b.y1+1, page_bound.page_width, page_bound.page_height))
@@ -55,8 +68,8 @@ class LayoutProcessor(Processor):
             background = images[ImageElement.ImageType.Background][0]
 
         #Split the 'default' section into chunks based on large line breaks
-        sections = []
-        last_y = 0
+        sections: List[PageSection] = []
+        last_y = 0.0
 
         for b in breaks:
             if b.width() / page_width > 0.75:
@@ -80,92 +93,95 @@ class LayoutProcessor(Processor):
         #Turn remaining part of the page into final default section
         sections.append(
             PageSection(
-                items=[], 
-                default=True, 
-                backing_drawing=None, 
-                backing_image=background, 
-                bbox = Bbox(page_bound.x0, 
-                            last_y, 
-                            page_bound.x1, 
-                            page_bound.y1, 
-                            page_bound.page_width, 
-                            page_bound.page_height),               
+                items=[],
+                default=True,
+                backing_drawing=None,
+                backing_image=background,
+                bbox = Bbox(page_bound.x0,
+                            last_y,
+                            page_bound.x1,
+                            page_bound.y1,
+                            page_bound.page_width,
+                            page_bound.page_height),        
                 inline=True
             )   
         )
 
         #Create sections from each section image
-        for i in images[ImageElement.ImageType.Section]:
+        for im in images[ImageElement.ImageType.Section]:
             sections.append(PageSection(
                     bbox=Bbox(
-                        i.bbox.x0+self.section_margin, 
-                        i.bbox.y0+self.section_margin, 
-                        i.bbox.x1-self.section_margin, 
-                        i.bbox.y1-self.section_margin,
+                        im.bbox.x0+self.section_margin,
+                        im.bbox.y0+self.section_margin,
+                        im.bbox.x1-self.section_margin,
+                        im.bbox.y1-self.section_margin,
                         page_bound.page_width,
-                        page_bound.page_height), 
-                    items=[], 
-                    default=False, 
-                    backing_drawing=None, 
-                    backing_image=i,
-                    inline = i.bbox.width() / page_width > 0.5
+                        page_bound.page_height
+                    ),
+                    items=[],
+                    default=False,
+                    backing_drawing=None,
+                    backing_image=im,
+                    inline = im.bbox.width() / page_width > 0.5
                 )
             )
 
         #Create a section from each rectangle
-        for d in drawings[DrawingElement.DrawingType.Rect]:
+        for drawing in drawings[DrawingElement.DrawingType.Rect]:
             sections.append(PageSection(
                     bbox=Bbox(
-                        d.bbox.x0+self.section_margin,
-                        d.bbox.y0+self.section_margin, 
-                        d.bbox.x1-self.section_margin, 
-                        d.bbox.y1-self.section_margin,
+                        drawing.bbox.x0+self.section_margin,
+                        drawing.bbox.y0+self.section_margin,
+                        drawing.bbox.x1-self.section_margin,
+                        drawing.bbox.y1-self.section_margin,
                         page_bound.page_width,
-                        page_bound.page_height),  
-                    items=[], 
-                    default=False, 
-                    backing_drawing=d, 
+                        page_bound.page_height
+                    ),
+                    items=[],
+                    default=False,
+                    backing_drawing=drawing,
                     backing_image=None,
-                    inline = d.bbox.width() / page_width > 0.5
+                    inline = drawing.bbox.width() / page_width > 0.5
                 )
             )
 
         #Assgn lines to sections
         sections.sort(key=lambda s: s.bbox.y0*1000 + s.bbox.x0)
         if len(sections) > 1:
-            for l in text:
+            for line in text: #type:LineElement
                 written = False
-                if not any(len(sp.text.strip()) > 0 for sp in l.spans):
+                if not any(len(sp.text.strip()) > 0 for sp in line.spans):
                     continue
                 
-                for i,s in enumerate(sections[1:]):
-                    if s.bbox.overlap(l.bbox, 'second') > 0.97:
-                        s.append(l, update_bbox=False)
+                for i,section in enumerate(sections[1:]):
+                    if section.bbox.overlap(line.bbox, 'second') > 0.97:
+                        section.append(line, update_bbox=False)
                         written = True
                         break
                 if not written:
-                    sections[0].append(l, update_bbox=False)
+                    sections[0].append(line, update_bbox=False)
         else:
             sections[0].items += text
 
         #Filter out sections with no lines
         sections = [s for s in sections if len(s.items) > 0 or s.default]
 
-        self.logger.debug(f"Found {len(sections)} section in page")
-        for i,s in enumerate(sections):
-            self.logger.debug(f"Section {i+1} - {s.bbox} - {len(s.items)} items")
+        self.logger.debug("Found %d section in page", len(sections))
+        for i,section in enumerate(sections):
+            self.logger.debug("Section %d - %s - %d items", i+1, section.bbox, len(section.items))
 
         return sections
 
     def _create_blocks(self, section: PageSection) -> List[TextBlock]:
         '''Group all of the items within a section into blocks'''
-        blocks = []
+        blocks: List[TextBlock] = []
+        block_open_state: Dict[str, bool] = {}
         section.items.sort(key=lambda l: l.bbox.y0*1000 + l.bbox.x0)
         list_re = re.compile(u"^(\u2022)|^\((\d+)\.?\)|^(\d+)\.\s|^([a-z])\.\s|^\(([a-z])\)\.?", re.UNICODE)
 
 
-        for line in section.items:
-            self.logger.debug(f"line: {line.get_text()}")
+        for line in section.items: #type: LineElement
+            self.logger.debug("line: %s", line.get_text())
             self.logger.debug(line)
 
 
@@ -191,10 +207,10 @@ class LayoutProcessor(Processor):
                     last_real_item = l
                     break
 
-                if not block.open:
+                if not block_open_state[block.id]:
                     continue
 
-                self.logger.debug(f"block: {block.get_text()}")
+                self.logger.debug("block: %s", block.get_text())
                 self.logger.debug(block.items[-1])
 
                 for i in range(len(block.items[-1].spans)):
@@ -248,69 +264,70 @@ class LayoutProcessor(Processor):
                         used = True
 
                     if not matched_font or is_bullet:
-                        block.open = False
+                        block_open_state[block.id] = False
                         self.logger.debug("Closing block")
                         continue
 
-                    block.open = False
+                    block_open_state[block.id] = False
                     self.logger.debug("Closing block")
                     continue
 
             if not used:
-                blocks.append(TextBlock(items=[line], open=True))
+                blocks.append(TextBlock(items=[line]))
+                block_open_state[blocks[-1].id] = True
                 
-        used = [False for _ in blocks]
-        for i,b in enumerate(blocks):
-            if used[i]:
+        block_used = [False for _ in blocks]
+        for i,block in enumerate(blocks):
+            if block_used[i]:
                 continue
             for j,b2 in enumerate(blocks[i+1:]):
-                if used[i+j+1]:
+                if block_used[i+j+1]:
                     continue
-                if b2.bbox.overlap(b.bbox, 'first') > 0.5:
-                    b.items += b2.items
-                    b.items.sort(key=lambda l: l.bbox.y0*5 + l.bbox.x0)
-                    used[i+j+1] = True
+                if b2.bbox.overlap(block.bbox, 'first') > 0.5:
+                    block.items += b2.items
+                    block.items.sort(key=lambda l: l.bbox.y0*5 + l.bbox.x0)
+                    block_used[i+j+1] = True
 
-        blocks = [b for i,b in enumerate(blocks) if not used[i]] 
+        blocks = [b for i,b in enumerate(blocks) if not block_used[i]] 
 
         split_blocks = []
-        for b in blocks:
+        for large_block in blocks: #type: TextBlock
             new_blocks = []
-            line_start = b.items[0].bbox.x0
+            line_start = block.items[0].bbox.x0
             last_line = 0
             skip_next_i = 0
-            for i,l in enumerate(b.items[1:-1]):
+            for i,l in enumerate(block.items[1:-1]):
                 if skip_next_i > 0:
                     skip_next_i -= 1
                     continue
 
                 compare_to = i+2
                 finish=False
-                while b.items[compare_to].bbox.y1 < (l.bbox.y1 + 3) or len(b.items[compare_to].get_text()) < 3:
+                while block.items[compare_to].bbox.y1 < (l.bbox.y1 + 3) or len(large_block.items[compare_to].get_text()) < 3: #type:ignore
                     compare_to += 1
                     skip_next_i += 1
 
-                    if compare_to == len(b.items):
+                    if compare_to == len(block.items):
                         finish=True
                         break
                 if finish:
                     break
 
-                if (l.bbox.x0 - line_start) > 1 and (b.items[compare_to].bbox.x0 - line_start) < 1:
+                if (l.bbox.x0 - line_start) > 1 and (block.items[compare_to].bbox.x0 - line_start) < 1:
                     new_blocks.append(
-                        TextBlock(items=b.items[last_line:i+1])
+                        TextBlock(items=large_block.items[last_line:i+1])
                     )
                     last_line = i+1
-                    line_start = b.items[compare_to].bbox.x0
+                    line_start = block.items[compare_to].bbox.x0
                 else:
                     line_start = l.bbox.x0
 
-            if last_line > 0  and last_line != len(b.items) - 1:
+            if last_line > 0  and last_line != len(block.items) - 1:
                 new_blocks.append(
-                    TextBlock(items=b.items[last_line:])
+                    TextBlock(items=large_block.items[last_line:])
                 )
             elif last_line == 0:
-                new_blocks.append(b)
+                new_blocks.append(block)
             split_blocks += new_blocks
                     
         self.logger.debug(f"Found {len(split_blocks)} blocks in section.")            

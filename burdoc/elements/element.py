@@ -1,16 +1,20 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from .bbox import Bbox
 
 
 class LayoutElement:
+    """Base class for any layout object within the PDF. LayoutElements can be used to describe
+    anything that has a bbox.
+    """
+    
     bbox: Bbox
 
-    def __init__(self, bbox: Bbox, title: Optional[str]=None):
-        self.title = title if title else 'LayoutElement'
+    def __init__(self, bbox: Bbox, title: str="LayoutElement"):
+        self.title = title
         self.id = uuid4().hex
         self.bbox = bbox
 
@@ -28,11 +32,19 @@ class LayoutElement:
     
     def __repr__(self) -> str:
         return self.__str__()
-    
-    def to_html(self, content=""):
-        return f"<div>{content}</div>"
-    
-    def to_json(self, include_bbox=False, extras=None):
+        
+    def to_json(self, extras: Optional[Dict[str, Any]]=None, include_bbox: bool=False) -> Dict[str, Any]:
+        """Convert the LayoutElement into a JSON object
+
+        Args:
+            extras (Optional[Dict[str, Any]], optional): Any additional items that
+                should be included within the JSON. Defaults to None.
+            include_bbox (bool, optional): Include the bounding box. Defaults to False.
+
+        Returns:
+            Dict[str, Any]: A JSON representation of the object.
+        """
+        
         if not extras:
             extras = {}
 
@@ -43,13 +55,11 @@ class LayoutElement:
         return extras
 
 class LayoutElementGroup(LayoutElement):
-    items: List[LayoutElement]
-    open: bool
+    """Base class for any coherent group of layout objects within the PDF. The BBox of the 
+    LayoutElementGroup is the rectangle encompassing all Bboxes of it's members.
+    """
 
-    def __init__(self, bbox: Optional[Bbox]=None, items: Optional[List[LayoutElement]]=None, open: Optional[bool]=False, title: Optional[str]=None):
-        
-        if not title:
-            title = "LayoutElementGroup"
+    def __init__(self, bbox: Optional[Bbox]=None, items: Optional[List[LayoutElement]]=None, open: bool=False, title: str="LayoutElementGroup"):
 
         if bbox and not items:
             super().__init__(bbox=bbox, title=title)
@@ -61,22 +71,45 @@ class LayoutElementGroup(LayoutElement):
             super().__init__(bbox=bbox, title=title)
             self.items = items
         else:
-            raise Exception("Require either a bbox or item list to create LayoutElementGroup")
+            raise TypeError("Require either a bbox or item list to create LayoutElementGroup")
         
         self._index = 0
         self.open = open
 
     def append(self, item: LayoutElement, update_bbox: bool=True):
+        """Add an item to the group
+
+        Args:
+            item (LayoutElement): Item to add
+            update_bbox (bool, optional): Should the group Bbox be recalculated or ignored?
+                Useful when items are non-contigous (e.g. they cross columns or pages).
+                Defaults to True.
+        """
         self.items.append(item)
         if update_bbox:
             self.bbox = Bbox.merge([self.bbox, item.bbox])
 
     def remove(self, item: LayoutElement, update_bbox: bool=True):
+        """Remove an item from the group
+
+        Args:
+            item (LayoutElement): Item to remove
+            update_bbox (bool, optional): Should the group Bbox be recalculated or ignored?
+                Defaults to True.
+        """
         self.items.remove(item)
         if update_bbox:
             self.bbox = Bbox.merge([i.bbox for i in self.items])
 
-    def merge(self, leg: LayoutElementGroup):
+    def merge(self, leg: LayoutElementGroup) -> LayoutElementGroup:
+        """In-place merge with another LayoutElementGroup
+
+        Args:
+            leg (LayoutElementGroup): LEG to merge with
+
+        Returns:
+            LayoutElementGroup: A reference to self
+        """
         self.items += leg.items
         self.items.sort(key=lambda i: round(i.bbox.y0/10,0)*1000 + i.bbox.x0)
         self.bbox = Bbox.merge([self.bbox, leg.bbox])
@@ -104,12 +137,19 @@ class LayoutElementGroup(LayoutElement):
     
     def __repr__(self) -> str:
         return self.__str__()
-    
-    def to_html(self):
-        return super().to_html("".join(i.to_html() for i in self.items))
-    
-    def to_json(self, extras=None, **kwargs):
+
+    def to_json(self, extras: Optional[Dict[str, Any]]=None, include_bbox: bool=False) -> Dict[str, Any]:
+        """_summary_
+
+        Args:
+            extras (Optional[Dict[str, Any]], optional): Any additional items that
+                need to be included in the JSON. Defaults to None.
+            include_bbox (bool, optional): Include the bounding box. Defaults to False.
+
+        Returns:
+            Dict[str, Any]: A JSON representation of the group
+        """
         if not extras:
             extras = {}
         extras['items'] = [i.to_json() for i in self.items]
-        return super().to_json(extras=extras, **kwargs)
+        return super().to_json(extras=extras, include_bbox=include_bbox)

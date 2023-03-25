@@ -17,19 +17,17 @@ class TextBlockType(Enum):
     Emphasis = auto()
 
 class TextBlock(LayoutElementGroup):
+    
+    items: List[LineElement] #type:ignore
 
-    open : bool
-    type: TextBlockType
-
-    def __init__(self, 
-                 bbox: Optional[Bbox]=None, 
-                 items: Optional[List[LineElement]]=None, 
-                 open: Optional[bool]=False,
+    def __init__(self,
+                 bbox: Optional[Bbox]=None,
+                 items: Optional[List[LineElement]]=None,
                  variant: TextBlockType=TextBlockType.Paragraph
                  ):
-        super().__init__(bbox, items, title="TextBlock")
+        super().__init__(bbox, items, title="TextBlock") #type:ignore
         self.variant = variant
-        self.open = open
+        self.type = variant
 
     def get_text(self):
         return " ".join(i.get_text() for i in self.items)
@@ -48,8 +46,16 @@ class TextBlock(LayoutElementGroup):
         type = variant_lookup[self.type]
         return f"<{type}>" + "\n".join(l.to_html() for l in self.items) + f"</{type}>"
 
-    def to_json(self, **kwargs) -> Dict[str, Any]:
-        return super().to_json(extras={"variant":self.variant.name.lower()}, **kwargs)
+    def to_json(self, include_bbox: bool=False) -> Dict[str, Any]:
+        """Convert the textblock into a JSON object
+
+        Args:
+            include_bbox (bool, optional): Defaults to False.
+
+        Returns:
+            Dict[str, Any]
+        """
+        return super().to_json(extras={"variant":self.variant.name.lower()}, include_bbox=include_bbox)
 
     def __str__(self) -> str:
         return self.__repr__()
