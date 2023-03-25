@@ -22,6 +22,7 @@ class MLTableProcessor(Processor):
     """
 
     threadable: bool = False
+    name: str = "ml-tables"
 
     class Strategies (Enum):
         DETR = auto()
@@ -29,7 +30,7 @@ class MLTableProcessor(Processor):
     strategy: TableExtractorStrategy
 
     def __init__(self, strategy: Strategies=Strategies.DETR, log_level: int=logging.INFO):
-        super().__init__('ml-tables', log_level=log_level)
+        super().__init__(MLTableProcessor.name, log_level=log_level)
         self.log_level = log_level
 
         if strategy == MLTableProcessor.Strategies.DETR:
@@ -45,7 +46,7 @@ class MLTableProcessor(Processor):
     def generates(self) -> List[str]:
         return ['tables', 'text_elements']
     
-    def process(self, data: Any) -> Table:
+    def _process(self, data: Any) -> Table:
         reqs = self.strategy.requirements()
         fields = {r:data[r] for r in self.strategy.requirements()}
         fields['page_numbers'] = list(data[reqs[0]].keys())

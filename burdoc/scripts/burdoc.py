@@ -15,11 +15,17 @@ def run():
     argparser.add_argument('outfile', type=str, help="Path to file to write output to", nargs="?")
     argparser.add_argument('--mltables', action='store_true', required=False, default=False, help="Use ML table finding. Warning, this can be slow without GPU acceleration")
     argparser.add_argument('--images', action='store_true', required=False, default=False, help="Extract images from PDF and store in output. This can lead to very large output JSON files.")
-
+    argparser.add_argument("--single-threaded", action="store_true", required=False, default=False, help="Force Burdoc to run in single-threaded mode")
+    argparser.add_argument("--performance", action="store_true", help="Dump timing infor at end of processing", default=False)
     args = argparser.parse_args()
 
-    parser = BurdocParser(log_level=logging.INFO, 
-                          use_ml_table_finding=args.mltables)
+    parser = BurdocParser(
+        log_level=logging.INFO,
+        use_ml_table_finding=args.mltables,
+        extract_images=args.images,
+        max_threads=1 if args.single_threaded else None,
+        print_performance=args.performance
+    )
 
     if os.path.exists(args.file):
         print(f"Parsing {args.file}")

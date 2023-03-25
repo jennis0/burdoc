@@ -21,9 +21,11 @@ class RulesTableProcessor(Processor):
     Optional: []
     Generates: ['tables', 'elements']
     """
+    
+    name: str = 'rules-table'
 
     def __init__(self, log_level: int=logging.INFO):
-        super().__init__("rules-table", log_level=log_level)
+        super().__init__(RulesTableProcessor.name, log_level=log_level)
 
     def requirements(self) -> Tuple[List[str], List[str]]:
         return (['page_bounds', 'elements'], [])
@@ -31,7 +33,7 @@ class RulesTableProcessor(Processor):
     def generates(self) -> List[str]:
         return ['tables', 'elements']
           
-    def process(self, data: Any) -> Any:
+    def _process(self, data: Any) -> Any:
         if 'tables' not in data:
             data['tables'] = {}
         for pn, page_bound, page_elements in self.get_page_data(data):

@@ -18,9 +18,11 @@ class MarginProcessor(Processor):
     Optional: ['tables']
     Generates: ['text_elements', 'headers', 'footers', 'left_sidebar', 'right_sidebar', 'extracted_page_number']
     """
+    
+    name: str = "margin"
 
     def __init__(self, log_level: int=logging.INFO):
-        super().__init__("margin", log_level=log_level)
+        super().__init__(MarginProcessor.name, log_level=log_level)
 
     def requirements(self) -> Tuple[List[str], List[str]]:
         return (["page_bounds", 'text_elements'], ['tables'])
@@ -90,7 +92,7 @@ class MarginProcessor(Processor):
 
         return res       
 
-    def process(self, data: Any) -> Any:
+    def _process(self, data: Any) -> Any:
         data['headers'] = {}
         data['footers'] = {}
         data['left_sidebar'] = {}

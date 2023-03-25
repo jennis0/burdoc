@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import Any, Dict, List, Tuple
 
 from plotly.graph_objects import Figure
@@ -8,6 +9,8 @@ from .processor import Processor
 
 class AggregatorProcessor(Processor):
 
+    name: str = "aggregator"
+
     def __init__(self,
                  processors: List[Processor],
                  processor_args: List[Any],
@@ -15,7 +18,7 @@ class AggregatorProcessor(Processor):
                  additional_reqs: List[str],
                  log_level: int=logging.INFO
                 ):
-        super().__init__("aggregator", log_level=log_level)
+        super().__init__(AggregatorProcessor.name, log_level=log_level)
         self.processors = [proc(**proc_args, log_level=log_level) for proc,proc_args in zip(processors, processor_args)]
         self.render_processors = render_processors
         self.additional_reqs = additional_reqs
@@ -54,10 +57,12 @@ class AggregatorProcessor(Processor):
             gens |= set(p.generates())
         return list(gens)
 
-    def process(self, data: Any) -> Any:
+    def _process(self, data: Any) -> Any:
         for p in self.processors:
-            self.logger.debug(f"----------------------- Running {type(p).__name__} --------------------")
-            p.process(data)
+            self.logger.debug("----------------------- Running %s --------------------", {type(p).__name__})
+            start = time.perf_counter()
+            p._process(data)
+            data['performance'][self.name][p.name] = [round(time.perf_counter() - start, 3)]
         return data
 
     def add_generated_items_to_fig(self, page_number: int, fig: Figure, data: Dict[str, Any]):

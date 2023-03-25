@@ -26,49 +26,62 @@ class ImageHandler(object):
         self.logger.debug("Loading image %d", xref)
         if image:
             self.logger.debug("Image %d: found", xref)
-            pix = fitz.Pixmap(image['image'])
+            #pix = fitz.Pixmap(image['image'])
+            pil_image = PILImage.open(io.BytesIO(image['image']))
 
-            #Convert CMYK to RGB
-            if 'colorspace' in image and image['cs-name'] != 'DeviceRGB':
-                self.logger.debug("Image %d: in colorspace %s", xref, image['cs-name'])
-                pix = fitz.Pixmap(fitz.csRGB, pix)
-                if image['cs-name'] == 'DeviceCMYK':
-                    self.logger.debug("Inverting CMYK image")
-                    pix.invert_irect()
+            # #Convert CMYK to RGB
+            # if 'colorspace' in image and image['cs-name'] != 'DeviceRGB':
+            #     self.logger.debug("Image %d: in colorspace %s", xref, image['cs-name'])
+            #     pix = fitz.Pixmap(fitz.csRGB, pix)
+            #     if image['cs-name'] == 'DeviceCMYK':
+            #         self.logger.debug("Inverting CMYK image")
+            #         pix.invert_irect()
 
-            #Load SMASK as alpha channel
+            # #Load SMASK as alpha channel
             if 'smask' in image and image['smask'] > 0:
                 self.logger.debug("Image %d: found softmask with xref %d", xref, image['smask'])
                 mask = self.pdf.extract_image(image['smask'])
-                mask_image = fitz.Pixmap(mask['image'])
+                mask_image = PILImage.open(io.BytesIO(mask['image']))
                 try:
-                    if mask_image.height != pix.height or mask_image.width != pix.width:
-                        self.logger.debug("Rescaling image softmask")
-                        mask_image = fitz.Pixmap(mask_image, pix.width, pix.height, None)
-                    pix = fitz.Pixmap(pix, mask_image)
+                    pil_image.putalpha(mask_image)
+                    # if mask_image.height != pix.height or mask_image.width != pix.width:
+                    #     self.logger.debug("Rescaling image softmask")
+                    #     mask_image = fitz.Pixmap(mask_image, pix.width, pix.height, None)
+                    # pix = fitz.Pixmap(pix, mask_image)
                 except Exception as exc:
                     self.logger.warning("Failed to create mask for image xref %d", xref)
                     self.logger.error(exc)
 
-            return PILImage.open(io.BytesIO(pix.tobytes()))
+            return pil_image
         return None
 
-    def _classify_image(self, image_element: ImageElement, image: PILImage.Image, page_colour: np.array, page_bbox: Bbox) -> ImageElement.ImageType:
+    def _classify_image(self, image_element: ImageElement, image: PILImage.Image, page_colour: np.ndarray, page_bbox: Bbox) -> ImageElement.ImageType:
     
-        #Calculate visible area of image intersected with visible area of page
+        #If cover is too small, we can't see it
         x_coverage = round(image_element.bbox.x_overlap(page_bbox, 'second'), 3)
         y_coverage = round(image_element.bbox.y_overlap(page_bbox, 'second'), 3)
         page_coverage =  x_coverage * y_coverage
+        if page_coverage <= 0.001:
+            return ImageElement.ImageType.Invisible
 
-        image_array = np.asarray(image)[:,:,:3]
+        #If thin in one dimension, treat as line rather than image
+        if ((x_coverage < 0.05 and y_coverage > 0.1) or (x_coverage > 0.1 and y_coverage < 0.05)):
+            if (image_element.bbox.y1 / page_bbox.y1) > 0.1 and (image_element.bbox.y0 / page_bbox.y1) < 0.9:
+                return ImageElement.ImageType.Line
+            else:
+                return ImageElement.ImageType.Decorative
+    
+        #If it's too small in any particular dimension it can't be a meaningful image
+        if x_coverage < 0.05 or y_coverage < 0.05 or page_coverage < 0.05:
+            return ImageElement.ImageType.Decorative
+    
+        #Now we've covered basic size-based cases, handle more complex image processing
+        reduced_image = image.crop([image.size[0]*0.33, image.size[1]*0.33,
+                                    image.size[0]*0.66, image.size[1]*0.66])
 
-        x_dims = int(0.25*image_array.shape[0]), int(0.75*image_array.shape[0])
-        y_dims = int(0.25*image_array.shape[1]), int(0.75*image_array.shape[1])
-
-        
         gaussian_filter = GaussianBlur(radius=10)
-        blurred_image = image.filter(gaussian_filter)
-        reduced_image = np.asarray(blurred_image)[x_dims[0]:x_dims[1],y_dims[0]:y_dims[1]]
+        blurred_image = reduced_image.filter(gaussian_filter)
+        reduced_image = np.asarray(blurred_image)
 
         x_variance = round(np.median(reduced_image.var(axis=0), axis=0).mean(), 2)
         y_variance = round(np.median(reduced_image.var(axis=1), axis=0).mean(), 2)
@@ -76,7 +89,7 @@ class ImageHandler(object):
         extrema = blurred_image.getextrema()
         if len(extrema) == 2:
             extrema = [extrema]
-        max_extrema = max([b-a for a,b in extrema[:3]])
+        max_extrema = max(b-a for a,b in extrema[:3])
         
         image_element.properties['variance'] = {'x':x_variance, 'y':y_variance}
         image_element.properties['coverage'] = {'x':x_coverage, 'y':y_coverage, 'page':page_coverage}
@@ -89,29 +102,15 @@ class ImageHandler(object):
 
         self.logger.debug("Image properties : %s", str(image_element.properties))
 
-        #If cover is too small, we can't see it
-        if page_coverage <= 0.001:
-            return ImageElement.ImageType.Invisible
-
-        #If thin in one dimension, treat as line rather than image
-        if ((x_coverage < 0.05 and y_coverage > 0.1) or (x_coverage > 0.1 and y_coverage < 0.05)):
-            if (image_element.bbox.y1 / page_bbox.y1) > 0.1 and (image_element.bbox.y0 / page_bbox.y1) < 0.9:
-                return ImageElement.ImageType.Line
-            else:
-                return ImageElement.ImageType.Decorative
-
-        #If it's too small in any particular dimension it can't be a meaningful image
-        if x_coverage < 0.05 or y_coverage < 0.05 or page_coverage < 0.05:
-            return ImageElement.ImageType.Decorative
-
         #If complexity is low it could be either a full page background or a section
         if x_variance + y_variance < 200:
             if page_coverage > 0.9:
                 return ImageElement.ImageType.Background
-            elif page_coverage > 0.1 and image_element.properties['colour_offset'] > 15:
+            
+            if page_coverage > 0.1 and image_element.properties['colour_offset'] > 15:
                 return ImageElement.ImageType.Section
-            else:
-                return ImageElement.ImageType.Decorative
+
+            return ImageElement.ImageType.Decorative
 
         if (x_variance < 50 and y_variance > 1000) or (x_variance > 1000 and y_variance < 50):
             return ImageElement.ImageType.Gradient
@@ -202,7 +201,9 @@ class ImageHandler(object):
         page_bbox = Bbox(*bound, bound[2], bound[3]) #type:ignore
         page_images = page.get_image_info(hashes=False, xrefs=True)
         
-        image_elements = {t:[] for t in ImageElement.ImageType}
+        image_elements: Dict[ImageElement.ImageType, List[ImageElement]] = {
+            image_type:[] for image_type in ImageElement.ImageType
+        }
         images = []
 
         for page_image in page_images:
@@ -210,12 +211,15 @@ class ImageHandler(object):
 
             if image:
                 orig_bbox = Bbox(*page_image['bbox'], bound[2], bound[3]) #type:ignore
+                
                 image, crop_bbox = self._crop_to_visible(orig_bbox, image, page_bbox)
                 if not image:
                     continue
+                
                 image_element = ImageElement(bbox=crop_bbox, original_bbox=orig_bbox,
                                             type=ImageElement.ImageType.Primary,
                                             image=-1, properties={})
+                
                 image_element.type = self._classify_image(image_element, image, page_colour, page_bbox)
                 image_elements[image_element.type].append(image_element)
 
@@ -229,7 +233,7 @@ class ImageHandler(object):
         if ImageElement.ImageType.Primary in image_elements:
             image_elements[ImageElement.ImageType.Primary] = self.merge_images(image_elements[ImageElement.ImageType.Primary], images)
 
-        for t in image_elements:
-            self.logger.debug("Found %d %s images", len(image_elements), t.name)
+        for image_type in image_elements:
+            self.logger.debug("Found %d %s images", len(image_elements), image_type.name)
 
         return image_elements, images

@@ -26,6 +26,8 @@ A python library for parsing structured text, images, and tables from PDFs.
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
 - [Usage](#usage)
+    - [Command Line](#command-line)
+    - [Library](#library)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
   - [Creating A Pull Request](#creating-a-pull-request)
@@ -72,18 +74,45 @@ This is an example of how to list things you need to use the software and how to
 * Cuda11 [Optional] - *ML Table extraction is greatly accelerated by GPUs if available*
 
 ### Installation
-
-1. Install requirements
+To install burdoc from pip
+```bash
+pip install burdoc
 ```
-pip install -r requirements.txt
+To build it directly from source
+```bash
+git clone https://github.com/jennis0/burdoc
+cd burdoc
+pip install .
 ```
 
 ## Usage
+Burdoc can be used as a library or directly from the command line depending on your usecase.
+
+#### Command Line
+```bash
+burdoc <input-file> [output-file] [--mltables] [--images]
+
+ARGUMENTS:
+  <input-file> - Path to input pdf
+  [output-file] - Optional path to output location. [default: {input-file}.json]
+
+FLAGS:
+  --mltables  - Use packaged ML table detection algorithm (very slow without GPU acceleration). [default: False]
+  --images    - Extract images from the PDF. Can cause the output file to be very large. [default: False]
+  --single-threaded - By default, Burdoc will split files > 50 pages over multiple threads. Only effects large files. [default: False]
+```
+#### Library
 
 ```python
 from burdoc import BurdocParser
 
-parser = BurdocParser()
+parser = BurdocParser(
+  use_ml_table_finding: bool=False,    # Use ML table detection
+  extract_images:       bool=False,    # Store extracted images
+  generate_page_images: bool=False,    # Generate and store images of each PDF page
+  max_threads:          Optional[int]=None  # Maximum number of threads to use. Set to None to use default or 1 
+                                            # to force single threaded
+)
 content = parser.read('file.pdf')
 ```
 

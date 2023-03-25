@@ -17,8 +17,10 @@ class JSONOutProcessor(Processor):
     Generators: ["json"]
     """
 
+    name: str = "json-out"
+
     def __init__(self, extract_images: bool, log_level: int=logging.INFO):
-        super().__init__("json-out", log_level=log_level)
+        super().__init__(JSONOutProcessor.name, log_level=log_level)
         self.extract_images = extract_images
     
     def requirements(self) -> Tuple[List[str], List[str]]:
@@ -30,7 +32,7 @@ class JSONOutProcessor(Processor):
     def _to_json(self, elements: List[LayoutElement]):
         return [e.to_json() for e in elements]
 
-    def process(self, data: Any) -> Any:
+    def _process(self, data: Any) -> Any:
         data['content'] = {}
         for page_number, elements, image_store in self.get_page_data(data):
             data['content'][page_number] = self._to_json(elements)

@@ -21,8 +21,10 @@ class LayoutProcessor(Processor):
     Generates: ['elements']
     """
 
+    name: str = "layout"
+
     def __init__(self, log_level: int=logging.INFO):
-        super().__init__("layout", log_level=log_level)
+        super().__init__(LayoutProcessor.name, log_level=log_level)
 
         self.block_graph_max_radius = 250
         self.block_vgap_threshold = 2
@@ -337,7 +339,7 @@ class LayoutProcessor(Processor):
         self.logger.debug("Found %d blocks in section.", len(split_blocks))          
         return split_blocks
             
-    def process(self, data: Any) -> Any:
+    def _process(self, data: Any) -> Any:
         data['elements'] = {}
         for pn, page_bound, images, drawings, elements in self.get_page_data(data):
 

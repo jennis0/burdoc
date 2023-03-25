@@ -14,6 +14,7 @@ class Processor(abc.ABC):
     or updated fields back to the data store.
     """
 
+    name: str = "processor"
     threadable = True
 
     def __init__(self, name: str, log_level: int=logging.INFO, max_threads: Optional[int]=None):
@@ -22,7 +23,7 @@ class Processor(abc.ABC):
         self.max_threads = max_threads
 
     def initialise(self):
-        '''Perform any expensive operations required to create a processor'''
+        '''Perform any expensive operations required to create a processor'''        
 
     @abc.abstractmethod
     def requirements(self) -> Tuple[List[str], List[str]]:
@@ -33,8 +34,17 @@ class Processor(abc.ABC):
         '''Return list of fields added by this processor'''
 
     @abc.abstractmethod
+    def _process(self, data: Any) -> Any:
+        '''Transforms the processed data'''
+        
     def process(self, data: Any) -> Any:
         '''Transforms the processed data'''
+        if self.name not in data['performance']:
+            data['performance'][self.name] = {}
+        start = time.perf_counter()
+        self._process(data)
+        duration = time.perf_counter() - start
+        data['performance'][self.name]['process'] = [round(duration, 3)]
 
     def get_page_data(self, data: Dict[str, Dict[int, Any]], page_number: Optional[int]=None) -> Iterator[List[Any]]:
         """Returns an iterable of the passed data segmented by page number. Optional requirements

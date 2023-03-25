@@ -14,8 +14,10 @@ from .processor import Processor
 
 class ReadingOrderProcessor(Processor):
 
+    name: str = "reading-order"
+
     def __init__(self, log_level: int=logging.INFO):
-        super().__init__("reading-order", log_level=log_level)
+        super().__init__(ReadingOrderProcessor.name, log_level=log_level)
 
         self.block_graph_max_radius = 250
         self.block_vgap_threshold = 2
@@ -28,7 +30,7 @@ class ReadingOrderProcessor(Processor):
         return (["page_bounds", "elements", "image_elements"], ['tables'])
     
     def generates(self) -> List[str]:
-        return ['elements', 'reading_order_bounds']
+        return ['elements']
             
     def _flow_items(self, page_bound: Bbox, elements: List[LayoutElement]):
         self.logger.debug("Ordering %d elements", len(elements))
@@ -237,7 +239,7 @@ class ReadingOrderProcessor(Processor):
             
         complete_sections = []
         for section in default_sections:
-            self.logger.debug(f"Ordering section {section}")
+            self.logger.debug("Ordering section %s", str(section))
 
             in_line_elements = []
             out_of_line_elements = []
@@ -255,10 +257,10 @@ class ReadingOrderProcessor(Processor):
                     for block in section.items:
                         overlap += element.bbox.overlap(block.bbox, 'first')
                     if overlap > 0.2:
-                        self.logger.debug(f"Assigning {element} as out of line image in section")
+                        self.logger.debug("Assigning %s as out of line image in section", str(element))
                         out_of_line_elements.append(PageSection(element.bbox, [element]))
                     else:
-                        self.logger.debug(f"Assigning {element} as inline image")
+                        self.logger.debug("Assigning %s as inline image", str(element))
                         in_line_elements.append(element)
                     used_images.add(i)
 
@@ -275,18 +277,14 @@ class ReadingOrderProcessor(Processor):
             if i not in used_images:
                 complete_sections.append(PageSection(element.bbox, [element]))
 
-        bounds = []
+        return complete_sections
 
-        return complete_sections, bounds
-
-    def process(self, data: Any) -> Any:
-        data['reading_order_bounds'] = {}
+    def _process(self, data: Any) -> Any:
         for pn, page_bound, elements, images, tables in self.get_page_data(data):
             if not tables:
                 tables = []
-            elements,bounds = self._flow_content(page_bound, elements, images[ImageElement.ImageType.Primary], tables)
+            elements = self._flow_content(page_bound, elements, images[ImageElement.ImageType.Primary], tables)
             data['elements'][pn] = elements
-            data['reading_order_bounds'][pn] = bounds
 
         self.logger.debug("Finished computing layout")
 

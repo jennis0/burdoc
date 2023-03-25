@@ -21,6 +21,8 @@ class ContentProcessor(Processor):
     Optional: None
     Generators: ['elements', 'page_hierarchy']
     """
+    
+    name: str = "content"
 
     def __init__(self, log_level: int=logging.INFO):
         self.para_size: Dict[str, List[Tuple[float, TextBlockType]]] = {}
@@ -29,7 +31,7 @@ class ContentProcessor(Processor):
             re.UNICODE
         )
 
-        super().__init__("content", log_level=log_level)
+        super().__init__(ContentProcessor.name, log_level=log_level)
 
     def requirements(self) -> Tuple[List[str], List[str]]:
         return (['elements'], [])
@@ -258,7 +260,7 @@ class ContentProcessor(Processor):
         return proc_elements
 
 
-    def process(self, data: Any) -> Any:
+    def _process(self, data: Any) -> Any:
         self._fit_font_predictor(data['metadata']['font_statistics'])
         data['page_hierarchy'] = {}
         for page_number, elements in self.get_page_data(data):

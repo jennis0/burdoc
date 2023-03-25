@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from typing import Any, Dict, List, Tuple
 
 import fitz
@@ -23,9 +24,12 @@ class PDFLoadProcessor(Processor):
     Generates: ['page_bounds', 'text_elements', 'image_elements', 
         'drawing_elements', 'images', 'page_images']
     """
+    
+    name: str = 'pdf-load'
+    threadable = True
 
     def __init__(self, log_level: int=logging.INFO):
-        super().__init__("pdf-load", log_level=log_level)
+        super().__init__(PDFLoadProcessor.name, log_level=log_level)
 
         self.log_level = log_level
 
@@ -89,18 +93,29 @@ class PDFLoadProcessor(Processor):
                     if s.font.name not in font_statistics[s.font.family]:
                         font_statistics[s.font.family][s.font.name] = dict(family=s.font.family, basefont=s.font.name, counts={s.font.size: 1})
 
-    def process(self, data: Dict[str, Any]):
+    def _process(self, data: Dict[str, Any]):
+
+        performance_tracker: Dict[str, List[float]] = {
+            'read_pdf':[],
+            'load_page':[],
+            'page_image_generation':[],
+            'image_handler':[],
+            'drawing_handler':[],
+            'text_handler':[]
+        }
         
         path = data['metadata']['path']
         pages = data['slice']
         self.logger.debug("Loading path %s", path)
         self.logger.debug("Loading pages %s", pages)
 
+        start = time.perf_counter()
         pdf = self._read_pdf(path)
         if not pdf:
             self.logger.error("Failed to load PDF from %s", path)
             return
         self._load_handlers(pdf)
+        performance_tracker['read_pdf'].append(time.perf_counter() - start)
         
         metadata: Dict[str, Any] = {
             'title':os.path.basename(path),
@@ -128,24 +143,41 @@ class PDFLoadProcessor(Processor):
                 self.logger.warning("Skipping page %d as only %d pages", page_number+1, page_count)
                 continue
             self.logger.debug("Reading page %d", page_number)
+            start = time.perf_counter()
             page = pdf.load_page(int(page_number))
+            performance_tracker['load_page'].append(time.perf_counter() - start)
             self.logger.debug("Page loaded")
             
             bound = page.bound()
             data['page_bounds'][page_number] = Bbox(*bound, bound[2], bound[3]) #type:ignore
+            
+            start = time.perf_counter()
             data['page_images'][page_number] = self.get_page_image(page)
+            performance_tracker['page_image_generation'].append(time.perf_counter() - start)
                 
+            start = time.perf_counter()
             image_elements, images = self.image_handler.get_image_elements(page, data['page_images'][page_number])
+            performance_tracker['image_handler'].append(time.perf_counter() - start)
+        
             data['image_elements'][int(page_number)] = image_elements
             data['images'][int(page_number)] = images
+            
+            start = time.perf_counter()
             data['drawing_elements'][page_number] = self.drawing_handler.get_page_drawings(page)
+            performance_tracker['drawing_handler'].append(time.perf_counter() - start)
+            
+            start = time.perf_counter()
             data['text_elements'][page_number] = self.text_handler.get_page_text(page)
+            performance_tracker['image_handler'].append(time.perf_counter() - start)
 
             if DrawingElement.DrawingType.Bullet in data['drawing_elements'][page_number]:
                 self.merge_bullets_into_text(data['drawing_elements'][page_number][DrawingElement.DrawingType.Bullet], data['text_elements'][page_number])
             self.update_font_statistics(data['metadata']['font_statistics'], page.get_fonts(), data['text_elements'][page_number])
 
         pdf.close()
+        
+        for k,values in performance_tracker.items():
+            data['performance'][self.name][k] = [round(sum(values), 3)]
 
     def merge_bullets_into_text(self, bullets: List[DrawingElement], text: List[LineElement]):
         """Merge lone bullet points found as drawings into their closest text lines.
