@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from plotly.graph_objects import Figure
 
@@ -15,6 +15,10 @@ from .processor import Processor
 class LayoutProcessor(Processor):
     """The LayoutProcessor handles dividing the page into sections, assigning text within each section 
     and 'blocking' lines into paragraphs.
+    
+    Requires: ['page_bounds', 'image_elements', 'drawing_elements', 'text_elements']
+    Optional: []
+    Generates: ['elements']
     """
 
     def __init__(self, log_level: int=logging.INFO):
@@ -27,8 +31,8 @@ class LayoutProcessor(Processor):
         self.block_size_threshold = 2
         self.section_margin = 5
 
-    def requirements(self) -> List[str]:
-        return ["page_bounds", "images", "drawings", "text"]
+    def requirements(self) -> Tuple[List[str], List[str]]:
+        return (["page_bounds", "image_elements", 'drawing_elements', 'text_elements'], [])
     
     def generates(self) -> List[str]:
         return ['elements']
@@ -177,10 +181,10 @@ class LayoutProcessor(Processor):
         blocks: List[TextBlock] = []
         block_open_state: Dict[str, bool] = {}
         section.items.sort(key=lambda l: l.bbox.y0*1000 + l.bbox.x0)
-        list_re = re.compile(u"^(\u2022)|^\((\d+)\.?\)|^(\d+)\.\s|^([a-z])\.\s|^\(([a-z])\)\.?", re.UNICODE)
+        list_re = re.compile("^(\u2022)|^\((\d+)\.?\)|^(\d+)\.\s|^([a-z])\.\s|^\(([a-z])\)\.?", re.UNICODE)
 
 
-        for line in section.items: #type: LineElement
+        for line in section.items: #type:LineElement
             self.logger.debug("line: %s", line.get_text())
             self.logger.debug(line)
 
@@ -330,7 +334,7 @@ class LayoutProcessor(Processor):
                 new_blocks.append(large_block)
             split_blocks += new_blocks
                     
-        self.logger.debug(f"Found {len(split_blocks)} blocks in section.")            
+        self.logger.debug("Found %d blocks in section.", len(split_blocks))          
         return split_blocks
             
     def process(self, data: Any) -> Any:
@@ -341,7 +345,7 @@ class LayoutProcessor(Processor):
             sections = self._create_sections(page_bound, elements, images, drawings)
         
             for s in sections:
-                s.items = self._create_blocks(s)
+                s.items = self._create_blocks(s) #type:ignore
 
             data['elements'][pn] = sections
 

@@ -28,11 +28,15 @@ from .utils.render_pages import render_pages
 class BurdocParser(object):
 
  
-    def __init__(self, 
-                 log_level: int=logging.INFO, 
+    def __init__(self,
+                 use_ml_table_finding: bool=True,
+                 extract_images: bool=False,
+                 generate_page_images: bool=False,
+                 max_threads: Optional[int]=None,
+                 log_level: int=logging.INFO,
                  do_render_pages: bool=False,
-                 max_threads: Optional[int]=None
-                 ):
+        ):
+        
         self.log_level = log_level
         self.logger = get_logger("burdoc_parser", log_level=log_level)
         self.min_slice_size = 100
@@ -43,7 +47,7 @@ class BurdocParser(object):
         self.processors: List[Tuple[Type[Processor], Dict, bool]] = [
            (PDFLoadProcessor, {}, True),
         ]
-        if _HAS_TRANSFORMERS:
+        if _HAS_TRANSFORMERS and use_ml_table_finding:
             self.processors.append(
                 (MLTableProcessor, {}, False)
             )
@@ -61,12 +65,18 @@ class BurdocParser(object):
             'render_processors': [
                 True, True, True, True, True, False
             ],
-            'processor_args': [{}, {}, {}, {}, {}, {}],
-            'additional_reqs': ['tables', 'image_store']
+            'processor_args': [{}, {}, {}, {}, {}, {'extract_images':extract_images}],
+            'additional_reqs': ['tables'] if use_ml_table_finding else []
            }, True, )
         )
 
-        self.return_fields = ['metadata', 'content', 'page_hierarchy', 'image_store']
+        self.return_fields = ['metadata', 'content', 'page_hierarchy']
+        
+        if extract_images:
+            self.return_fields.append("images")
+        
+        if generate_page_images:
+            self.return_fields.append("page_images")
 
     @staticmethod
     def _process_slice(arg_dict: Any) -> Dict[str, Any]:
@@ -76,10 +86,11 @@ class BurdocParser(object):
         processor.process(arg_dict['data'])
         return {k:arg_dict['data'][k] for k in ['metadata'] + processor.generates()}
 
-    def slice_data(self, data: Dict[str, Any], page_slices: List[List[int]], requirements: List[str]):
+    def slice_data(self, data: Dict[str, Any], page_slices: List[List[int]], requirements: Tuple[List[str], List[str]]):
+        keys = requirements[0] + [k for k in requirements[1] if k in data]
         sliced_data = [
             {'metadata':data['metadata'], 'slice': ps} | \
-            {k:{p:data[k][p] for p in ps} for k in requirements}
+            {k:{p:data[k][p] for p in ps} for k in keys}
         for ps in page_slices]
         return sliced_data
 

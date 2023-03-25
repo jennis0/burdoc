@@ -1,6 +1,7 @@
 import logging
-import os
-from typing import Any, Dict, List, Optional
+import base64
+from typing import Any, Dict, List, Tuple
+from PIL.Image import Image
 
 from plotly.graph_objects import Figure
 
@@ -9,18 +10,22 @@ from .processor import Processor
 
 
 class JSONOutProcessor(Processor):
+    """Converts generated elements and images into a JSON-compatible structure
 
-    def __init__(self, log_level: int=logging.INFO):
+    Requires: ["elements", "images"]
+    Optional: []
+    Generators: ["json"]
+    """
+
+    def __init__(self, extract_images: bool, log_level: int=logging.INFO):
         super().__init__("json-out", log_level=log_level)
-
-    def initialise(self):
-        return super().initialise()
+        self.extract_images = extract_images
     
-    def requirements(self) -> List[str]:
-        return ['elements', 'image_store']
+    def requirements(self) -> Tuple[List[str], List[str]]:
+        return (['elements', 'images'], [])
     
     def generates(self) -> List[str]:
-        return ['content', 'image_store']
+        return ['content', 'images']
     
     def _to_json(self, elements: List[LayoutElement]):
         return [e.to_json() for e in elements]
@@ -31,18 +36,12 @@ class JSONOutProcessor(Processor):
             data['content'][page_number] = self._to_json(elements)
 
 
-            if len(image_store) == 0:
+            if len(image_store) == 0 or not self.extract_images:
                 continue
 
-            image_root = "image_out"
-            if not os.path.exists(image_root):
-                os.makedirs(image_root)
-            image_paths = []
-            for i,im in enumerate(image_store):
-                path = f"image_{page_number}_{i}.webp"
-                im.save(os.path.join(image_root, path))
-                image_paths.append(path)
-            data['image_store'][page_number] = image_paths
+            image: Image
+            for i,image in enumerate(image_store):
+                image_store[i] = base64.encodebytes(image.tobytes()).decode("utf-8")
         return data
     
     def add_generated_items_to_fig(self, page_number: int, fig: Figure, data: Dict[str, Any]):

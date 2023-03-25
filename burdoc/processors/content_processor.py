@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from plotly.graph_objects import Figure
@@ -13,38 +13,47 @@ from .processor import Processor
 
 
 class ContentProcessor(Processor):
+    """The ContentProcessor takes the correctly ordered layout elements and applies additional 
+    semantic processing. It generates lists, applies a basic text type classifier to find 
+    headings, and generates a hierarchy of headings for the page.
+    
+    Requires: ['elements']
+    Optional: None
+    Generators: ['elements', 'page_hierarchy']
+    """
 
     def __init__(self, log_level: int=logging.INFO):
-        self.para_size = {}
-        self.list_regex = re.compile(u"^(\u2022)|^\((\d+)\.?\)|^(\d+)\.\s|^([a-z])\.\s|^\(([a-z])\)\.?", re.UNICODE)
+        self.para_size: Dict[str, List[Tuple[float, TextBlockType]]] = {}
+        self.list_regex = re.compile(
+            "^(\u2022)|^\((\d+)\.?\)|^(\d+)\.\s|^([a-z])\.\s|^\(([a-z])\)\.?",
+            re.UNICODE
+        )
 
         super().__init__("content", log_level=log_level)
 
-    def initialise(self):
-        return super().initialise()
-
-    def requirements(self) -> List[str]:
-        return ['elements']
-    
+    def requirements(self) -> Tuple[List[str], List[str]]:
+        return (['elements'], [])
+   
     def generates(self) -> List[str]:
         return ['elements', 'page_hierarchy']
-    
+   
     def _get_list_index_from_match(self, match: re.Match) -> str:
-        for g in match.groups():
-            if g:
-                return g
+        for group in match.groups():
+            if group:
+                return group
+        return ""
 
     def _is_next_list_index(self, last_index: str, next_index: str) -> bool:
-        if last_index == u"\u2022":
-            if next_index == u"\u2022":
+        if last_index == "\u2022":
+            if next_index == "\u2022":
                 return True
             return False
-        
+
         last_is_num = str.isnumeric(last_index)
         next_is_num = str.isnumeric(next_index)
         if last_is_num != next_is_num:
             return False
-        
+
         if last_is_num:
             if int(next_index) - int(last_index) == 1:
                 return True
@@ -56,10 +65,10 @@ class ContentProcessor(Processor):
 
     def _fit_font_predictor(self, font_statistics):
         counts = {}
-        
         total_lines = 0
         default_font = None
         default_font_count = 0
+        
         for font_family in font_statistics:
             f_counts = font_statistics[font_family]['_counts']
             if len(f_counts) > 0:
@@ -72,9 +81,9 @@ class ContentProcessor(Processor):
                     default_font_count = counts[font_family].sum()
 
         self.para_size = {}
-        for font_family in counts:
-            if counts[font_family].sum() / total_lines > 0.2:
-                para_size = int(counts[font_family].argmax()) + 1
+        for font_family, family_count in counts.items():
+            if family_count.sum() / total_lines > 0.2:
+                para_size = int(family_count.argmax()) + 1
                 self.para_size[font_family] = [
                     (para_size - 2, TextBlockType.Small),
                     (para_size + 0.5, TextBlockType.Paragraph),
@@ -83,7 +92,7 @@ class ContentProcessor(Processor):
                     (para_size + 6, TextBlockType.H3),
                     (para_size + 10, TextBlockType.H2)
                 ]
-        
+
         for font_family in counts:
             if font_family not in self.para_size:
                 self.para_size[font_family] = self.para_size[default_font]
@@ -98,15 +107,15 @@ class ContentProcessor(Processor):
         if len(block.items) > 3:
             return TextBlockType.Paragraph
 
-        type = TextBlockType.H1
+        variant = TextBlockType.H1
         if fam not in self.para_size:
             fam = 'default'
         for v,t in self.para_size[fam]:
             if fs < v:
-                type = t
+                variant = t
                 break
-    
-        if type == TextBlockType.Paragraph:
+
+        if variant == TextBlockType.Paragraph:
             all_italic=True
             for i in block.items:
                 if not all(s.font.italic for s in i.spans):
@@ -115,25 +124,25 @@ class ContentProcessor(Processor):
             if all_italic:
                 return TextBlockType.Emphasis
 
-        return type
+        return variant
 
 
-    def _create_list(self, list_items: List[Tuple[str, List[TextBlock]]]) -> List[TextList]:
-        ordered = list_items[0][0] != u"\u2022"
+    def _create_list(self, list_items: List[Tuple[str, List[TextBlock]]]) -> Union[List[TextList], List[TextBlock]]:
+        ordered = list_items[0][0] != "\u2022"
 
         if ordered and len(list_items) == 1:
             elements = []
-            for li in list_items:
-                elements += li[1]
+            for list_item in list_items:
+                elements += list_item[1]
             return elements
         
-        tl = TextList(bbox=list_items[0][1][0].bbox, ordered=ordered, items=[])
-        for li in list_items:
-            label_match = self.list_regex.match(li[1][0].items[0].spans[0].text)
-            li[1][0].items[0].spans[0].text = li[1][0].items[0].spans[0].text[label_match.span()[1]:].lstrip()
-            tl.append(TextListItem(label=li[0], items=li[1]))
+        textlist = TextList(bbox=list_items[0][1][0].bbox, ordered=ordered, items=[])
+        for list_item in list_items:
+            label_match = self.list_regex.match(list_item[1][0].items[0].spans[0].text)
+            list_item[1][0].items[0].spans[0].text = list_item[1][0].items[0].spans[0].text[label_match.span()[1]:].lstrip()
+            textlist.append(TextListItem(label=list_item[0], items=list_item[1]))
         
-        return [tl]
+        return [textlist]
 
     def _process_text_block(self, block: TextBlock) -> TextBlock:
         block.variant = self._get_text_class(block)
@@ -164,13 +173,11 @@ class ContentProcessor(Processor):
                 ### If we're processing a list, do we think we're still in it?
                 if in_list and not list_match:
                     if e.items[0].bbox.x0 - list_elements[-1][1][-1].bbox.x0 > 30 or \
-                        abs(e.bbox.y0 - list_elements[-1][1][-1].bbox.y1) > 3:
-                            in_list = False
-                    elif len(elements) > i+1 and isinstance(elements[i+1], TextBlock) and processed_tb.variant == TextBlockType.Paragraph:
-                        if self.list_regex.match(elements[i+1].get_text()) is not None: #type:ignore
-                            in_list = True  
-                        else:
-                            in_list = False
+                            abs(e.bbox.y0 - list_elements[-1][1][-1].bbox.y1) > 3:
+                        in_list = False                            
+                    elif len(elements) > i+1 and isinstance(elements[i+1], TextBlock) and \
+                            processed_tb.variant == TextBlockType.Paragraph:
+                        in_list = bool(self.list_regex.match(elements[i+1].get_text())) #type:ignore
                     else:
                         in_list = False
 
@@ -288,20 +295,20 @@ class ContentProcessor(Processor):
                                         font_family="Arial Black",
                                         text=text))
 
-        def recursive_add(fig, e):
-            if isinstance(e, PageSection):
-                for i in e.items:
+        def recursive_add(fig: Figure, element: LayoutElement):
+            if isinstance(element, PageSection):
+                for i in element.items:
                     recursive_add(fig, i)
-            elif isinstance(e, TextBlock):
-                add_rect(fig, e.bbox, colours[e.variant.name[0].lower()], add_shape=False, text=e.variant.name, side="right")
-            elif isinstance(e, TextListItem):
-                add_rect(fig, e.bbox, colours[TextListItem], f"L:{e.label}")
-            elif isinstance(e, TextList):
-                for i in e.items:
+            elif isinstance(element, TextBlock):
+                add_rect(fig, element.bbox, colours[element.variant.name[0].lower()], add_shape=False, text=element.variant.name, side="right")
+            elif isinstance(element, TextListItem):
+                add_rect(fig, element.bbox, colours[TextListItem], f"L:{element.label}")
+            elif isinstance(element, TextList):
+                for i in element.items:
                     recursive_add(fig, i)
             
 
-        for e in data['elements'][page_number]:
-            recursive_add(fig, e)
+        for element in data['elements'][page_number]:
+            recursive_add(fig, element)
 
         fig.add_scatter(x=[None], y=[None], name="List", line=dict(width=3, color=colours[TextListItem]))

@@ -1,6 +1,6 @@
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from plotly.graph_objects import Figure
 
@@ -12,21 +12,23 @@ from .processor import Processor
 
 
 class MarginProcessor(Processor):
+    """Identifies headers, footers, and marginalia
+
+    Requires: ['page_bounds', 'text_elements']
+    Optional: ['tables']
+    Generates: ['text_elements', 'headers', 'footers', 'left_sidebar', 'right_sidebar', 'extracted_page_number']
+    """
 
     def __init__(self, log_level: int=logging.INFO):
         super().__init__("margin", log_level=log_level)
 
-    
-    def initialise(self):
-        return super().initialise()
-
-    def requirements(self) -> List[str]:
-        return ["page_bounds", 'text', 'tables']
+    def requirements(self) -> Tuple[List[str], List[str]]:
+        return (["page_bounds", 'text_elements'], ['tables'])
     
     def generates(self) -> List[str]:
-        return ['text', 'headers', 'footers', 'left_sidebar', 'right_sidebar', 'extracted_page_number']
+        return ['text_elements', 'headers', 'footers', 'left_sidebar', 'right_sidebar', 'extracted_page_number']
     
-    def _process_text(self, page_bound: Bbox, text: List[LineElement], other_elements: List[LayoutElement]) -> Dict[str, Any]:
+    def _process_text(self, page_bound: Bbox, text: List[LineElement], other_elements: Optional[List[LayoutElement]]) -> Dict[str, Any]:
         page_width = page_bound.width()
         page_height = page_bound.height()
         res = {
@@ -35,11 +37,15 @@ class MarginProcessor(Processor):
             'left_sidebar':[],
             'right_sidebar':[],
             'extracted_page_number':None,
-            'text':[]
+            'text_elements':[]
         }
 
-        lg = LayoutGraph(self.logger, page_bound, text + other_elements)
-        for node in lg.nodes[1:]:
+        if other_elements:
+            layout_graph = LayoutGraph(self.logger, page_bound, text + other_elements)
+        else:
+            layout_graph = LayoutGraph(self.logger, page_bound, text)
+            
+        for node in layout_graph.nodes[1:]:
             t = node.element
             if not isinstance(t, LineElement):
                 continue
@@ -80,7 +86,7 @@ class MarginProcessor(Processor):
                 res['left_sidebar'].append(t)
 
             else:
-                res['text'].append(t)     
+                res['text_elements'].append(t)     
 
         return res       
 

@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Sequence, Tuple
 
 from plotly.graph_objects import Figure
 
@@ -14,7 +14,7 @@ from .processor import Processor
 
 class ReadingOrderProcessor(Processor):
 
-    def __init__(self, log_level:Optional[int]=logging.INFO):
+    def __init__(self, log_level: int=logging.INFO):
         super().__init__("reading-order", log_level=log_level)
 
         self.block_graph_max_radius = 250
@@ -24,23 +24,19 @@ class ReadingOrderProcessor(Processor):
         self.block_size_threshold = 2
         self.section_margin = 5
 
-
-    def initialise(self):
-        return super().initialise()
-
-    def requirements(self) -> List[str]:
-        return ["page_bounds", "elements", "images", "tables"]
+    def requirements(self) -> Tuple[List[str], List[str]]:
+        return (["page_bounds", "elements", "image_elements"], ['tables'])
     
     def generates(self) -> List[str]:
         return ['elements', 'reading_order_bounds']
             
     def _flow_items(self, page_bound: Bbox, elements: List[LayoutElement]):
-        self.logger.debug(f"Ordering {len(elements)} elements")
+        self.logger.debug("Ordering %d elements", len(elements))
         elements.sort(key=lambda e: e.bbox.y0*100 + e.bbox.x0)
         page_width = page_bound.width()
         center = page_bound.center()
 
-        columns = []
+        columns: List[LayoutElementGroup] = []
         for e in elements:
             used = False
             self.logger.debug(e)
@@ -60,7 +56,14 @@ class ReadingOrderProcessor(Processor):
                 dx_block = c.bbox.x_overlap(e.bbox, 'second')
                 append = False
 
-                self.logger.debug(f"dy: {dy}, col: {dx_col}, block: {dx_block}, col_full_page: {c_full_page}, el_full_page: {e_full_page}, col_centered: {c_centered}, el_centered: {e_centered}")
+                self.logger.debug("dy: {dy}, col: {dx_col}, block: {dx_block}, col_full_page: {c_full_page}, el_full_page: {e_full_page}, col_centered: {c_centered}, el_centered: {e_centered}",
+                                  dy=dy,
+                                  dx_col=dx_col,
+                                  dx_block=dx_block,
+                                  c_full_page=c_full_page,
+                                  e_full_page=e_full_page,
+                                  c_centered=c_centered,
+                                  e_centered=e_centered)
 
                 stop = False
                 #If element starts above column end and the majority of the element overlaps
@@ -114,27 +117,28 @@ class ReadingOrderProcessor(Processor):
 
         #Merge overlapping columns
         remove_cols = set()
-        for i in range(0, len(columns)):
+        for i,col_i in enumerate(columns):
             if i in remove_cols:
                 continue
-            for j in range(0, len(columns)):
+            for j,col_j in enumerate(columns):
                 if i == j or j in remove_cols:
                     continue
-                if columns[i].bbox.overlap(columns[j].bbox, 'min') > 0.5:
-                    columns[i].merge(columns[j])
+                if col_i.bbox.overlap(col_j.bbox, 'min') > 0.5:
+                    col_i.merge(col_j)
                     remove_cols.add(j)
+                    
         columns = [c for i,c in enumerate(columns) if i not in remove_cols]
         if len(remove_cols) > 0:
-            self.logger.debug(f"Removing columns {remove_cols}")
+            self.logger.debug("Removing columns %s", str(remove_cols))
 
         columns.sort(key=lambda c: round(c.bbox.y0/10)*1000 + c.bbox.x0)
-        self.logger.debug(f"Found {len(columns)} columns")
+        self.logger.debug("Found %d columns", len(columns))
 
         return columns
                     
 
-    def _flow_columns(self, page_bound: Bbox, columns: List[LayoutElement]) -> List[LayoutElement]:
-        self.logger.debug(f"Ordering {len(columns)} element groups")
+    def _flow_columns(self, page_bound: Bbox, columns: Sequence[LayoutElement]) -> List[LayoutElement]:
+        self.logger.debug("Ordering %d element groups", len(columns))
         page_width = page_bound.width()
         sections = []
         current_section = []
@@ -193,30 +197,30 @@ class ReadingOrderProcessor(Processor):
         default_sections = [s for s in sections if s.default]
         other_sections = [s for s in sections if not s.default]
 
-        images += tables
+        global_elements: Sequence[LayoutElement] = images + tables
 
         used_images = set()
 
         for section in other_sections:
-            self.logger.debug(f"Ordering section {section}")
+            self.logger.debug("Ordering section {section}", section=section)
             
-            inline_images = []
-            outline_images = []
-            for i,im in enumerate(images):
+            in_line_elements = []
+            out_of_line_elements = []
+            for i,element in enumerate(global_elements):
                 if i in used_images:
                     continue
-                if im.bbox.overlap(section.bbox, 'first') > 0.9:
-                    overlap = 0
+                if element.bbox.overlap(section.bbox, 'first') > 0.9:
+                    overlap = 0.0
                     for block in section.items:
-                        overlap += im.bbox.overlap(block.bbox, 'first')
+                        overlap += element.bbox.overlap(block.bbox, 'first')
                     if overlap > 0.2:
-                        outline_images.append(PageSection(im.bbox, [im]))
+                        out_of_line_elements.append(PageSection(element.bbox, [element]))
                     else:
-                        inline_images.append(im)
+                        in_line_elements.append(element)
                     used_images.add(i)
                         
-            columns = self._flow_items(page_bound, section.items + inline_images)
-            columns = self._flow_columns(page_bound, columns + outline_images)
+            columns = self._flow_items(page_bound, section.items + in_line_elements)
+            columns = self._flow_columns(page_bound, columns + out_of_line_elements)
             items = []
             for c in columns:
                 items += c
@@ -235,31 +239,31 @@ class ReadingOrderProcessor(Processor):
         for section in default_sections:
             self.logger.debug(f"Ordering section {section}")
 
-            inline_images = []
-            outline_images = []
-            for i,im in enumerate(images):
+            in_line_elements = []
+            out_of_line_elements = []
+            for i,element in enumerate(images):
                 if i in used_images:
                     continue
 
-                if im.bbox.overlap(section.bbox, 'first') > 0.9:
-                    if isinstance(im, ImageElement) and (im.bbox.width(norm=True) > 0.6 or im.bbox.height(norm=True) > 0.6):
-                        outline_images.append(PageSection(im.bbox, [im]))
+                if element.bbox.overlap(section.bbox, 'first') > 0.9:
+                    if isinstance(element, ImageElement) and (element.bbox.width(norm=True) > 0.6 or element.bbox.height(norm=True) > 0.6):
+                        out_of_line_elements.append(PageSection(element.bbox, [element]))
                         used_images.add(i)
                         continue
 
                     overlap = 0
                     for block in section.items:
-                        overlap += im.bbox.overlap(block.bbox, 'first')
+                        overlap += element.bbox.overlap(block.bbox, 'first')
                     if overlap > 0.2:
-                        self.logger.debug(f"Assigning {im} as out of line image in section")
-                        outline_images.append(PageSection(im.bbox, [im]))
+                        self.logger.debug(f"Assigning {element} as out of line image in section")
+                        out_of_line_elements.append(PageSection(element.bbox, [element]))
                     else:
-                        self.logger.debug(f"Assigning {im} as inline image")
-                        inline_images.append(im)
+                        self.logger.debug(f"Assigning {element} as inline image")
+                        in_line_elements.append(element)
                     used_images.add(i)
 
-            columns = self._flow_items(page_bound, section.items + inline_images)
-            columns = self._flow_columns(page_bound, columns + outline_images)
+            columns = self._flow_items(page_bound, section.items + in_line_elements)
+            columns = self._flow_columns(page_bound, columns + out_of_line_elements)
 
             items = []
             for c in columns:
@@ -267,9 +271,9 @@ class ReadingOrderProcessor(Processor):
             complete_sections.append(PageSection(items=items, bbox=section.bbox, default=True))
 
         #Merge images with sections
-        for i,im in enumerate(images):
+        for i,element in enumerate(images):
             if i not in used_images:
-                complete_sections.append(PageSection(im.bbox, [im]))
+                complete_sections.append(PageSection(element.bbox, [element]))
 
         bounds = []
 
@@ -278,7 +282,8 @@ class ReadingOrderProcessor(Processor):
     def process(self, data: Any) -> Any:
         data['reading_order_bounds'] = {}
         for pn, page_bound, elements, images, tables in self.get_page_data(data):
-
+            if not tables:
+                tables = []
             elements,bounds = self._flow_content(page_bound, elements, images[ImageElement.ImageType.Primary], tables)
             data['elements'][pn] = elements
             data['reading_order_bounds'][pn] = bounds

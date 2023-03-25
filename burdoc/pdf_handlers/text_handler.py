@@ -43,7 +43,7 @@ class TextHandler(object):
                     skip[i+j] = True
             
             #Merge separated bullet points
-            if t1 == u"\u2022" and len(lines) > i+1:
+            if t1 == "\u2022" and len(lines) > i+1:
                 j = 1
                 l2 = lines[i+1]
                 while skip[i+j] is True:
@@ -95,7 +95,7 @@ class TextHandler(object):
             for line in block['lines']:
 
                 if len(line['spans']) == 1 and line['spans'][0]['font'] == 'Wingdings' and len(line['spans'][0]['text']) == 1:
-                    line['spans'][0]['text'] = u"\u2022"
+                    line['spans'][0]['text'] = "\u2022"
                     line['spans'][0]['font'] = "Wingdings-Replaced"
 
                 block_lines.append(

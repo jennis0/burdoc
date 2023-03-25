@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Tuple
 
 import fitz
 from PIL import Image
@@ -16,35 +16,40 @@ from .processor import Processor
 
 
 class PDFLoadProcessor(Processor):
+    """Loads PDF from file and extracts essential information 
+    with minor processing/cleaning applied
+    
+    Requires: None
+    Generates: ['page_bounds', 'text_elements', 'image_elements', 
+        'drawing_elements', 'images', 'page_images']
+    """
 
     def __init__(self, log_level: int=logging.INFO):
         super().__init__("pdf-load", log_level=log_level)
+
         self.log_level = log_level
 
-    def initialise(self):
-        return super().initialise()
-
-    def requirements(self) -> List[str]:
-        return []
+    def requirements(self) -> Tuple[List[str], List[str]]:
+        return ([], [])
     
     def generates(self) -> List[str]:
-        return ['page_bounds', 'text', 'images', 
-                'page_images', 'drawings', 'image_store']
+        return ['page_bounds', 'text_elements', 'image_elements',
+                'page_images', 'drawing_elements', 'images']
 
     def _read_pdf(self, path:os.PathLike):
-        self.logger.debug(f'Loading {path}')
+        self.logger.debug('Loading %s', path)
         try:
             pdf = fitz.open(path)
-        except Exception as e:
-            self.logger.exception(f"Failed to open {path}", exc_info=e)
+        except RuntimeError as error:
+            self.logger.exception("Failed to open %s", path, exc_info=error)
             pdf = None
         
         return pdf
 
     def _load_handlers(self, pdf: fitz.Document):
-        self.textHandler = TextHandler(pdf, self.log_level)
-        self.imageHandler = ImageHandler(pdf, self.log_level)
-        self.drawingHandler = DrawingHandler(pdf, self.log_level)
+        self.text_handler = TextHandler(pdf, self.log_level)
+        self.image_handler = ImageHandler(pdf, self.log_level)
+        self.drawing_handler = DrawingHandler(pdf, self.log_level)
 
     def get_page_image(self, page: fitz.Page) -> Image:
         pix = page.get_pixmap()
@@ -78,7 +83,7 @@ class PDFLoadProcessor(Processor):
                     else:
                         font_statistics[s.font.family]['_counts'][size] += l
                         font_statistics[s.font.family][s.font.name]['counts'][size] += l
-                except:
+                except KeyError:
                     if s.font.family not in font_statistics:
                         font_statistics[s.font.family] = {'_counts':{s.font.size: 1}}
                     if s.font.name not in font_statistics[s.font.family]:
@@ -87,61 +92,68 @@ class PDFLoadProcessor(Processor):
     def process(self, data: Dict[str, Any]):
         
         path = data['metadata']['path']
-        slice = data['slice']
-        self.logger.debug(f"Loading path {path}")
-        self.logger.debug(f"Loading slice {slice}")
+        pages = data['slice']
+        self.logger.debug("Loading path %s", path)
+        self.logger.debug("Loading pages %s", pages)
 
         pdf = self._read_pdf(path)
         if not pdf:
-            self.logger.error(f"Failed to load PDF from {path}")
-            return None
+            self.logger.error("Failed to load PDF from %s", path)
+            return
         self._load_handlers(pdf)
         
-        metadata = {
+        metadata: Dict[str, Any] = {
             'title':os.path.basename(path),
             'pdf_metadata':pdf.metadata,
             'font_statistics': {},
             'toc':pdf.get_toc()
         }
 
-        new_fields = {
+        new_fields: Dict[str, Dict[int, Any]] = {
             'page_bounds': {},
+            'image_elements':{},
             'images':{},
-            'image_store':{},
             'page_images':{},
-            'text':{},
-            'drawings':{},
+            'text_elements':{},
+            'drawing_elements':{},
         }
         data['metadata'] |= metadata
         data |= new_fields
 
         page_count = pdf.page_count
 
-        for page_number in slice:
+        for page_number in pages:
             page_number = int(page_number)
             if page_number >= page_count:
-                self.logger.info(f"Skipping page {page_number + 1} as only {page_count} pages")
+                self.logger.warning("Skipping page %d as only %d pages", page_number+1, page_count)
                 continue
-            self.logger.debug(f"Reading page {page_number}")
+            self.logger.debug("Reading page %d", page_number)
             page = pdf.load_page(int(page_number))
             self.logger.debug("Page loaded")
             
             bound = page.bound()
-            data['page_bounds'][page_number] = Bbox(*bound, bound[2], bound[3])
+            data['page_bounds'][page_number] = Bbox(*bound, bound[2], bound[3]) #type:ignore
             data['page_images'][page_number] = self.get_page_image(page)
-            images, image_store = self.imageHandler.get_page_images(page, data['page_images'][page_number])
+                
+            image_elements, images = self.image_handler.get_image_elements(page, data['page_images'][page_number])
+            data['image_elements'][int(page_number)] = image_elements
             data['images'][int(page_number)] = images
-            data['image_store'][int(page_number)] = image_store
-            data['drawings'][page_number] = self.drawingHandler.get_page_drawings(page)
-            data['text'][page_number] = self.textHandler.get_page_text(page)
+            data['drawing_elements'][page_number] = self.drawing_handler.get_page_drawings(page)
+            data['text_elements'][page_number] = self.text_handler.get_page_text(page)
 
-            if DrawingElement.DrawingType.Bullet in data['drawings'][page_number]:
-                self.merge_bullets_into_text(data['drawings'][page_number][DrawingElement.DrawingType.Bullet], data['text'][page_number])
-            self.update_font_statistics(data['metadata']['font_statistics'], page.get_fonts(), data['text'][page_number])
+            if DrawingElement.DrawingType.Bullet in data['drawing_elements'][page_number]:
+                self.merge_bullets_into_text(data['drawing_elements'][page_number][DrawingElement.DrawingType.Bullet], data['text_elements'][page_number])
+            self.update_font_statistics(data['metadata']['font_statistics'], page.get_fonts(), data['text_elements'][page_number])
 
         pdf.close()
 
     def merge_bullets_into_text(self, bullets: List[DrawingElement], text: List[LineElement]):
+        """Merge lone bullet points found as drawings into their closest text lines.
+
+        Args:
+            bullets (List[DrawingElement])
+            text (List[LineElement])
+        """
         if len(bullets) == 0:
             return
         
@@ -152,7 +164,7 @@ class PDFLoadProcessor(Processor):
                     continue
 
                 if t.bbox.y_overlap(b.bbox, 'second') > 0.6 and abs(t.bbox.x0 - b.bbox.x1) < 25:
-                    t.spans.insert(0, Span(t.spans[0].font, u"\u2022"))
+                    t.spans.insert(0, Span(t.spans[0].font, "\u2022"))
                     t.bbox = Bbox.merge([t.bbox, b.bbox])
                     b_used[i] = True
                     break
@@ -178,9 +190,9 @@ class PDFLoadProcessor(Processor):
                 line=dict(color=colour, width=3)
             )
 
-        for e in data['text'][page_number]:
-            add_rect(fig, e.bbox, colours['text'])
-        fig.add_scatter(x=[None], y=[None], name="Line", line=dict(width=3, color=colours['text']))
+        for e in data['text_elements'][page_number]:
+            add_rect(fig, e.bbox, colours['text_elements'])
+        fig.add_scatter(x=[None], y=[None], name="Line", line=dict(width=3, color=colours['text_elements']))
 
         for im_type in data['images'][page_number]:
             if im_type in colours:
@@ -189,9 +201,9 @@ class PDFLoadProcessor(Processor):
                     add_rect(fig, im.bbox, colour)
                 fig.add_scatter(x=[None], y=[None], name=f"{im_type.name}", line=dict(width=3, color=colour))
 
-        for dr_type in data['drawings'][page_number]:
+        for dr_type in data['drawing_elements'][page_number]:
             if dr_type in colours:
                 colour = colours[dr_type]
-                for dr in data['drawings'][page_number][dr_type]:
+                for dr in data['drawing_elements'][page_number][dr_type]:
                     add_rect(fig, dr.bbox, colour)
                 fig.add_scatter(x=[None], y=[None], name=f"{dr_type.name}", line=dict(width=3, color=colour))

@@ -1,11 +1,10 @@
 import logging
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 from plotly.graph_objects import Figure
 
-from ..elements.bbox import Bbox
 from ..elements.layout_objects import *
 from ..elements.table import Table
 from ..table_strategies.detr_table_strategy import DetrTableStrategy
@@ -14,6 +13,13 @@ from .processor import Processor
 
 
 class MLTableProcessor(Processor):
+    """Wrapper for ML models to detect tables. Separated from rules based processor as
+    it can only be run single-threaded.
+
+    Requires: ['text_elements'] and additional requirements from specific strategy
+    Optional: []
+    Generates: ['tables', 'text_elements']
+    """
 
     threadable: bool = False
 
@@ -33,11 +39,11 @@ class MLTableProcessor(Processor):
         self.strategy = self.strategy_type(self.log_level)
         return super().initialise()
 
-    def requirements(self) -> List[str]:
-        return self.strategy_type.requirements() + ['text']
+    def requirements(self) -> Tuple[List[str], List[str]]:
+        return (self.strategy_type.requirements() + ['text_elements'], [])
     
     def generates(self) -> List[str]:
-        return ['tables', 'text']
+        return ['tables', 'text_elements']
     
     def process(self, data: Any) -> Table:
         reqs = self.strategy.requirements()
@@ -70,8 +76,8 @@ class MLTableProcessor(Processor):
                                          row_boxes=rs, col_boxes=cs, merges=merges))
 
             bad_lines = np.array([0 for _ in page_tables])
-            used_text = np.array([-1 for _ in data['text'][page]])
-            for line_index,line in enumerate(data['text'][page]):
+            used_text = np.array([-1 for _ in data['text_elements'][page]])
+            for line_index,line in enumerate(data['text_elements'][page]):
                 shrunk_bbox = line.bbox.clone()
                 shrunk_bbox.y0 += 2
                 if shrunk_bbox.height() > 8:
@@ -127,12 +133,12 @@ class MLTableProcessor(Processor):
                 data['tables'][page].append(table)
 
             keep_text = []
-            for line,u in zip(data['text'][page], used_text):
+            for line,u in zip(data['text_elements'][page], used_text):
                 if u >= 0:
                     continue
                 keep_text.append(line)
 
-            data['text'][page] = keep_text   
+            data['text_elements'][page] = keep_text   
 
     def add_generated_items_to_fig(self, page_number:int, fig: Figure, data: Dict[str, Any]):
         colours = {

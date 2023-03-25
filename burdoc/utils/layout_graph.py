@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Tuple
+from typing import List, Sequence, Tuple
 
 import numpy as np
 
@@ -16,10 +16,10 @@ class LayoutGraph(object):
         def __init__(self, id: int, element: LayoutElement):
             self.id = id
             self.element = element
-            self.up = []
-            self.down = []
-            self.left = []
-            self.right = []
+            self.up: List[Tuple[int, float]] = []
+            self.down: List[Tuple[int, float]] = []
+            self.left: List[Tuple[int, float]] = []
+            self.right: List[Tuple[int, float]] = []
 
         def __repr__(self):
             el_str = str(self.element)
@@ -31,7 +31,7 @@ class LayoutGraph(object):
             return self.nodes[id_dist_pair[0]]
 
 
-    def node_has_ancester(self, node_id: int, target_id: int):
+    def node_has_ancester(self, node_id: int, target_id: int) -> bool:
         if node_id == target_id:
             return True
 
@@ -139,7 +139,7 @@ class LayoutGraph(object):
 
 
 
-    def __init__(self, logger: logging.Logger, pagebound: Bbox, elements: List[LayoutElement]):
+    def __init__(self, logger: logging.Logger, pagebound: Bbox, elements: Sequence[LayoutElement]):
         self.logger = logger.getChild('layoutgraph')
         self.pagebound = pagebound
         self.root = LayoutGraph.Node(0, LayoutElement(Bbox(0, -2, pagebound.x1, -1, pagebound.x1, pagebound.y1)))

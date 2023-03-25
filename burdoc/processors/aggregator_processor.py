@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Tuple
 
 from plotly.graph_objects import Figure
 
@@ -16,7 +16,7 @@ class AggregatorProcessor(Processor):
                  log_level: int=logging.INFO
                 ):
         super().__init__("aggregator", log_level=log_level)
-        self.processors = [p(**pa, log_level=log_level) for p,pa in zip(processors, processor_args)]
+        self.processors = [proc(**proc_args, log_level=log_level) for proc,proc_args in zip(processors, processor_args)]
         self.render_processors = render_processors
         self.additional_reqs = additional_reqs
 
@@ -24,16 +24,29 @@ class AggregatorProcessor(Processor):
         for p in self.processors:
             p.initialise()
 
-    def requirements(self) -> List[str]:
+    def requirements(self) -> Tuple[List[str], List[str]]:
         reqs = set()
+        opt_reqs = set()
         gens = set()
-        for p in self.processors:
-            rs = p.requirements()
-            for r in rs:
-                if r not in gens:
-                    reqs.add(r)
-            gens |= set(p.generates())
-        return list(reqs) + self.additional_reqs
+        for processor in self.processors:
+            proc_reqs = processor.requirements()
+            for req in proc_reqs[0]:
+                if req not in gens:
+                    reqs.add(req)
+            for req in proc_reqs[1]:
+                if req not in gens:
+                    opt_reqs.add(req)
+                    
+            gens |= set(processor.generates())
+            
+        to_remove: List[str] = []
+        for req in opt_reqs:
+            if req in reqs:
+                to_remove.append(req)
+        for req in to_remove:
+            opt_reqs.remove(req)
+            
+        return (list(reqs) + self.additional_reqs, list(opt_reqs))
 
     def generates(self) -> List[str]:
         gens = set()

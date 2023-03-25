@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from plotly.graph_objects import Figure
@@ -13,15 +13,20 @@ from .processor import Processor
 
 
 class RulesTableProcessor(Processor):
+    """Applies a simple rules-based algorithm to identify tables in text.
+    This looks for patterns in text blocks and makes no use of lines/images.
+    Very good at pulling out dense inline tables missed by the ML algorithms.
+
+    Requires: ['page_bounds', 'elements']
+    Optional: []
+    Generates: ['tables', 'elements']
+    """
 
     def __init__(self, log_level: int=logging.INFO):
         super().__init__("rules-table", log_level=log_level)
 
-    def initialise(self):
-        return super().initialise()
-
-    def requirements(self) -> List[str]:
-        return ['page_bounds', 'elements']
+    def requirements(self) -> Tuple[List[str], List[str]]:
+        return (['page_bounds', 'elements'], [])
     
     def generates(self) -> List[str]:
         return ['tables', 'elements']
