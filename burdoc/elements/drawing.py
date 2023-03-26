@@ -6,6 +6,7 @@ from .element import LayoutElement
 
 class DrawingType(Enum):
     """Enumeration of types of drawing Burdoc understands.
+    
     LINE: Anything long and thin used as a visual separator
     RECT: Usually means a square or outer edge defining an aside or section
     BULLET: A small circle indicating a textual bullet point.

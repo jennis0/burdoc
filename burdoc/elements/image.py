@@ -7,15 +7,16 @@ from .element import LayoutElement
 
 class ImageType(Enum):
     """Enumeration of types of images Burdoc understands.
-    INVISIBLE: Image isn't visible on page
-    BACKGROUND: Image is used as background for the whole page
-    SECTION: Image is used as a background for a page section or aside
-    INLINE: Image is part of the flow of text (currently unused)
+    
+    INVISIBLE: Image isn't visible on page  
+    BACKGROUND: Image is used as background for the whole page  
+    SECTION: Image is used as a background for a page section or aside  
+    INLINE: Image is part of the flow of text (currently unused)  
     DECORATIVE: Image is a decorative element in the page layout but h
-        as no semantic menaing
-    PRIMARY: Image is a 'hero' image on the page
-    GRADIENT: Image is a smooth gradient used as a background
-    LINE: Image is used to semantically separate page sections
+        as no semantic menaing  
+    PRIMARY: Image is a 'hero' image on the page  
+    GRADIENT: Image is a smooth gradient used as a background  
+    LINE: Image is used to semantically separate page sections  
     """
     INVISIBLE=auto() # images that aren't visible on page
     BACKGROUND=auto() #used as the base page image

@@ -6,8 +6,7 @@ from .textblock import TextBlock
 
 
 class TextListItem (LayoutElementGroup):
-    """A single item within a list. Equivalent to <li>
-    """
+    """A single item within a list. Equivalent to <li> """
     label: str
     items: List[TextBlock] #type:ignore
 
