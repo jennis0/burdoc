@@ -33,3 +33,17 @@ class TestLineElement():
         assert test_line.title == line.title
         #assert line == test_line
         
+    def test_to_json(self, line):
+        expected_json = {
+            'type':'line',
+            'spans': [s.to_json() for s in line.spans]
+        }
+        assert line.to_json() == expected_json
+        
+    def test_to_json_with_bbox(self, line):
+        expected_json = {
+            'type':'line',
+            'spans': [s.to_json() for s in line.spans],
+            'bbox': line.bbox.to_json() 
+        }
+        assert line.to_json(include_bbox=True) == expected_json
