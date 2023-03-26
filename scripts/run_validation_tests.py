@@ -1,43 +1,62 @@
 import os
 import sys
 import json
+import argparse
+import shutil
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from burdoc import BurdocParser
 
-from src.burdoc import BurdocParser
-
-def run_validation(in_dir, out_dir):
-    burdoc = BurdocParser()
-
-    if not os.path.exists(in_dir) and os.path.isdir(in_dir):
-        print(f"ERROR: {in_dir} does not exist or is not a director")
-        exit(1)
+def run_parser(source_dir: str, out_dir: str, gold_dir: str, do_update: bool):
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
-    else:
-        if not os.path.isdir(out_dir):
-            print(f"ERROR: {out_dir} is not a directory")
-            exit(1)
+        
+    if not os.path.exists(gold_dir):
+        os.makedirs(gold_dir)
 
-    files = os.listdir(in_dir)
+    burdoc = BurdocParser()
+
+    files = os.listdir(source_dir)
     for filename in files[-13:]:
-        path = os.path.join(in_dir, filename)
+        path = os.path.join(source_dir, filename)
         if not os.path.isfile(path):
             continue
         
         print(f"Reading {filename}")
-        result = burdoc.read(path, pages=[i for i in range(10)])
+        result = burdoc.read(path)
 
         json_filename = ".".join(filename.split(".")[:-1]) + ".json"
-        json_path = os.path.join(out_dir, json_filename)
-        with open(json_path, 'w') as f:
+        out_path = os.path.join(out_dir, json_filename)
+        with open(out_path, 'w', encoding='utf-8') as f:
             json.dump(result, f)
+        
+        if do_update:
+            gold_path = os.path.join(gold_dir, json_filename)
+            shutil.copyfile(out_path, gold_path)
+
+def run():
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("--source", type=str, help="Directory of input files", required=True)
+    argparser.add_argument("--out", type=str, help="Target directory for output files", required=True)
+    argparser.add_argument("--gold", type=str, required=False, help="Directory of gold files. These will be overwritten if --update is passed")
+    argparser.add_argument("--update", required=False, default=False, action="store_true", help="Update gold files rather than run tests")
+    args = argparser.parse_args()
+    
+    
+    if not (os.path.exists(args.source) and os.path.isdir(args.source)):
+        raise NotADirectoryError(f"{args.source} does not exist or is not a director")
+
+    if not args.update and not (os.path.exists(args.gold) and os.path.isdir(args.gold)):
+        raise NotADirectoryError(f"{args.gold}  does not exist or is not a director")
+
+    if args.update and (os.path.exists(args.gold) and not os.path.isdir(args.gold)):
+        raise NotADirectoryError(f"{args.gold}  does not exist or is not a director")
+ 
+    if os.path.exists(args.out) and not os.path.isdir(args.out):
+        raise NotADirectoryError(f"{args.out}  does not exist or is not a director")
+    
+    run_parser(args.source, args.out, args.gold, args.update)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4 and len(sys.argv) != 3:
-        print("ERROR: Incorrect number of arguments. Use 'python run_validation_tests [in_dir] [out_dir] (gold)'")
-        exit(1)
-    
-    run_validation(sys.argv[1], sys.argv[2])
+    run()
 

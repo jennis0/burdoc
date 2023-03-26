@@ -220,7 +220,7 @@ class BurdocParser(object):
         print("=================================================================")
                 
 
-    def read(self, path: os.PathLike, pages: Optional[List[int]]=None) -> Any:
+    def read(self, path: str, pages: Optional[List[int]]=None) -> Any:
         
         start = time.perf_counter()
         pdf = fitz.open(path)

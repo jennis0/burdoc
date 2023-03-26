@@ -8,7 +8,9 @@ from PIL import Image
 from plotly.graph_objects import Figure
 
 from ..elements.bbox import Bbox
-from ..elements.layout_objects import DrawingElement, ImageElement, LineElement
+from ..elements.drawing import DrawingElement, DrawingType
+from ..elements.image import ImageElement, ImageType
+from ..elements.line import LineElement
 from ..elements.span import Span
 from ..pdf_handlers.drawing_handler import DrawingHandler
 from ..pdf_handlers.image_handler import ImageHandler
@@ -40,7 +42,7 @@ class PDFLoadProcessor(Processor):
         return ['page_bounds', 'text_elements', 'image_elements',
                 'page_images', 'drawing_elements', 'images']
 
-    def _read_pdf(self, path:os.PathLike):
+    def _read_pdf(self, path:str):
         self.logger.debug('Loading %s', path)
         try:
             pdf = fitz.open(path)
@@ -170,8 +172,8 @@ class PDFLoadProcessor(Processor):
             data['text_elements'][page_number] = self.text_handler.get_page_text(page)
             performance_tracker['image_handler'].append(time.perf_counter() - start)
 
-            if DrawingElement.DrawingType.Bullet in data['drawing_elements'][page_number]:
-                self.merge_bullets_into_text(data['drawing_elements'][page_number][DrawingElement.DrawingType.Bullet], data['text_elements'][page_number])
+            if DrawingType.BULLET in data['drawing_elements'][page_number]:
+                self.merge_bullets_into_text(data['drawing_elements'][page_number][DrawingType.BULLET], data['text_elements'][page_number])
             self.update_font_statistics(data['metadata']['font_statistics'], page.get_fonts(), data['text_elements'][page_number])
 
         pdf.close()
@@ -206,12 +208,12 @@ class PDFLoadProcessor(Processor):
     def add_generated_items_to_fig(self, page_number:int, fig: Figure, data: Dict[str, Any]):
 
         colours = {
-            ImageElement.ImageType.Primary:"DarkRed",
-            ImageElement.ImageType.Background:"Red",
-            ImageElement.ImageType.Section:"Pink",
-            DrawingElement.DrawingType.Line:"DarkBlue",
-            DrawingElement.DrawingType.Rect:"Blue",
-            DrawingElement.DrawingType.Bullet:"LightBlue",
+            ImageType.PRIMARY:"DarkRed",
+            ImageType.BACKGROUND:"Red",
+            ImageType.SECTION:"Pink",
+            DrawingType.LINE:"DarkBlue",
+            DrawingType.RECT:"Blue",
+            DrawingType.BULLET:"LightBlue",
             "text":"Grey",
         }
 

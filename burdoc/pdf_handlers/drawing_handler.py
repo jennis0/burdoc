@@ -1,10 +1,10 @@
 import logging
-from typing import Any, List, Optional
+from typing import Any, List
 
 import fitz
 
 from ..elements.bbox import Bbox
-from ..elements.layout_objects import DrawingElement
+from ..elements.drawing import DrawingElement, DrawingType
 from ..utils.logging import get_logger
 
 
@@ -30,16 +30,16 @@ class DrawingHandler(object):
         self.page_bbox = Bbox(*bound, bound[2], bound[3])
         _,_,self.width,self.height = page.bound()
 
-        processed_drawings = {t:[] for t in DrawingElement.DrawingType}
+        processed_drawings = {t:[] for t in DrawingType}
         for d in self.page.get_cdrawings():
             if d['type'] == 'f' and d['fill_opacity'] > 0.9 and len(d['items']) > 2:
                 width = d['rect'][2] - d['rect'][0]
                 height = d['rect'][3] - d['rect'][1]
                 if abs(width/height - 1) < 0.1 and width < 5:
                     drawing =  DrawingElement(bbox = Bbox(*d['rect'], bound[2], bound[3]), 
-                                    type=DrawingElement.DrawingType.Bullet, opacity=d['fill_opacity']
+                                    drawing_type=DrawingType.BULLET, opacity=d['fill_opacity']
                                 )
-                    processed_drawings[drawing.type].append(drawing)
+                    processed_drawings[drawing.drawing_type].append(drawing)
                     self.logger.debug(f"Found bullet with box {drawing.bbox}")
                     continue
                 
@@ -48,7 +48,7 @@ class DrawingHandler(object):
                     self.logger.debug("Filtered drawing due to low fill opacity")
                     continue
 
-                drawing = DrawingElement(bbox=Bbox(*d['rect'], bound[2], bound[3]), type=None, opacity=d['fill_opacity'])
+                drawing = DrawingElement(bbox=Bbox(*d['rect'], bound[2], bound[3]), drawing_type=None, opacity=d['fill_opacity'])
                 drawing.bbox.x0 = max(drawing.bbox.x0, 0)
                 drawing.bbox.y0 = max(drawing.bbox.y0, 0)
                 drawing.bbox.x1 = min(drawing.bbox.x1, bound.x1)
@@ -57,20 +57,20 @@ class DrawingHandler(object):
 
                 if (drawing.bbox.height() < 10) or (drawing.bbox.width() < 10):
                     if overlap > 0:
-                        self.logger.debug(f"Found line {len(processed_drawings[DrawingElement.DrawingType.Line])} with box {drawing.bbox}")
-                        drawing.type = DrawingElement.DrawingType.Line
-                        processed_drawings[drawing.type].append(drawing)
+                        self.logger.debug(f"Found line {len(processed_drawings[DrawingType.LINE])} with box {drawing.bbox}")
+                        drawing.drawing_type = DrawingType.LINE
+                        processed_drawings[drawing.drawing_type].append(drawing)
                         continue
                 
                 if overlap > 0.001 and overlap < 0.55:
-                    self.logger.debug(f"Found rectangle {len(processed_drawings[DrawingElement.DrawingType.Rect])} with box {drawing.bbox}")
-                    drawing.type = DrawingElement.DrawingType.Rect
-                    processed_drawings[drawing.type].append(drawing)
+                    self.logger.debug(f"Found rectangle {len(processed_drawings[DrawingType.RECT])} with box {drawing.bbox}")
+                    drawing.drawing_type = DrawingType.RECT
+                    processed_drawings[drawing.drawing_type].append(drawing)
 
         #Merge boxes with significant overlap
-        if self.merge_rects and DrawingElement.DrawingType.Rect:
+        if self.merge_rects and DrawingType.RECT:
             did_merge = True
-            to_process = processed_drawings[DrawingElement.DrawingType.Rect]
+            to_process = processed_drawings[DrawingType.RECT]
             while did_merge:
                 did_merge = False
                 merged_boxes = []
@@ -103,7 +103,7 @@ class DrawingHandler(object):
 
                 to_process = merged_boxes
 
-            processed_drawings[DrawingElement.DrawingType.Rect] = merged_boxes
+            processed_drawings[DrawingType.RECT] = merged_boxes
 
         for t in processed_drawings:
             self.logger.debug(f"Found {len(processed_drawings[t])} {t} drawings")

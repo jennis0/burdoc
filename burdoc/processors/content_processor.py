@@ -5,10 +5,11 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 from plotly.graph_objects import Figure
 
-from ..elements.content_objects import Aside, TextList, TextListItem
+from ..elements.aside import Aside
 from ..elements.element import LayoutElement
 from ..elements.section import PageSection
 from ..elements.textblock import TextBlock, TextBlockType
+from ..elements.textlist import TextList, TextListItem
 from .processor import Processor
 
 
@@ -87,8 +88,8 @@ class ContentProcessor(Processor):
             if family_count.sum() / total_lines > 0.2:
                 para_size = int(family_count.argmax()) + 1
                 self.para_size[font_family] = [
-                    (para_size - 2, TextBlockType.Small),
-                    (para_size + 0.5, TextBlockType.Paragraph),
+                    (para_size - 2, TextBlockType.SMALL),
+                    (para_size + 0.5, TextBlockType.PARAGRAPH),
                     (para_size + 2, TextBlockType.H5),
                     (para_size + 4, TextBlockType.H4),
                     (para_size + 6, TextBlockType.H3),
@@ -107,7 +108,7 @@ class ContentProcessor(Processor):
         fam = block.items[0].spans[-1].font.family
 
         if len(block.items) > 3:
-            return TextBlockType.Paragraph
+            return TextBlockType.PARAGRAPH
 
         variant = TextBlockType.H1
         if fam not in self.para_size:
@@ -117,14 +118,14 @@ class ContentProcessor(Processor):
                 variant = t
                 break
 
-        if variant == TextBlockType.Paragraph:
+        if variant == TextBlockType.PARAGRAPH:
             all_italic=True
             for i in block.items:
                 if not all(s.font.italic for s in i.spans):
                     all_italic = False
                     break
             if all_italic:
-                return TextBlockType.Emphasis
+                return TextBlockType.EMPHASIS
 
         return variant
 
@@ -140,14 +141,16 @@ class ContentProcessor(Processor):
         
         textlist = TextList(bbox=list_items[0][1][0].bbox, ordered=ordered, items=[])
         for list_item in list_items:
-            label_match = self.list_regex.match(list_item[1][0].items[0].spans[0].text)
+            label_match = self.list_regex.match(list_item[1][0].items[0].get_text())
+            if not label_match:
+                raise RuntimeError("Regex failed to refind list label - this shouldn't be possible!")
             list_item[1][0].items[0].spans[0].text = list_item[1][0].items[0].spans[0].text[label_match.span()[1]:].lstrip()
             textlist.append(TextListItem(label=list_item[0], items=list_item[1]))
         
         return [textlist]
 
     def _process_text_block(self, block: TextBlock) -> TextBlock:
-        block.variant = self._get_text_class(block)
+        block.type = self._get_text_class(block)
         return block
 
     def _preprocess(self, elements: List[LayoutElement]) -> List[LayoutElement]:
@@ -178,7 +181,7 @@ class ContentProcessor(Processor):
                             abs(e.bbox.y0 - list_elements[-1][1][-1].bbox.y1) > 3:
                         in_list = False                            
                     elif len(elements) > i+1 and isinstance(elements[i+1], TextBlock) and \
-                            processed_tb.variant == TextBlockType.Paragraph:
+                            processed_tb.type == TextBlockType.PARAGRAPH:
                         in_list = bool(self.list_regex.match(elements[i+1].get_text())) #type:ignore
                     else:
                         in_list = False
@@ -221,7 +224,7 @@ class ContentProcessor(Processor):
     def _build_page_hierarchy(self, page_number: int, elements: List[LayoutElement]) -> List[Any]:
 
         def add_to_hierarchy(textblock: TextBlock, hierarchy: List[Dict[str, Any]], index: int, sub_index: Optional[int]=None):
-            if textblock.variant in [TextBlockType.Paragraph, TextBlockType.Emphasis, TextBlockType.Small]:
+            if textblock.type in [TextBlockType.PARAGRAPH, TextBlockType.EMPHASIS, TextBlockType.SMALL]:
                 return
 
             size = textblock.items[0].spans[0].font.size
@@ -302,7 +305,7 @@ class ContentProcessor(Processor):
                 for i in element.items:
                     recursive_add(fig, i)
             elif isinstance(element, TextBlock):
-                add_rect(fig, element.bbox, colours[element.variant.name[0].lower()], add_shape=False, text=element.variant.name, side="right")
+                add_rect(fig, element.bbox, colours[element.type.name[0].lower()], add_shape=False, text=element.type.name, side="right")
             elif isinstance(element, TextListItem):
                 add_rect(fig, element.bbox, colours[TextListItem], f"L:{element.label}")
             elif isinstance(element, TextList):

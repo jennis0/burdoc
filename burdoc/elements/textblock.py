@@ -1,52 +1,48 @@
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from .bbox import Bbox
 from .element import LayoutElementGroup
-from .layout_objects import LineElement
+from .line import LineElement
 
 
 class TextBlockType(Enum):
-    Small = auto()
-    Paragraph = auto()
+    """Possible types of text supported by the semantic classifier.
+    """
+    SMALL = auto()
+    PARAGRAPH = auto()
     H1 = auto()
     H2 = auto()
     H3 = auto()
     H4 = auto()
     H5 = auto()
-    Emphasis = auto()
+    EMPHASIS = auto()
 
 class TextBlock(LayoutElementGroup):
+    """Represents a standard grouping of lines into a paragraph. All text
+    within a textblock can be considered to be of semantically equivalent
+    fonts. This may include variations in bold or italics."""
     
     items: List[LineElement] #type:ignore
 
     def __init__(self,
                  bbox: Optional[Bbox]=None,
                  items: Optional[List[LineElement]]=None,
-                 variant: TextBlockType=TextBlockType.Paragraph
+                 text_type: TextBlockType=TextBlockType.PARAGRAPH
                  ):
         super().__init__(bbox, items, title="TextBlock") #type:ignore
-        self.variant = variant
-        self.type = variant
+        self.type = text_type
 
-    def get_text(self):
+    def get_text(self) -> str:
+        """Returns all text contained within the block as a string
+        This strips out any format or font information.
+
+        Returns:
+            str
+        """
         return " ".join(i.get_text() for i in self.items)
 
-    def to_html(self) -> str:
-        variant_lookup = {
-            TextBlockType.Small: "small",
-            TextBlockType.Emphasis: "emphasis",
-            TextBlockType.Paragraph:"p",
-            TextBlockType.H1:"h1",
-            TextBlockType.H2:"h2",
-            TextBlockType.H3:"h3",
-            TextBlockType.H4:"h4",
-            TextBlockType.H5:"h5"
-        }
-        type = variant_lookup[self.type]
-        return f"<{type}>" + "\n".join(l.to_html() for l in self.items) + f"</{type}>"
-
-    def to_json(self, include_bbox: bool=False) -> Dict[str, Any]:
+    def to_json(self, extras: Optional[Dict]=None, include_bbox: bool=False, **kwargs):
         """Convert the textblock into a JSON object
 
         Args:
@@ -55,7 +51,10 @@ class TextBlock(LayoutElementGroup):
         Returns:
             Dict[str, Any]
         """
-        return super().to_json(extras={"variant":self.variant.name.lower()}, include_bbox=include_bbox)
+        if not extras:
+            extras = {}
+        extras['type'] = self.type.name.lower()
+        return super().to_json(**kwargs, extras=extras, include_bbox=include_bbox)
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -65,4 +64,4 @@ class TextBlock(LayoutElementGroup):
             text = self.items[0].spans[0].text + "..."
         else:
             text = ""
-        return super()._str_rep(extras={'variant':self.variant, 'text':text})
+        return super()._str_rep(extras={'type':self.type, 'text':text})

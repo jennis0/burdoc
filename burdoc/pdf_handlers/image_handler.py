@@ -9,7 +9,7 @@ from PIL import Image as PILImage
 from PIL.ImageFilter import GaussianBlur
 
 from ..elements.bbox import Bbox
-from ..elements.layout_objects import ImageElement
+from ..elements.image import ImageElement, ImageType
 from ..utils.image_manip import get_image_palette
 from ..utils.logging import get_logger
 
@@ -55,25 +55,25 @@ class ImageHandler(object):
             return pil_image
         return None
 
-    def _classify_image(self, image_element: ImageElement, image: PILImage.Image, page_colour: np.ndarray, page_bbox: Bbox) -> ImageElement.ImageType:
+    def _classify_image(self, image_element: ImageElement, image: PILImage.Image, page_colour: np.ndarray, page_bbox: Bbox) -> ImageType:
     
         #If cover is too small, we can't see it
         x_coverage = round(image_element.bbox.x_overlap(page_bbox, 'second'), 3)
         y_coverage = round(image_element.bbox.y_overlap(page_bbox, 'second'), 3)
         page_coverage =  x_coverage * y_coverage
         if page_coverage <= 0.001:
-            return ImageElement.ImageType.Invisible
+            return ImageType.INVISIBLE
 
         #If thin in one dimension, treat as line rather than image
         if ((x_coverage < 0.05 and y_coverage > 0.1) or (x_coverage > 0.1 and y_coverage < 0.05)):
             if (image_element.bbox.y1 / page_bbox.y1) > 0.1 and (image_element.bbox.y0 / page_bbox.y1) < 0.9:
-                return ImageElement.ImageType.Line
+                return ImageType.LINE
             else:
-                return ImageElement.ImageType.Decorative
+                return ImageType.DECORATIVE
     
         #If it's too small in any particular dimension it can't be a meaningful image
         if x_coverage < 0.05 or y_coverage < 0.05 or page_coverage < 0.05:
-            return ImageElement.ImageType.Decorative
+            return ImageType.DECORATIVE
     
         #Now we've covered basic size-based cases, handle more complex image processing
         reduced_image = image.crop([image.size[0]*0.33, image.size[1]*0.33,
@@ -105,20 +105,20 @@ class ImageHandler(object):
         #If complexity is low it could be either a full page background or a section
         if x_variance + y_variance < 200:
             if page_coverage > 0.9:
-                return ImageElement.ImageType.Background
+                return ImageType.BACKGROUND
             
             if page_coverage > 0.1 and image_element.properties['colour_offset'] > 15:
-                return ImageElement.ImageType.Section
+                return ImageType.SECTION
 
-            return ImageElement.ImageType.Decorative
+            return ImageType.DECORATIVE
 
         if (x_variance < 50 and y_variance > 1000) or (x_variance > 1000 and y_variance < 50):
-            return ImageElement.ImageType.Gradient
+            return ImageType.GRADIENT
 
         if page_coverage < 0.05 or x_coverage < 0.15 or y_coverage < 0.15:
-            return ImageElement.ImageType.Decorative
+            return ImageType.DECORATIVE
 
-        return ImageElement.ImageType.Primary
+        return ImageType.PRIMARY
 
     def _crop_to_visible(self, orig_bbox: Bbox, image: PILImage.Image, page_bound: Bbox) -> Tuple[PILImage.Image, Bbox]:
         '''Crop an image to only the visible pixels while preserving scaling transformations from the original PDF'''
@@ -192,7 +192,7 @@ class ImageHandler(object):
         return [i for i,u in zip(images, used_images) if not u]
 
                     
-    def get_image_elements(self, page: fitz.Page, page_image: PILImage) -> Tuple[Dict[ImageElement.ImageType, List[ImageElement]], List[PILImage.Image]]:
+    def get_image_elements(self, page: fitz.Page, page_image: PILImage) -> Tuple[Dict[ImageType, List[ImageElement]], List[PILImage.Image]]:
         self.logger.debug("Starting image extraction")
 
         page_colour = np.array(get_image_palette(page_image, 1)[0][0])
@@ -201,8 +201,8 @@ class ImageHandler(object):
         page_bbox = Bbox(*bound, bound[2], bound[3]) #type:ignore
         page_images = page.get_image_info(hashes=False, xrefs=True)
         
-        image_elements: Dict[ImageElement.ImageType, List[ImageElement]] = {
-            image_type:[] for image_type in ImageElement.ImageType
+        image_elements: Dict[ImageType, List[ImageElement]] = {
+            image_type:[] for image_type in ImageType
         }
         images = []
 
@@ -217,7 +217,7 @@ class ImageHandler(object):
                     continue
                 
                 image_element = ImageElement(bbox=crop_bbox, original_bbox=orig_bbox,
-                                            type=ImageElement.ImageType.Primary,
+                                            image_type=ImageType.PRIMARY,
                                             image=-1, properties={})
                 
                 image_element.type = self._classify_image(image_element, image, page_colour, page_bbox)
@@ -230,8 +230,8 @@ class ImageHandler(object):
 
                 image_element.image = self.cache[im_hash]
 
-        if ImageElement.ImageType.Primary in image_elements:
-            image_elements[ImageElement.ImageType.Primary] = self.merge_images(image_elements[ImageElement.ImageType.Primary], images)
+        if ImageType.PRIMARY in image_elements:
+            image_elements[ImageType.PRIMARY] = self.merge_images(image_elements[ImageType.PRIMARY], images)
 
         for image_type in image_elements:
             self.logger.debug("Found %d %s images", len(image_elements), image_type.name)

@@ -5,7 +5,7 @@ from plotly.graph_objects import Figure
 
 from ..elements.bbox import Bbox
 from ..elements.element import LayoutElement, LayoutElementGroup
-from ..elements.layout_objects import ImageElement
+from ..elements.image import ImageElement, ImageType
 from ..elements.section import PageSection
 from ..elements.table import Table
 from ..utils.layout_graph import LayoutGraph
@@ -280,7 +280,7 @@ class ReadingOrderProcessor(Processor):
         for pn, page_bound, elements, images, tables in self.get_page_data(data):
             if not tables:
                 tables = []
-            elements = self._flow_content(page_bound, elements, images[ImageElement.ImageType.Primary], tables)
+            elements = self._flow_content(page_bound, elements, images[ImageType.PRIMARY], tables)
             data['elements'][pn] = elements
 
         self.logger.debug("Finished computing layout")

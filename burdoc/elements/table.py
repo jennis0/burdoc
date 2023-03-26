@@ -64,7 +64,7 @@ class Table(LayoutElement):
         text += "</table>"
         return text
     
-    def to_json(self, **kwargs):
+    def to_json(self, extras: Optional[Dict]=None, include_bbox: bool=False, **kwargs):
         extras = {}
         if self.row_headers:
             extras['rh'] = [r.to_json() for r in self.row_headers]

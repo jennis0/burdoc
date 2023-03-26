@@ -5,8 +5,10 @@ from typing import Any, Dict, List, Tuple
 from plotly.graph_objects import Figure
 
 from ..elements.bbox import Bbox
+from ..elements.drawing import DrawingElement, DrawingType
 from ..elements.element import LayoutElementGroup
-from ..elements.layout_objects import DrawingElement, ImageElement, LineElement
+from ..elements.image import ImageElement, ImageType
+from ..elements.line import LineElement
 from ..elements.section import PageSection
 from ..elements.textblock import TextBlock
 from .processor import Processor
@@ -39,17 +41,17 @@ class LayoutProcessor(Processor):
     def generates(self) -> List[str]:
         return ['elements']
 
-    def _create_sections(self, page_bound: Bbox, 
-                        text : List[LineElement], 
-                        images : Dict[ImageElement.ImageType, List[ImageElement]],
-                        drawings : Dict[DrawingElement.DrawingType, List[DrawingElement]]) -> List[PageSection]:
+    def _create_sections(self, page_bound: Bbox,
+                        text : List[LineElement],
+                        images : Dict[ImageType, List[ImageElement]],
+                        drawings : Dict[DrawingType, List[DrawingElement]]) -> List[PageSection]:
         """Create sections based on drawn boxes, images, and page dividing lines then assign each text element to a section
 
         Args:
             page_bound (Bbox): Overall bbox of hte page
             text (List[LineElement]): Text elements to be assigned to sections
-            images (Dict[ImageElement.ImageType, List[ImageElement]]): Images
-            drawings (Dict[DrawingElement.DrawingType, List[DrawingElement]]): Drawings
+            images (Dict[ImageType, List[ImageElement]]): Images
+            drawings (Dict[DrawingType, List[DrawingElement]]): Drawings
 
         Returns:
             List[PageSection]: List of page sections with text elements assigned
@@ -61,17 +63,17 @@ class LayoutProcessor(Processor):
 
         #Turn line drawings into section breaks
         breaks = [
-            d.bbox for d in drawings[DrawingElement.DrawingType.Line]
+            d.bbox for d in drawings[DrawingType.LINE]
         ]
-        for line_image in images[ImageElement.ImageType.Line]:
+        for line_image in images[ImageType.LINE]:
             b = line_image.bbox
             if b.y0/page_height < 0.95 and b.y0/page_height > 0.05:
                 breaks.append(Bbox(max(b.x0,0), b.y0, b.x1, b.y0+1, page_bound.page_width, page_bound.page_height))
                 breaks.append(Bbox(max(b.x0,0), b.y1, b.x1, b.y1+1, page_bound.page_width, page_bound.page_height))
 
         background = None
-        if len(images[ImageElement.ImageType.Background]) > 0:
-            background = images[ImageElement.ImageType.Background][0]
+        if len(images[ImageType.BACKGROUND]) > 0:
+            background = images[ImageType.BACKGROUND][0]
 
         #Split the 'default' section into chunks based on large line breaks
         sections: List[PageSection] = []
@@ -114,7 +116,7 @@ class LayoutProcessor(Processor):
         )
 
         #Create sections from each section image
-        for im in images[ImageElement.ImageType.Section]:
+        for im in images[ImageType.SECTION]:
             sections.append(PageSection(
                     bbox=Bbox(
                         im.bbox.x0+self.section_margin,
@@ -133,7 +135,7 @@ class LayoutProcessor(Processor):
             )
 
         #Create a section from each rectangle
-        for drawing in drawings[DrawingElement.DrawingType.Rect]:
+        for drawing in drawings[DrawingType.RECT]:
             sections.append(PageSection(
                     bbox=Bbox(
                         drawing.bbox.x0+self.section_margin,

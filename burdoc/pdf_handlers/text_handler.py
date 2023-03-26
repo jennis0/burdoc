@@ -4,7 +4,7 @@ from typing import List
 import fitz
 
 from ..elements.bbox import Bbox
-from ..elements.layout_objects import LineElement
+from ..elements.line import LineElement
 from ..utils.logging import get_logger
 
 

@@ -1,11 +1,10 @@
 import logging
 from enum import Enum, auto
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 
 import numpy as np
 from plotly.graph_objects import Figure
 
-from ..elements.layout_objects import *
 from ..elements.table import Table
 from ..table_strategies.detr_table_strategy import DetrTableStrategy
 from ..table_strategies.table_extractor_strategy import TableExtractorStrategy
@@ -55,7 +54,7 @@ class MLTableProcessor(Processor):
         data['tables'] = {p:[] for p  in fields['page_numbers']}
 
         if len(extracted_tables) == 0:
-            return
+            return None
         
         for page, table_parts in extracted_tables.items():
             page_tables = []

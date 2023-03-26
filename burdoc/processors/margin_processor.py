@@ -6,7 +6,7 @@ from plotly.graph_objects import Figure
 
 from ..elements.bbox import Bbox
 from ..elements.element import LayoutElement
-from ..elements.layout_objects import LineElement
+from ..elements.line import LineElement
 from ..utils.layout_graph import LayoutGraph
 from .processor import Processor
 
