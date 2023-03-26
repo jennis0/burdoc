@@ -5,7 +5,6 @@
   </a> -->
 
   <h1 align="center">Burdoc: Advanced PDF Parser</h1>
-
   <p align="center">
 A python library for parsing structured text, images, and tables from PDFs.
   </p>
@@ -21,14 +20,13 @@ A python library for parsing structured text, images, and tables from PDFs.
   - [Key Features](#key-features)
   - [Limitations](#limitations)
 - [Getting Started](#getting-started)
-- [Built With](#built-with)
-- [Getting Started](#getting-started-1)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
 - [Usage](#usage)
     - [Command Line](#command-line)
     - [Library](#library)
 - [Roadmap](#roadmap)
+- [Built With](#built-with)
 - [Contributing](#contributing)
   - [Creating A Pull Request](#creating-a-pull-request)
 - [License](#license)
@@ -54,14 +52,7 @@ Excellent question! Between pdfminer, PyMuPDF, Tika, and many others there are a
 
 ## Getting Started
 
-
-## Built With
-
-* [PyMuPDF](https://github.com/pymupdf/PyMuPDF)
-* [Pillow](https://github.com/python-pillow/Pillow)
-* [Huggingface Transformers](https://huggingface.co/)
-
-## Getting Started
+[Docs](https://jennis0.github.io/burdoc/burdoc.html)
 
 This is an example of how you may give instructions on setting up your project locally.
 To get a local copy up and running follow these simple example steps.
@@ -119,6 +110,12 @@ content = parser.read('file.pdf')
 ## Roadmap
 
 See the [open issues](https://github.com/jennis0/burdoc/issues) for a list of proposed features (and known issues).
+
+## Built With
+
+* [PyMuPDF](https://github.com/pymupdf/PyMuPDF)
+* [Pillow](https://github.com/python-pillow/Pillow)
+* [Huggingface Transformers](https://huggingface.co/)
 
 ## Contributing
 
