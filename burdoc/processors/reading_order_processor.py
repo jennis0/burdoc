@@ -58,8 +58,8 @@ class ReadingOrderProcessor(Processor):
                 dx_block = c.bbox.x_overlap(e.bbox, 'second')
                 append = False
 
-                self.logger.debug("dy: %f, col: %f, block: %f, col_full_page: %f,"+\
-                    "el_full_page: %d, col_centered: %d, el_centered: %d",
+                self.logger.debug(
+        "dy: %f, col: %f, block: %f, col_full_page: %f, el_full_page: %d, col_centered: %d, el_centered: %d",
                                   dy, dx_col, dx_block,
                                   c_full_page, e_full_page,
                                   c_centered, e_centered)
@@ -326,9 +326,5 @@ class ReadingOrderProcessor(Processor):
 
             return item_order
         
-        for e in data['elements'][page_number]:
-            item_order = recursive_add(colours, fig, e, item_order)
-
-        # fig.add_scatter(x=[None], y=[None], name="TextBlock", line=dict(width=3, color=colours["TextBlock"]))
-        # fig.add_scatter(x=[None], y=[None], name="Table", line=dict(width=3, color=colours["Table"]))
-        # fig.add_scatter(x=[None], y=[None], name="Image", line=dict(width=3, color=colours["ImageElement"]))
+        for element in data['elements'][page_number]:
+            item_order = recursive_add(colours, fig, element, item_order)

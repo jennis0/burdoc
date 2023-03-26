@@ -61,7 +61,7 @@ class AggregatorProcessor(Processor):
         for p in self.processors:
             self.logger.debug("----------------------- Running %s --------------------", {type(p).__name__})
             start = time.perf_counter()
-            p._process(data)
+            p._process(data) #pylint: disable=protected-access
             data['performance'][self.name][p.name] = [round(time.perf_counter() - start, 3)]
         return data
 

@@ -48,7 +48,7 @@ class ImageHandler(object):
                     #     self.logger.debug("Rescaling image softmask")
                     #     mask_image = fitz.Pixmap(mask_image, pix.width, pix.height, None)
                     # pix = fitz.Pixmap(pix, mask_image)
-                except Exception as exc:
+                except Exception as exc: #pylint: disable=broad-exception-caught
                     self.logger.warning("Failed to create mask for image xref %d", xref)
                     self.logger.error(exc)
 

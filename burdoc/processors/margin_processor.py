@@ -30,17 +30,19 @@ class MarginProcessor(Processor):
     def generates(self) -> List[str]:
         return ['text_elements', 'headers', 'footers', 'left_sidebar', 'right_sidebar', 'extracted_page_number']
     
-    def _process_text(self, page_bound: Bbox, text: List[LineElement], other_elements: Optional[List[LayoutElement]]) -> Dict[str, Any]:
+    def _process_text(self, page_bound: Bbox, 
+                      text: List[LineElement], 
+                      other_elements: Optional[List[LayoutElement]]) -> Tuple[Optional[int], Dict[str, List[Any]]]:
         page_width = page_bound.width()
         page_height = page_bound.height()
-        res = {
+        res: Dict[str, List[Any]] = {
             'headers':[],
             'footers':[],
             'left_sidebar':[],
             'right_sidebar':[],
-            'extracted_page_number':None,
             'text_elements':[]
         }
+        extracted_page_number: Optional[int] = None
 
         if other_elements:
             layout_graph = LayoutGraph(self.logger, page_bound, text + other_elements)
@@ -77,7 +79,7 @@ class MarginProcessor(Processor):
 
             elif bottom > 0.9 and nearest > 5:
                 if str.isnumeric(t.get_text()):
-                    res['extracted_page_number'] = int(t.get_text())
+                    extracted_page_number = int(t.get_text())
                 else:
                     res['footers'].append(t)
 
@@ -90,7 +92,7 @@ class MarginProcessor(Processor):
             else:
                 res['text_elements'].append(t)     
 
-        return res       
+        return extracted_page_number, res       
 
     def _process(self, data: Any) -> Any:
         data['headers'] = {}
@@ -100,9 +102,9 @@ class MarginProcessor(Processor):
         data['extracted_page_number'] = {}
 
         for page_number, page_bound, text, tables in self.get_page_data(data):
-            res = self._process_text(page_bound, text, tables)
-            for t in res:
-                data[t][page_number] = res[t]
+            data['extracted_page_number'], res = self._process_text(page_bound, text, tables)
+            for t,value in res.items():
+                data[t][page_number] = value
 
         return data
 
