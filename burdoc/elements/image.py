@@ -25,21 +25,24 @@ class ImageType(Enum):
     PRIMARY=auto() #a hero image that illustrates the page
     GRADIENT=auto() #a gradient type image usually non functional
     LINE = auto() #a line
+    UNKNOWN = auto() #unknown type
 
 class ImageElement(LayoutElement):
     """Core element representing an image with a page layout
     """
 
-    def __init__(self, bbox: Bbox, original_bbox: Bbox, image_type: ImageType,
-                 image: int, properties: Dict[str, Any], inline: bool=False):
+    def __init__(self, bbox: Bbox, original_bbox: Bbox,
+                 image: int, properties: Dict[str, Any], 
+                 image_type: ImageType=ImageType.UNKNOWN,
+                 inline: bool=False):
         """Create an image element.
 
         Args:
             bbox (Bbox): A Bbox representing the image's visible extent
             original_bbox (Bbox): A Bbox representing the image's true extent
-            image_type (ImageType): Purpose of the image
             image (int): Index of page image store where image is found
             properties (Dict[str, Any]): Any additional properties of the image
+            image_type (ImageType, optional): Purpose of the image. Default is UNKNOWN
             inline (bool, optional): Whether the image layout should be inline or additional. 
                 Generally set later in processing. Defaults to False.
         """

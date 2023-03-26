@@ -1,5 +1,5 @@
 import logging
-from typing import Any, List
+from typing import Any, Dict, List
 
 import fitz
 
@@ -9,38 +9,41 @@ from ..utils.logging import get_logger
 
 
 class DrawingHandler(object):
+    """Extracts drawings from a PDF and applies standardisation and basic type inference
+    """
 
     def __init__(self, pdf: fitz.Document, log_level: int=logging.INFO):
         self.logger = get_logger('drawing-handler', log_level=log_level)
-        self.page_bbox = None
-        self.page = None
-        self.page_bbox = None
-        self.pdf = pdf
+        self.page_bbox: Bbox = None #type:ignore
+        self.page: fitz.Page = None #type:ignore
+        self.pdf: fitz.Document = pdf
         self.merge_rects = True
 
-    def _get_line_page_overlap(self, bbox: Any) -> float:
-        x = bbox[2] - self.page_bbox[0] > 0 and bbox[2] > self.page_bbox[0]
-        y = bbox[3] - self.page_bbox[1] > 0 and bbox[3] > self.page_bbox[1]
-        return x and y
+    def get_page_drawings(self, page: fitz.Page) -> Dict[DrawingType, List[DrawingElement]]:
+        """Extract all drawings from the page and apply basic classification
 
-    def get_page_drawings(self, page: fitz.Page, merge_boxes=True) -> List[DrawingElement]:
+        Args:
+            page (fitz.Page)
+
+        Returns:
+            Dict[DrawingType, List[DrawingElement]]: Drawings found, separated by type
+        """
         self.logger.debug("Starting drawing extraction")
         self.page = page
         bound = page.bound()
-        self.page_bbox = Bbox(*bound, bound[2], bound[3])
-        _,_,self.width,self.height = page.bound()
+        self.page_bbox = Bbox(*bound, bound[2], bound[3]) #type:ignore
 
-        processed_drawings = {t:[] for t in DrawingType}
+        processed_drawings: Dict[DrawingType, List[DrawingElement]] = {t:[] for t in DrawingType}
         for d in self.page.get_cdrawings():
             if d['type'] == 'f' and d['fill_opacity'] > 0.9 and len(d['items']) > 2:
                 width = d['rect'][2] - d['rect'][0]
                 height = d['rect'][3] - d['rect'][1]
                 if abs(width/height - 1) < 0.1 and width < 5:
-                    drawing =  DrawingElement(bbox = Bbox(*d['rect'], bound[2], bound[3]), 
+                    drawing =  DrawingElement(bbox = Bbox(*d['rect'], bound[2], bound[3]), #type:ignore
                                     drawing_type=DrawingType.BULLET, opacity=d['fill_opacity']
                                 )
                     processed_drawings[drawing.drawing_type].append(drawing)
-                    self.logger.debug(f"Found bullet with box {drawing.bbox}")
+                    self.logger.debug("Found bullet with box %s", str(drawing.bbox))
                     continue
                 
             if d['type'] == 'f':
@@ -48,7 +51,9 @@ class DrawingHandler(object):
                     self.logger.debug("Filtered drawing due to low fill opacity")
                     continue
 
-                drawing = DrawingElement(bbox=Bbox(*d['rect'], bound[2], bound[3]), drawing_type=None, opacity=d['fill_opacity'])
+                drawing = DrawingElement(bbox=Bbox(*d['rect'], bound[2], bound[3]), #type:ignore
+                                         drawing_type=DrawingType.UNKNOWN, 
+                                         opacity=d['fill_opacity'])
                 drawing.bbox.x0 = max(drawing.bbox.x0, 0)
                 drawing.bbox.y0 = max(drawing.bbox.y0, 0)
                 drawing.bbox.x1 = min(drawing.bbox.x1, bound.x1)
@@ -57,13 +62,15 @@ class DrawingHandler(object):
 
                 if (drawing.bbox.height() < 10) or (drawing.bbox.width() < 10):
                     if overlap > 0:
-                        self.logger.debug(f"Found line {len(processed_drawings[DrawingType.LINE])} with box {drawing.bbox}")
+                        self.logger.debug("Found line %d with box %s", 
+                                          len(processed_drawings[DrawingType.LINE]), str(drawing.bbox))
                         drawing.drawing_type = DrawingType.LINE
                         processed_drawings[drawing.drawing_type].append(drawing)
                         continue
                 
                 if overlap > 0.001 and overlap < 0.55:
-                    self.logger.debug(f"Found rectangle {len(processed_drawings[DrawingType.RECT])} with box {drawing.bbox}")
+                    self.logger.debug("Found rectangle %d with box %s",
+                                      len(processed_drawings[DrawingType.RECT]), str(drawing.bbox))
                     drawing.drawing_type = DrawingType.RECT
                     processed_drawings[drawing.drawing_type].append(drawing)
 
@@ -92,7 +99,7 @@ class DrawingHandler(object):
                                     merged_boxes.append(b1)
                                 merged[i] = True
                                 merged[j+i+1] = True
-                                self.logger.debug(f"Merged boxes {i} and {j+i+1}")
+                                self.logger.debug("Merged boxes %d and %d", i, j+i+1)
                                 did_merge = True
                         
                         if not merged[i]:
@@ -106,6 +113,6 @@ class DrawingHandler(object):
             processed_drawings[DrawingType.RECT] = merged_boxes
 
         for t in processed_drawings:
-            self.logger.debug(f"Found {len(processed_drawings[t])} {t} drawings")
+            self.logger.debug("Found %d %s drawings", len(processed_drawings[t]), t.name )
 
         return processed_drawings

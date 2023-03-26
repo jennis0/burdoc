@@ -13,18 +13,19 @@ class DrawingType(Enum):
     LINE = auto()
     RECT = auto()
     BULLET = auto()
+    UNKNOWN = auto()
 
 
 class DrawingElement(LayoutElement):
     """Core element representing a drawing"""
     
-    def __init__(self, bbox: Bbox, drawing_type: DrawingType, opacity: float):
+    def __init__(self, bbox: Bbox, opacity: float, drawing_type: DrawingType=DrawingType.UNKNOWN):
         """Creates a drawing element.
 
         Args:
             bbox (Bbox): Bbox of the extent of the drawing
-            drawing_type (DrawingType): Semantic purpose of the drawing
             opacity (float): Opacity of the drawing
+            drawing_type (DrawingType, optional): Semantic purpose of the drawing. Default is UNKNOWN
         """
         super().__init__(bbox, title="Drawing")
         self.drawing_type = drawing_type
