@@ -12,6 +12,7 @@ A python library for parsing structured text, images, and tables from PDFs.
 
 <div align="center">
 
+<a href="">![Build](https://img.shields.io/github/actions/workflow/status/jennis0/burdoc/python-package.yml)
 <a href="">![Downloads](https://img.shields.io/github/downloads/jennis0/Burdoc/total)</a> 
 <a href="">![Contributors](https://img.shields.io/github/contributors/jennis0/burdoc?color=dark-green)</a>
 <a href="">![Issues](https://img.shields.io/github/issues/jennis0/burdoc)</a>
