@@ -10,7 +10,7 @@ class LineElement(LayoutElement):
 
     bbox: Bbox
     spans: List[Span]
-    rotation: List[float]
+    rotation: Tuple[float, float]
 
     def __init__(self, bbox: Bbox, spans: List[Span], rotation:Tuple[float, float]):
         """Creates a line element

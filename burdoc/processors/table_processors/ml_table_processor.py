@@ -1,14 +1,14 @@
 import logging
 from enum import Enum, auto
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from plotly.graph_objects import Figure
 
-from ..elements.table import Table
-from ..table_strategies.detr_table_strategy import DetrTableStrategy
-from ..table_strategies.table_extractor_strategy import TableExtractorStrategy
-from .processor import Processor
+from ...elements import Table, TableParts
+from ..processor import Processor
+from .detr_table_strategy import DetrTableStrategy
+from .table_extractor_strategy import TableExtractorStrategy
 
 
 class MLTableProcessor(Processor):
@@ -59,15 +59,15 @@ class MLTableProcessor(Processor):
         for page, table_parts in extracted_tables.items():
             page_tables = []
             for table_bbox, structure in table_parts:
-                row_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.ROWHEADER]
-                rows = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.ROW]
-                col_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.COLUMNHEADER]
-                cols = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.COLUMN]
+                row_headers = [s for s in structure if s[0] == TableParts.ROWHEADER]
+                rows = [s for s in structure if s[0] == TableParts.ROW]
+                col_headers = [s for s in structure if s[0] == TableParts.COLUMNHEADER]
+                cols = [s for s in structure if s[0] == TableParts.COLUMN]
             
                 rs = col_headers + rows
                 cs = row_headers + cols
                 
-                merges  = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.SPANNINGCELL]
+                merges  = [s for s in structure if s[0] == TableParts.SPANNINGCELL]
 
                 if len(cols) < 2:
                     continue
@@ -114,7 +114,7 @@ class MLTableProcessor(Processor):
                             continue
                         
                         used_text[line_index] = table_index
-                        table_parts._cells[candidate_row_index][candidate_col_index].append(line)
+                        table_parts.cells[candidate_row_index][candidate_col_index].append(line)
                         continue
                         
                     elif table_line_x_overlap > 0.5 and table_line_y_overlap > 0.5:

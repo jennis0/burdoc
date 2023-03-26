@@ -8,10 +8,9 @@ import numpy as np
 from PIL import Image as PILImage
 from PIL.ImageFilter import GaussianBlur
 
-from ..elements.bbox import Bbox
-from ..elements.image import ImageElement, ImageType
-from ..utils.image_manip import get_image_palette
-from ..utils.logging import get_logger
+from ...elements import Bbox, ImageElement, ImageType
+from ...utils.image_manip import get_image_palette
+from ...utils.logging import get_logger
 
 
 class ImageHandler(object):

@@ -4,12 +4,10 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 from plotly.graph_objects import Figure
 
-from ..elements.bbox import Bbox
-from ..elements.table import Table
-from ..elements.textblock import TextBlock
-from ..table_strategies.table_extractor_strategy import TableExtractorStrategy
-from ..utils.layout_graph import LayoutGraph
-from .processor import Processor
+from ...elements import Bbox, Table, TableParts, TextBlock
+from ...utils.layout_graph import LayoutGraph
+from ..processor import Processor
+from .table_extractor_strategy import TableExtractorStrategy
 
 
 class RulesTableProcessor(Processor):
@@ -61,10 +59,10 @@ class RulesTableProcessor(Processor):
 
                 table_elements = []
                 for table_bbox, structure in section_tables:
-                    row_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.ROWHEADER]
-                    rows = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.ROW]
-                    col_headers = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.COLUMNHEADER]
-                    cols = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.COLUMN]
+                    row_headers = [s for s in structure if s[0] == TableParts.ROWHEADER]
+                    rows = [s for s in structure if s[0] == TableParts.ROW]
+                    col_headers = [s for s in structure if s[0] == TableParts.COLUMNHEADER]
+                    cols = [s for s in structure if s[0] == TableParts.COLUMN]
                 
                     rs = col_headers + rows
                     cs = row_headers + cols
@@ -73,7 +71,7 @@ class RulesTableProcessor(Processor):
                         if cs[0][1].width() / cs[1][1].width() > 0.9:
                             continue
 
-                    merges  = [s for s in structure if s[0] == TableExtractorStrategy.TableParts.SPANNINGCELL]
+                    merges  = [s for s in structure if s[0] == TableParts.SPANNINGCELL]
 
                     table_elements.append(Table(table_bbox[1], [[[] for _ in cs] for _ in rs], 
                                             row_boxes=rs, col_boxes=cs, merges=merges))
@@ -112,7 +110,7 @@ class RulesTableProcessor(Processor):
                                     bad_lines[table_index] += 1
                                     continue
 
-                                table._cells[candidate_row_index][candidate_col_index].append(line)
+                                table.cells[candidate_row_index][candidate_col_index].append(line)
                             
                             used_text[element_index] = table_index
                             break
@@ -129,7 +127,7 @@ class RulesTableProcessor(Processor):
                         continue
 
                     skip = False
-                    for row in table._cells:
+                    for row in table.cells:
                         if len(row[0]) == 0:
                             skip = True
                             break
@@ -480,16 +478,16 @@ class RulesTableProcessor(Processor):
         # fig = plt.imshow(5*(ah + av) + arr)
         # fig.show()
 
-        table = [TableExtractorStrategy.TableParts.TABLE, dims.clone()]
+        table = [TableParts.TABLE, dims.clone()]
         parts = []
         for i in range(len(h_lines) - 1):
             parts.append(
-                [TableExtractorStrategy.TableParts.ROW, Bbox(dims.x0, h_lines[i], dims.x1, h_lines[i+1], dims.page_width, dims.page_height)]
+                [TableParts.ROW, Bbox(dims.x0, h_lines[i], dims.x1, h_lines[i+1], dims.page_width, dims.page_height)]
             )
 
         for i in range(len(v_lines) - 1):
             parts.append(
-                [TableExtractorStrategy.TableParts.COLUMN, Bbox(v_lines[i], dims.y0, v_lines[i+1], dims.y1, dims.page_width, dims.page_height)]
+                [TableParts.COLUMN, Bbox(v_lines[i], dims.y0, v_lines[i+1], dims.y1, dims.page_width, dims.page_height)]
             )
 
         return (table, parts)

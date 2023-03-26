@@ -3,9 +3,8 @@ from typing import Dict, List
 
 import fitz
 
-from ..elements.bbox import Bbox
-from ..elements.drawing import DrawingElement, DrawingType
-from ..utils.logging import get_logger
+from ...elements import Bbox, DrawingElement, DrawingType
+from ...utils.logging import get_logger
 
 
 class DrawingHandler(object):

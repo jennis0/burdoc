@@ -1,12 +1,12 @@
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import torch
 from PIL import Image
 from transformers import DetrImageProcessor, TableTransformerForObjectDetection
 
-from ..elements.bbox import Bbox
+from ...elements import Bbox, TableParts
 from .table_extractor_strategy import TableExtractorStrategy
 
 
@@ -119,9 +119,9 @@ class DetrTableStrategy(TableExtractorStrategy):
         for label,score,bbox in zip(results['labels'].tolist(), results['scores'].tolist(), results['boxes'].tolist()):
             corrected_bb = [bbox[0]+corrections[0]-bbox_offset_x, bbox[1]+corrections[1]-bbox_offset_y, 
                             bbox[2]+corrections[0]+bbox_offset_x, bbox[3]+corrections[1]+bbox_offset_y]
-            part_type = TableExtractorStrategy.TableParts._value2member_map_[label]
-            if part_type == TableExtractorStrategy.TableParts.TABLE:
-                table = (TableExtractorStrategy.TableParts._value2member_map_[label], Bbox(*corrected_bb, page_width, page_height), score)
+            part_type = TableParts._value2member_map_[label]
+            if part_type == TableParts.TABLE:
+                table = (TableParts._value2member_map_[label], Bbox(*corrected_bb, page_width, page_height), score)
             else:
-                parts.append((TableExtractorStrategy.TableParts._value2member_map_[label], Bbox(*corrected_bb, page_width, page_height), score))
+                parts.append((TableParts._value2member_map_[label], Bbox(*corrected_bb, page_width, page_height), score))
         return (table, parts)

@@ -1,22 +1,13 @@
 import abc
 import logging
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from ..utils.logging import get_logger
+from ...utils.logging import get_logger
 
 
 class TableExtractorStrategy(abc.ABC):
     """Abstract base class defining the interface for table extraction methods. This is consistent between ML and rules based methods"""
-
-    class TableParts(Enum):
-        """Enum defining the different parts of a table that can be extracted"""
-        TABLE = 0
-        COLUMN = 1
-        ROW = 2
-        COLUMNHEADER = 3
-        ROWHEADER = 4
-        SPANNINGCELL = 5
 
     def __init__(self, name: str, log_level: int=logging.INFO):
         self.name = name

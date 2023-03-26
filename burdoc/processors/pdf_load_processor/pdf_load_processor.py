@@ -7,15 +7,12 @@ import fitz
 from PIL import Image
 from plotly.graph_objects import Figure
 
-from ..elements.bbox import Bbox
-from ..elements.drawing import DrawingElement, DrawingType
-from ..elements.image import ImageElement, ImageType
-from ..elements.line import LineElement
-from ..elements.span import Span
-from ..pdf_handlers.drawing_handler import DrawingHandler
-from ..pdf_handlers.image_handler import ImageHandler
-from ..pdf_handlers.text_handler import TextHandler
-from .processor import Processor
+from ...elements import (Bbox, DrawingElement, DrawingType, ImageType,
+                         LineElement, Span)
+from ..processor import Processor
+from .drawing_handler import DrawingHandler
+from .image_handler import ImageHandler
+from .text_handler import TextHandler
 
 
 class PDFLoadProcessor(Processor):
@@ -51,11 +48,6 @@ class PDFLoadProcessor(Processor):
             pdf = None
         
         return pdf
-
-    def _load_handlers(self, pdf: fitz.Document):
-        self.text_handler = TextHandler(pdf, self.log_level)
-        self.image_handler = ImageHandler(pdf, self.log_level)
-        self.drawing_handler = DrawingHandler(pdf, self.log_level)
 
     def get_page_image(self, page: fitz.Page) -> Image:
         pix = page.get_pixmap()
@@ -96,7 +88,7 @@ class PDFLoadProcessor(Processor):
                         font_statistics[s.font.family][s.font.name] = dict(family=s.font.family, basefont=s.font.name, counts={s.font.size: 1})
 
     def _process(self, data: Dict[str, Any]):
-
+        
         performance_tracker: Dict[str, List[float]] = {
             'read_pdf':[],
             'load_page':[],
@@ -116,8 +108,11 @@ class PDFLoadProcessor(Processor):
         if not pdf:
             self.logger.error("Failed to load PDF from %s", path)
             return
-        self._load_handlers(pdf)
         performance_tracker['read_pdf'].append(time.perf_counter() - start)
+        
+        text_handler = TextHandler(pdf, self.log_level)
+        image_handler = ImageHandler(pdf, self.log_level)
+        drawing_handler = DrawingHandler(pdf, self.log_level)
         
         metadata: Dict[str, Any] = {
             'title':os.path.basename(path),
@@ -158,18 +153,18 @@ class PDFLoadProcessor(Processor):
             performance_tracker['page_image_generation'].append(time.perf_counter() - start)
                 
             start = time.perf_counter()
-            image_elements, images = self.image_handler.get_image_elements(page, data['page_images'][page_number])
+            image_elements, images = image_handler.get_image_elements(page, data['page_images'][page_number])
             performance_tracker['image_handler'].append(time.perf_counter() - start)
         
             data['image_elements'][int(page_number)] = image_elements
             data['images'][int(page_number)] = images
             
             start = time.perf_counter()
-            data['drawing_elements'][page_number] = self.drawing_handler.get_page_drawings(page)
+            data['drawing_elements'][page_number] = drawing_handler.get_page_drawings(page)
             performance_tracker['drawing_handler'].append(time.perf_counter() - start)
             
             start = time.perf_counter()
-            data['text_elements'][page_number] = self.text_handler.get_page_text(page)
+            data['text_elements'][page_number] = text_handler.get_page_text(page)
             performance_tracker['image_handler'].append(time.perf_counter() - start)
 
             if DrawingType.BULLET in data['drawing_elements'][page_number]:

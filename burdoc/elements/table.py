@@ -1,8 +1,19 @@
+from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
-from ..table_strategies.table_extractor_strategy import TableExtractorStrategy
+#from ..table_strategies.table_extractor_strategy import TableExtractorStrategy
 from .bbox import Bbox
 from .element import LayoutElement
+
+
+class TableParts(Enum):
+    """Enum defining the different parts of a table that can be extracted"""
+    TABLE = 0
+    COLUMN = 1
+    ROW = 2
+    COLUMNHEADER = 3
+    ROWHEADER = 4
+    SPANNINGCELL = 5
 
 
 class Table(LayoutElement):
@@ -12,8 +23,8 @@ class Table(LayoutElement):
                  cells: List[List[Any]], 
                  row_headers: Optional[List[Any]]=None,
                  col_headers: Optional[List[Any]]=None,
-                 row_boxes: Optional[List[Tuple[TableExtractorStrategy.TableParts, List[Bbox]]]]=None,
-                 col_boxes: Optional[List[Tuple[TableExtractorStrategy.TableParts, List[Bbox]]]]=None,
+                 row_boxes: Optional[List[Tuple[TableParts, List[Bbox]]]]=None,
+                 col_boxes: Optional[List[Tuple[TableParts, List[Bbox]]]]=None,
                  merges: Optional[Dict[Tuple[int, int], List[Tuple[int,int]]]]=None
     ):
         super().__init__(bbox, title='Table')
@@ -71,7 +82,7 @@ class Table(LayoutElement):
         if self.col_headers:
             extras['ch'] = [c.to_json() for c in self.col_headers]
         if self.cells:
-            json_cells = []
+            json_cells: List[List[Any]] = []
             for row in self.cells:
                 json_cells.append([])
                 for col in row:

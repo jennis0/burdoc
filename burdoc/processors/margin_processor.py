@@ -102,7 +102,8 @@ class MarginProcessor(Processor):
         data['extracted_page_number'] = {}
 
         for page_number, page_bound, text, tables in self.get_page_data(data):
-            data['extracted_page_number'], res = self._process_text(page_bound, text, tables)
+            epn, res = self._process_text(page_bound, text, tables)
+            data['extracted_page_number'][page_number] = epn
             for t,value in res.items():
                 data[t][page_number] = value
 

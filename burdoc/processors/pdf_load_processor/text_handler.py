@@ -3,9 +3,8 @@ from typing import List
 
 import fitz
 
-from ..elements.bbox import Bbox
-from ..elements.line import LineElement
-from ..utils.logging import get_logger
+from ...elements import Bbox, LineElement
+from ...utils.logging import get_logger
 
 
 class TextHandler(object):
