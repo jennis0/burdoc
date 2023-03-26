@@ -20,7 +20,8 @@ dependencies = [
     "Pillow>=9.4",
     "plotly>=5.12",
     "PyMuPDF>=1.21",
-    "scipy>=1.10"
+    "scipy>=1.10",
+    "pandas>=1.5"
 ]
 
 [tool.setuptools]
