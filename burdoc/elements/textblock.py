@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .bbox import Bbox
 from .element import LayoutElementGroup
@@ -42,11 +42,14 @@ class TextBlock(LayoutElementGroup):
         """
         return " ".join(i.get_text() for i in self.items)
 
-    def to_json(self, extras: Optional[Dict]=None, include_bbox: bool=False, **kwargs):
+    def to_json(self, extras: Optional[Dict[str, Any]]=None, include_bbox: bool=False, **kwargs):
         """Convert the textblock into a JSON object
 
         Args:
+            extras (Dict[str, Any], optional): Any additional fields that should be included. 
+                Defaults to None
             include_bbox (bool, optional): Defaults to False.
+            **kwargs: Arbitrary keyword arguments to be pass to superclass
 
         Returns:
             Dict[str, Any]

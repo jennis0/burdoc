@@ -166,6 +166,9 @@ class Bbox:
             float
         """
         x_overlap = max(min(self.x1, other_bbox.x1) - max(self.x0, other_bbox.x0), 0)
+        if x_overlap < 0.01:
+            return 0.
+        
         if normalisation == "":
             width = 1.
         if normalisation == "first":
@@ -179,7 +182,7 @@ class Bbox:
         elif normalisation == 'page':
             width = self.page_width
         if width < 1 and x_overlap > 0:
-            return 1
+            return 1.
         return x_overlap / width
 
     def y_overlap(self, other_bbox: Bbox, normalisation: str = "") -> float:
@@ -202,7 +205,7 @@ class Bbox:
         """
         y_overlap = max(min(self.y1, other_bbox.y1) - max(self.y0, other_bbox.y0), 0)
         if y_overlap < 0.01:
-            return 0
+            return 0.
         
         if normalisation == "":
             height = 1.
@@ -218,7 +221,7 @@ class Bbox:
             height = self.page_height
 
         if height < 1:
-            return 1
+            return 1.
         
         return y_overlap / height
 
@@ -250,7 +253,7 @@ class Bbox:
 
     def x_distance(self, other_bbox: Bbox) -> float:
         """Returns the distance between called and passed Bbox in the x direction.
-        Note that this is edge to edge. It returns negatively if passed Bbox is below 
+        Note that this is calculated centre to centre. It returns negatively if passed Bbox is below 
         this Bbox.
 
         Args:
@@ -263,7 +266,7 @@ class Bbox:
     
     def y_distance(self, other_bbox: Bbox) -> float:
         """Returns the distance between called and passed Bbox in the y direction.
-        Note that this is edge to edge. It returns negatively if passed Bbox is to the
+        Note that this is calculated centre to centre. It returns negatively if passed Bbox is to the
         right of this Bbox.
 
         Args:

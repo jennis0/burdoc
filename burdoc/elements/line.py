@@ -1,5 +1,4 @@
-from typing import Any, List, Optional, Dict
-
+from typing import Any, Dict, List, Optional, Tuple
 
 from .bbox import Bbox
 from .element import LayoutElement
@@ -13,7 +12,7 @@ class LineElement(LayoutElement):
     spans: List[Span]
     rotation: List[float]
 
-    def __init__(self, bbox: Bbox, spans: List[Span], rotation:List[float]):
+    def __init__(self, bbox: Bbox, spans: List[Span], rotation:Tuple[float, float]):
         """Creates a line element
 
         Args:
@@ -58,7 +57,7 @@ class LineElement(LayoutElement):
 
     def __str__(self):
         extras ={"Text":self.spans[0].text if len(self.spans)>0 else ''}
-        return self._str_rep(extras)
+        return self._str_rep(extras)           
     
     def to_json(self, extras: Optional[Dict]=None, include_bbox: bool=False, **kwargs):
         if not extras:
