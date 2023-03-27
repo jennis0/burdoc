@@ -38,4 +38,4 @@ class Span:
         Returns:
             Dict[str, Any]: A JSON representation of the span.
         """
-        return {'type':'span', 'text':self.text, 'font':self.font.to_json()}
+        return {'name':'span', 'text':self.text, 'font':self.font.to_json()}
