@@ -90,7 +90,7 @@ class Processor(abc.ABC):
         
         for r in self.requirements()[0]:
             if r not in data:
-                self.logger.error("Missing required data field {r}", r=r)
+                self.logger.error("Missing required data field %s", r)
                 return False
         return True
     

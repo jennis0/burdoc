@@ -183,6 +183,10 @@ class TestBbox():
         expected_bbox = Bbox(50., 75., 125., 150., 200., 300.)
         assert Bbox.merge([bbox, bbox2]) == expected_bbox
 
+    def test_merge_fail_on_empty(self):
+        with pytest.raises(ValueError):
+            Bbox.merge([])
+
     def test_to_json(self, bbox):
         expected_json = {
             'x0':50., 'y0':75., 'x1':100., 'y1':150.

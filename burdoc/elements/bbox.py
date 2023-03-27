@@ -299,9 +299,15 @@ class Bbox:
         Args:
             bboxes (List[Bbox])
 
+        Raises:
+            ValueError: No bboxes passed
+
         Returns:
             Bbox
         """
+        if len(bboxes) == 0:
+            raise ValueError("At least one bbox required")
+        
         bbox = Bbox(1000, 1000, 0, 0, bboxes[0].page_width, bboxes[0].page_height)
         for bb in bboxes:
             bbox.x0 = min(bbox.x0, bb.x0)

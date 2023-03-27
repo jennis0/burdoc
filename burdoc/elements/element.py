@@ -25,7 +25,7 @@ class LayoutElement:
                 extra_str = " "+extra_str
         else:
             extra_str = ""
-        return f"<{self.title} Id={self.id[8]}... Bbox={self.bbox}{extra_str}>" 
+        return f"<{self.title} Id={self.id[:8]}... Bbox={self.bbox}{extra_str}>" 
 
     def __str__(self) -> str:
         return self._str_rep()
@@ -59,7 +59,9 @@ class LayoutElementGroup(LayoutElement):
     LayoutElementGroup is the rectangle encompassing all Bboxes of it's members.
     """
 
-    def __init__(self, bbox: Optional[Bbox]=None, items: Optional[List[LayoutElement]]=None, open: bool=False, title: str="LayoutElementGroup"):
+    def __init__(self, bbox: Optional[Bbox]=None, 
+                 items: Optional[List[LayoutElement]]=None, 
+                 title: str="LayoutElementGroup"):
 
         if bbox and not items:
             super().__init__(bbox=bbox, title=title)
@@ -74,7 +76,6 @@ class LayoutElementGroup(LayoutElement):
             raise TypeError("Require either a bbox or item list to create LayoutElementGroup")
         
         self._index = 0
-        self.open = open
 
     def append(self, item: LayoutElement, update_bbox: bool=True):
         """Add an item to the group
@@ -96,9 +97,12 @@ class LayoutElementGroup(LayoutElement):
             item (LayoutElement): Item to remove
             update_bbox (bool, optional): Should the group Bbox be recalculated or ignored?
                 Defaults to True.
+                
+        Raises:
+            ValueError: Item not present in list
         """
         self.items.remove(item)
-        if update_bbox:
+        if update_bbox and len(self.items) > 0:
             self.bbox = Bbox.merge([i.bbox for i in self.items])
 
     def merge(self, leg: LayoutElementGroup) -> LayoutElementGroup:
