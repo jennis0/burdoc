@@ -1,6 +1,6 @@
 import logging
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 from plotly.graph_objects import Figure

@@ -1,6 +1,7 @@
 import abc
 import logging
 from typing import Dict, List, Tuple
+from PIL import Image
 
 from ...elements import Bbox, TableParts
 from ...utils.logging import get_logger
@@ -17,8 +18,10 @@ class TableExtractorStrategy(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def requirements() -> List[str]:
-        '''Return list of data requirements for this strategy'''
+        """Return list of data requirements for this strategy"""
 
     @abc.abstractmethod
-    def extract_tables(self, **kwargs) -> Dict[int, List[List[Tuple[TableParts, Bbox]]]]:
-        '''Extracts tables and returns them in a complex JSON format'''
+    def extract_tables(self, page_numbers: List[int], page_images: Dict[int, Image.Image]) \
+        -> Dict[int, List[List[Tuple[TableParts, Bbox]]]]:
+        """Extracts tables and returns them in a complex JSON format
+        """

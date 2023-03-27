@@ -182,10 +182,11 @@ class LayoutProcessor(Processor):
 
     def _create_blocks(self, section: PageSection) -> List[TextBlock]:
         '''Group all of the items within a section into blocks'''
+        
         blocks: List[TextBlock] = []
         block_open_state: Dict[str, bool] = {}
         section.items.sort(key=lambda l: l.bbox.y0*1000 + l.bbox.x0)
-        list_re = re.compile("^(\u2022)|^\((\d+)\.?\)|^(\d+)\.\s|^([a-z])\.\s|^\(([a-z])\)\.?", re.UNICODE)
+        list_re = re.compile("^(\u2022)|^\((\d+)\.?\)|^(\d+)\.\s|^([a-z])\.\s|^\(([a-z])\)\.?", re.UNICODE) #pylint: disable=W1401
 
 
         for line in section.items: #type:LineElement #type:ignore

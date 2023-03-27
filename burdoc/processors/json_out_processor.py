@@ -29,7 +29,7 @@ class JSONOutProcessor(Processor):
     def generates(self) -> List[str]:
         return ['content', 'images']
     
-    def _to_json(self, elements: List[LayoutElement]):
+    def _to_json(self, elements: List[LayoutElement]) -> List[Dict[str, Any]]:
         return [e.to_json() for e in elements]
 
     def _process(self, data: Any) -> Any:

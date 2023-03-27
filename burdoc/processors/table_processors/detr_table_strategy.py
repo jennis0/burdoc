@@ -50,7 +50,7 @@ class DetrTableStrategy(TableExtractorStrategy):
         return ['page_images']
 
     def extract_tables(self, page_numbers: List[int], page_images: Dict[int, Image.Image]) \
-        -> Dict[int, List[List[Tuple[TableParts, Bbox]]]]:
+        -> Dict[int, List[List[Tuple[TableParts, Bbox]]]]: #type:ignore
 
         i = 0
         results = {}
@@ -71,7 +71,7 @@ class DetrTableStrategy(TableExtractorStrategy):
         s = time.time()
         encoding = self.extractor.preprocess(page_images, return_tensors='pt', 
                                              do_resize=True, do_rescale=True, do_normalize=True)
-        self.logger.debug(f"Encoding {round(time.time() - s, 2)}")
+        self.logger.debug("Encoding %f", round(time.time() - s, 3))
         return encoding
 
     def _do_extraction(self, model, images: List[Image.Image], threshold: float) -> List[Dict[str, Any]]:
@@ -79,15 +79,15 @@ class DetrTableStrategy(TableExtractorStrategy):
         sizes = torch.Tensor([[i.size[1], i.size[0]] for i in images])
         if self.cuda:
             features.to(self.device)
-            sizes = sizes.to(self.device)
+            sizes = sizes.to(self.device) #type:ignore
         with torch.no_grad():
             start = time.time()
             outputs = model(**features)
-            self.logger.debug(f"Model {round(time.perf_counter() - start, 3)}")
+            self.logger.debug("Model %f", round(time.perf_counter() - start, 3))
         
         start = time.perf_counter()
         results = self.extractor.post_process_object_detection(outputs, threshold=threshold, target_sizes=sizes)
-        self.logger.debug(f"Postprocess {round(time.perf_counter() - start, 3)}")
+        self.logger.debug("Postprocess %s", round(time.perf_counter() - start, 3))
         return results
 
     def _extract_tables_batch(self, page_images: List[Image.Image]) -> List[List[List[Tuple[TableParts, Bbox]]]]:
