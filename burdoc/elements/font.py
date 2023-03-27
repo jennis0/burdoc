@@ -21,4 +21,4 @@ class Font:
         Returns:
             Dict[str, Any]: A JSON representation of the font.
         """
-        return {'type':'font', 'font':self.name, 'family':self.family, 'size':self.size, 'colour':self.colour, 'bold':self.bold, 'italic':self.italic, 'superscript':self.superscript}
+        return {'name':'font', 'font':self.name, 'family':self.family, 'size':self.size, 'colour':self.colour, 'bold':self.bold, 'italic':self.italic, 'superscript':self.superscript}

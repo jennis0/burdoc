@@ -209,7 +209,7 @@ class PDFLoadProcessor(Processor):
             DrawingType.LINE:"DarkBlue",
             DrawingType.RECT:"Blue",
             DrawingType.BULLET:"LightBlue",
-            "text":"Grey",
+            "text_elements":"Grey",
         }
 
         def add_rect(fig, bbox, colour):

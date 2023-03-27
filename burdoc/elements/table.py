@@ -23,8 +23,8 @@ class Table(LayoutElement):
                  cells: List[List[Any]], 
                  row_headers: Optional[List[Any]]=None,
                  col_headers: Optional[List[Any]]=None,
-                 row_boxes: Optional[List[Tuple[TableParts, List[Bbox]]]]=None,
-                 col_boxes: Optional[List[Tuple[TableParts, List[Bbox]]]]=None,
+                 row_boxes: Optional[List[Tuple[TableParts, Bbox]]]=None,
+                 col_boxes: Optional[List[Tuple[TableParts, Bbox]]]=None,
                  merges: Optional[Dict[Tuple[int, int], List[Tuple[int,int]]]]=None
     ):
         super().__init__(bbox, title='Table')

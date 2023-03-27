@@ -13,10 +13,10 @@ from .table_extractor_strategy import TableExtractorStrategy
 
 class MLTableProcessor(Processor):
     """Wrapper for ML models to detect tables. Separated from rules based processor as
-    it can only be run single-threaded.
+    it can only be run single-threaded.  
 
-    Requires: ['text_elements'] and additional requirements from specific strategy
-    Optional: []
+    Requires: ['text_elements'] and additional requirements from specific strategy  
+    Optional: []  
     Generates: ['tables', 'text_elements']
     """
 
@@ -45,55 +45,66 @@ class MLTableProcessor(Processor):
     def generates(self) -> List[str]:
         return ['tables', 'text_elements']
     
-    def _process(self, data: Any) -> Optional[Table]:
-        reqs = self.strategy.requirements()
+    def _process(self, data: Dict[str, Any]):
+        required_fields = self.strategy.requirements()
         fields = {r:data[r] for r in self.strategy.requirements()}
-        fields['page_numbers'] = list(data[reqs[0]].keys())
+        fields['page_numbers'] = list(data[required_fields[0]].keys())
+        
+        data['tables'] = {p:[] for p  in fields['page_numbers']}
+        
         extracted_tables = self.strategy.extract_tables(**fields)
 
-        data['tables'] = {p:[] for p  in fields['page_numbers']}
-
         if len(extracted_tables) == 0:
-            return None
+            return
         
-        for page, table_parts in extracted_tables.items():
-            page_tables = []
-            for table_bbox, structure in table_parts:
-                row_headers = [s for s in structure if s[0] == TableParts.ROWHEADER]
-                rows = [s for s in structure if s[0] == TableParts.ROW]
-                col_headers = [s for s in structure if s[0] == TableParts.COLUMNHEADER]
-                cols = [s for s in structure if s[0] == TableParts.COLUMN]
-            
-                rs = col_headers + rows
-                cs = row_headers + cols
-                
-                merges  = [s for s in structure if s[0] == TableParts.SPANNINGCELL]
+        for page, list_of_table_parts in extracted_tables.items():
 
-                if len(cols) < 2:
+            #Create a list of table candidates for the page
+            page_table_candidates: List[Table] = []
+            for table_parts in list_of_table_parts:
+                table_bbox  = table_parts[0][1]
+                row_headers = [s for s in table_parts[1:] if s[0] == TableParts.ROWHEADER]
+                rows        = [s for s in table_parts[1:] if s[0] == TableParts.ROW]
+                col_headers = [s for s in table_parts[1:] if s[0] == TableParts.COLUMNHEADER]
+                cols        = [s for s in table_parts[1:] if s[0] == TableParts.COLUMN]
+                merges      = [s for s in table_parts[1:] if s[0] == TableParts.SPANNINGCELL]  
+            
+                all_rows = col_headers + rows
+                all_cols = row_headers + cols
+                
+                if len(all_cols) < 2:
                     continue
 
-                page_tables.append(Table(table_bbox[1], [[[] for _ in cs] for _ in rs], 
-                                         row_boxes=rs, col_boxes=cs, merges=merges))
-
-            bad_lines = np.array([0 for _ in page_tables])
+                page_table_candidates.append(Table(table_bbox, [[[] for _ in all_cols] for _ in all_rows], 
+                                         row_boxes=all_rows, col_boxes=all_cols, merges=merges))
+                
+    
+            bad_lines = np.array([0 for _ in page_table_candidates])
             used_text = np.array([-1 for _ in data['text_elements'][page]])
+            
             for line_index,line in enumerate(data['text_elements'][page]):
                 shrunk_bbox = line.bbox.clone()
                 shrunk_bbox.y0 += 2
                 if shrunk_bbox.height() > 8:
                     shrunk_bbox.y1 -= 5
- 
-                for table_index,table_parts in enumerate(page_tables):
-                    table_line_x_overlap = shrunk_bbox.x_overlap(table_parts.bbox, 'first')
-                    table_line_y_overlap = shrunk_bbox.y_overlap(table_parts.bbox, 'first')
   
+                for table_index,candidate_table in enumerate(page_table_candidates):
+                    
+                    if not candidate_table.row_boxes or not candidate_table.col_boxes:
+                        continue
+                    
+                    table_line_x_overlap = shrunk_bbox.x_overlap(candidate_table.bbox, 'first')
+                    table_line_y_overlap = shrunk_bbox.y_overlap(candidate_table.bbox, 'first')
+                      
                     if table_line_x_overlap > 0.93 and table_line_y_overlap > 0.93:
 
+                        #Find correct row
                         candidate_row_index = -1
-                        for row_index,row in enumerate(table_parts.row_boxes):
+                        for row_index,row in enumerate(candidate_table.row_boxes):
                             if shrunk_bbox.overlap(row[1], 'first') > 0.85:
                                 candidate_row_index = row_index
                                 break
+                        #If no correct row, punish table candiate
                         if candidate_row_index < 0:
                             if table_line_x_overlap > 0.99 and table_line_y_overlap > 0.99:
                                 bad_lines[table_index] += 10
@@ -101,11 +112,13 @@ class MLTableProcessor(Processor):
                                 bad_lines[table_index] += 1   
                             continue
 
+                        #Find correct column
                         candidate_col_index = -1
-                        for col_index,col in enumerate(table_parts.col_boxes):
+                        for col_index,col in enumerate(candidate_table.col_boxes):
                             if line.bbox.overlap(col[1], 'first') > 0.85:
                                 candidate_col_index = col_index
                                 break
+                        #If no correct row, punish table candidate
                         if candidate_col_index < 0:
                             if table_line_x_overlap > 0.99 and table_line_y_overlap > 0.99:
                                 bad_lines[table_index] += 10
@@ -113,32 +126,32 @@ class MLTableProcessor(Processor):
                                 bad_lines[table_index] += 1
                             continue
                         
+                        #Note which table text has been assigned too
                         used_text[line_index] = table_index
-                        table_parts.cells[candidate_row_index][candidate_col_index].append(line)
+                        #Add text to table
+                        candidate_table.cells[candidate_row_index][candidate_col_index].append(line)
                         continue
                         
-                    elif table_line_x_overlap > 0.5 and table_line_y_overlap > 0.5:
+                    #If table overlaps with none-table text, punish table
+                    if table_line_x_overlap > 0.5 and table_line_y_overlap > 0.5:
                         bad_lines[table_index] += 10
-
                     elif table_line_x_overlap > 0.1 and table_line_y_overlap > 0.1:
                         bad_lines[table_index] += 1
 
-            for line_index,z in enumerate(zip(page_tables, bad_lines)):
-                table_parts = z[0]
-                bl = z[1]
-                if bl >= 3:
+            #Check badness of tables and either accept them or unmark any used text
+            for line_index,tables_and_bad_line_count in enumerate(zip(page_table_candidates, bad_lines)):
+                table = tables_and_bad_line_count[0]
+                bad_line_count = tables_and_bad_line_count[1]
+                                
+                if bad_line_count >= 11:
                     used_text[used_text == line_index] = -1
                     continue
 
-                data['tables'][page].append(table_parts)
+                data['tables'][page].append(table)
 
-            keep_text = []
-            for line,u in zip(data['text_elements'][page], used_text):
-                if u >= 0:
-                    continue
-                keep_text.append(line)
-
-            data['text_elements'][page] = keep_text   
+            #Filter text that has been inserted into tables
+            data['text_elements'][page] = [t for t,is_used in zip(data['text_elements'][page], used_text) \
+                                                if is_used < 0]
 
     def add_generated_items_to_fig(self, page_number:int, fig: Figure, data: Dict[str, Any]):
         colours = {
@@ -159,12 +172,12 @@ class MLTableProcessor(Processor):
         for t in data['tables'][page_number]:
             add_rect(fig, t.bbox, colours["table"])
 
-            for rb in t.row_boxes:
-                add_rect(fig, rb[1], colours['row'])
-            for cb in t.col_boxes:
-                add_rect(fig, cb[1], colours['col'])
-            for sb in t.merges:
-                add_rect(fig, sb[1], colours['merges'])
+            for row_box in t.row_boxes:
+                add_rect(fig, row_box[1], colours['row'])
+            for col_box in t.col_boxes:
+                add_rect(fig, col_box[1], colours['col'])
+            for merged_box in t.merges:
+                add_rect(fig, merged_box[1], colours['merges'])
 
 
 

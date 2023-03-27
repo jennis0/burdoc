@@ -37,10 +37,10 @@ def test_span_to_json(text, size, fontname, colour, bold, italic, superscript):
     
     burdoc_span = Span(Font(fontname, fontname, size, colour, bold, italic, superscript), text)
     burdoc_span_json = {
-        'type':'span',
+        'name':'span',
         'text':text,
         'font':{
-            'type':'font',
+            'name':'font',
             'font':fontname,
             'family':fontname,
             'size':size,

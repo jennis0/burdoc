@@ -35,7 +35,7 @@ def text_to_html(text: Any):
 
 
 def item_to_html(item: Any):
-    if item['type'] == 'textblock':
+    if item['name'] == 'textblock':
         return text_to_html(item)
     
     return ""

@@ -14,7 +14,8 @@ from .processors import (AggregatorProcessor, ContentProcessor,
 try:
     from .processors import MLTableProcessor
     _HAS_TRANSFORMERS = True
-except ImportError:
+except ImportError as e:
+    print(e)
     _HAS_TRANSFORMERS = False
 
 from .utils.logging import get_logger
@@ -54,9 +55,13 @@ class BurdocParser(object):
         self.print_performance = print_performance
         
         self.processors: List[Tuple[Type[Processor], Dict, bool]] = [
-           (PDFLoadProcessor, {}, True),
+           (PDFLoadProcessor, {}, False),
         ]
-        if _HAS_TRANSFORMERS and use_ml_table_finding:
+        
+        if use_ml_table_finding:
+            if not _HAS_TRANSFORMERS:
+                raise ImportError("Transformer library needed for ML table finding")
+            
             self.processors.append(
                 (MLTableProcessor, {}, False)
             )

@@ -34,11 +34,10 @@
                     <li><a href="processors/json_out_processor.html">json_out_processor</a></li>
                     <li><a href="processors/layout_processor.html">layout_processor</a></li>
                     <li><a href="processors/margin_processor.html">margin_processor</a></li>
-                    <li><a href="processors/ml_table_processor.html">ml_table_processor</a></li>
                     <li><a href="processors/pdf_load_processor.html">pdf_load_processor</a></li>
                     <li><a href="processors/processor.html">processor</a></li>
                     <li><a href="processors/reading_order_processor.html">reading_order_processor</a></li>
-                    <li><a href="processors/rules_table_processor.html">rules_table_processor</a></li>
+                    <li><a href="processors/table_processors.html">table_processors</a></li>
             </ul>
 
 
@@ -56,10 +55,34 @@
                     <h1 class="modulename">
 <a href="./../burdoc.html">burdoc</a><wbr>.processors    </h1>
 
-                
-                
-                
-                
+                        <div class="docstring"><p>Composable processors used in the PDF processing chain.</p>
+</div>
+
+                        <input id="mod-processors-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+
+                        <label class="view-source-button" for="mod-processors-view-source"><span>View Source</span></label>
+
+                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="sd">&quot;&quot;&quot;Composable processors used in the PDF processing chain.&quot;&quot;&quot;</span>
+</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a>
+</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="kn">from</span> <span class="nn">.aggregator_processor</span> <span class="kn">import</span> <span class="n">AggregatorProcessor</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="kn">from</span> <span class="nn">.content_processor</span> <span class="kn">import</span> <span class="n">ContentProcessor</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="kn">from</span> <span class="nn">.json_out_processor</span> <span class="kn">import</span> <span class="n">JSONOutProcessor</span>
+</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="kn">from</span> <span class="nn">.layout_processor</span> <span class="kn">import</span> <span class="n">LayoutProcessor</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="kn">from</span> <span class="nn">.margin_processor</span> <span class="kn">import</span> <span class="n">MarginProcessor</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="kn">from</span> <span class="nn">.pdf_load_processor.pdf_load_processor</span> <span class="kn">import</span> <span class="n">PDFLoadProcessor</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="kn">from</span> <span class="nn">.processor</span> <span class="kn">import</span> <span class="n">Processor</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="kn">from</span> <span class="nn">.reading_order_processor</span> <span class="kn">import</span> <span class="n">ReadingOrderProcessor</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a>
+</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="k">try</span><span class="p">:</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a>    <span class="kn">from</span> <span class="nn">.table_processors.ml_table_processor</span> <span class="kn">import</span> <span class="n">MLTableProcessor</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a>    <span class="n">ML_PROCESSORS_LOADED</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span> <span class="c1">#pylint: disable=W0718</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>    <span class="n">ML_PROCESSORS_LOADED</span><span class="o">=</span><span class="kc">False</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>    
+</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="kn">from</span> <span class="nn">.table_processors.rules_table_processor</span> <span class="kn">import</span> <span class="n">RulesTableProcessor</span>
+</span></pre></div>
+
+
             </section>
     </main>
 <script>

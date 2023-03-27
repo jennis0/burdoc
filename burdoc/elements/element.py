@@ -48,7 +48,7 @@ class LayoutElement:
         if not extras:
             extras = {}
 
-        extras['type'] = self.title.lower()
+        extras['name'] = self.title.lower()
         if include_bbox:
             extras['bbox'] = self.bbox.to_json()
 

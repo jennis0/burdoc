@@ -35,14 +35,14 @@ class TestLineElement():
         
     def test_to_json(self, line):
         expected_json = {
-            'type':'line',
+            'name':'line',
             'spans': [s.to_json() for s in line.spans]
         }
         assert line.to_json() == expected_json
         
     def test_to_json_with_bbox(self, line):
         expected_json = {
-            'type':'line',
+            'name':'line',
             'spans': [s.to_json() for s in line.spans],
             'bbox': line.bbox.to_json() 
         }

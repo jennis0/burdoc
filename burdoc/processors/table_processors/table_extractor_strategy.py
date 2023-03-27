@@ -1,8 +1,8 @@
 import abc
 import logging
-from enum import Enum
-from typing import Any, Dict, List
+from typing import Dict, List, Tuple
 
+from ...elements import Bbox, TableParts
 from ...utils.logging import get_logger
 
 
@@ -20,5 +20,5 @@ class TableExtractorStrategy(abc.ABC):
         '''Return list of data requirements for this strategy'''
 
     @abc.abstractmethod
-    def extract_tables(self, **kwargs) -> List[Dict[int, Any]]:
+    def extract_tables(self, **kwargs) -> Dict[int, List[List[Tuple[TableParts, Bbox]]]]:
         '''Extracts tables and returns them in a complex JSON format'''
