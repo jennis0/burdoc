@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from plotly.graph_objects import Figure
 
@@ -13,6 +13,16 @@ from .processor import Processor
 
 
 class ReadingOrderProcessor(Processor):
+    """Infers the correct reading order for all elements on a page. 
+    
+    The ReadingOrderProcessor analyses each section of a page independently and uses a 
+    combination of heuristics to order elements within each, before creating an overall
+    ordering of section.
+    
+    Requires: ["page_bounds", "elements", "image_elements"]
+    Optional: ["tables"]
+    Generates: ["elements"]
+    """
 
     name: str = "reading-order"
 
@@ -43,16 +53,17 @@ class ReadingOrderProcessor(Processor):
         for e in elements:
             used = False
             self.logger.debug(e)
+            
+            e_centered = abs(e.bbox.center().x - center.x) < 10
+            e_full_page = e.bbox.width() / page_width > 0.6
 
             for i, c in enumerate(columns):
                 if not is_column_open[i]:
                     continue
-
+                
                 c_full_page = c.bbox.width() / page_width > 0.6
-                e_full_page = e.bbox.width() / page_width > 0.6
                 l_aligned = (abs(c.bbox.x0 - e.bbox.x0) < 2 and e.bbox.height() < 15)
                 c_centered = abs(c.bbox.center().x - center.x) < 10
-                e_centered = abs(e.bbox.center().x - center.x) < 10
 
                 dy = e.bbox.y0 - c.bbox.y1
                 dx_col= c.bbox.x_overlap(e.bbox, 'first')
@@ -138,24 +149,24 @@ class ReadingOrderProcessor(Processor):
         return columns
                     
 
-    def _flow_columns(self, page_bound: Bbox, columns: Sequence[LayoutElement]) -> List[LayoutElement]:
+    def _flow_columns(self, page_bound: Bbox, columns: Sequence[LayoutElementGroup]) -> List[LayoutElement]:
         self.logger.debug("Ordering %d element groups", len(columns))
         page_width = page_bound.width()
-        sections = []
-        current_section = []
+        sections: List[List[LayoutElementGroup]] = []
+        current_section: List[LayoutElementGroup] = []
         is_full = None
-        for c in columns:
-            c_is_full = c.bbox.width() / page_width > 0.5
+        for element in columns:
+            c_is_full = element.bbox.width() / page_width > 0.5
             if is_full is not None and c_is_full != is_full:
                 sections.append(current_section)
-                current_section = [c]
+                current_section = [element]
             else:
-                current_section.append(c)
+                current_section.append(element)
             is_full = c_is_full
         if len(current_section) > 0:
             sections.append(current_section)
 
-        full_sorted_elements: List[List[LayoutElement]] = []
+        full_sorted_elements: List[LayoutElement] = []
         for section in sections:
             ### Within each section, do left-to-right, depth-first traversal of elements
             section_sorted_elements: List[LayoutElement] = []
@@ -163,17 +174,21 @@ class ReadingOrderProcessor(Processor):
 
             backtrack: List[LayoutGraph.Node] = []
             used = set([0])
-            node = layout_graph.nodes[0]
-            while True:
+            node: Optional[LayoutGraph.Node] = layout_graph.nodes[0]
+            while node:
                 if len(node.down) > 0:
                     children = [layout_graph.get_node(n) for n in node.down if n[0] not in used]
                     if len(children) > 0:
                         children.sort(key=lambda c: c.element.bbox.x0)
-                        section_sorted_elements += children[0].element
-                        node = children[0]
-                        used.add(node.id)
-                        backtrack += reversed(children[1:])
-                        continue
+                        
+                        do_backtrack = any(layout_graph.get_node(u) in backtrack for u in children[0].up)
+                    
+                        if not do_backtrack:    
+                            section_sorted_elements += children[0].element #type:ignore
+                            node = children[0]
+                            used.add(node.id)
+                            backtrack += reversed(children[1:])
+                            continue
                 
                 if len(backtrack) > 0:
                     node = backtrack.pop()
@@ -183,18 +198,17 @@ class ReadingOrderProcessor(Processor):
                             node = None
                             break
                     if node:
-                        section_sorted_elements += node.element
+                        section_sorted_elements += node.element #type:ignore
                         used.add(node.id)
                         continue
-
+                    
                 break
 
-            #s.sort(key=lambda c: round(c.bbox.y0/50, 0) * 1000 + c.bbox.x0)
-            full_sorted_elements.append(section_sorted_elements)
-
+            full_sorted_elements += section_sorted_elements
+        
         return full_sorted_elements
 
-    def _flow_content(self, page_bound: Bbox, sections: List[PageSection], images: List[ImageElement], tables: List[Table]):
+    def _flow_content(self, page_bound: Bbox, sections: List[PageSection], images: List[ImageElement], tables: List[Table]) -> List[PageSection]:
         default_sections = [s for s in sections if s.default]
         other_sections = [s for s in sections if not s.default]
 
@@ -202,43 +216,45 @@ class ReadingOrderProcessor(Processor):
 
         used_images = set()
 
-        for section in other_sections:
-            self.logger.debug("Ordering section {section}", section=section)
+        for o_section in other_sections:
+            self.logger.debug("Ordering section {section}", section=o_section)
             
             in_line_elements = []
             out_of_line_elements = []
             for i,element in enumerate(global_elements):
                 if i in used_images:
                     continue
-                if element.bbox.overlap(section.bbox, 'first') > 0.9:
+                if element.bbox.overlap(o_section.bbox, 'first') > 0.9:
                     overlap = 0.0
-                    for block in section.items:
+                    for block in o_section.items:
                         overlap += element.bbox.overlap(block.bbox, 'first')
                     if overlap > 0.2:
                         out_of_line_elements.append(PageSection(element.bbox, [element]))
                     else:
-                        in_line_elements.append(element)
+                        in_line_elements.append(LayoutElementGroup(items=[element]))
                     used_images.add(i)
                         
-            columns = self._flow_items(page_bound, section.items + in_line_elements)
+            columns = self._flow_items(page_bound, o_section.items + in_line_elements) #type:ignore
             columns = self._flow_columns(page_bound, columns + out_of_line_elements)
-            items = []
-            for c in columns:
-                items += c
-            section.items = items
+            o_section.items = columns
 
             #Insert into a default section - these will always cover the full page so there must
             #be a correct section to insert it into
-            for d in default_sections:
-                if section.bbox.overlap(d.bbox, 'first') > 0.6:
-                    d.items.append(section)
-                    break
+            best_section: Tuple[PageSection, float] = (default_sections[0], 0.)
+            for d_section in default_sections:
+                overlap = o_section.bbox.overlap(d_section.bbox, 'first') > 0.5
+                if overlap > best_section[1]:
+                    best_section = (d_section, overlap)
+                
+            best_section[0].append(o_section, update_bbox=False)
+                
+                
 
         self.logger.debug("Finished ordering non-default sections")
             
-        complete_sections = []
-        for section in default_sections:
-            self.logger.debug("Ordering section %s", str(section))
+        complete_sections: List[PageSection] = []
+        for d_section in default_sections:
+            self.logger.debug("Ordering section %s", str(d_section))
 
             in_line_elements = []
             out_of_line_elements = []
@@ -246,36 +262,32 @@ class ReadingOrderProcessor(Processor):
                 if i in used_images:
                     continue
 
-                if element.bbox.overlap(section.bbox, 'first') > 0.9:
+                if element.bbox.overlap(d_section.bbox, 'first') > 0.9:
                     if isinstance(element, ImageElement) and (element.bbox.width(norm=True) > 0.6 or element.bbox.height(norm=True) > 0.6):
                         out_of_line_elements.append(PageSection(element.bbox, [element]))
                         used_images.add(i)
                         continue
 
                     overlap = 0
-                    for block in section.items:
+                    for block in d_section.items:
                         overlap += element.bbox.overlap(block.bbox, 'first')
                     if overlap > 0.2:
                         self.logger.debug("Assigning %s as out of line image in section", str(element))
                         out_of_line_elements.append(PageSection(element.bbox, [element]))
                     else:
                         self.logger.debug("Assigning %s as inline image", str(element))
-                        in_line_elements.append(element)
+                        in_line_elements.append(LayoutElementGroup(items=[element]))
                     used_images.add(i)
 
-            columns = self._flow_items(page_bound, section.items + in_line_elements)
+            columns = self._flow_items(page_bound, d_section.items + in_line_elements) #type:ignore            
             columns = self._flow_columns(page_bound, columns + out_of_line_elements)
-
-            items = []
-            for c in columns:
-                items += c
-            complete_sections.append(PageSection(items=items, bbox=section.bbox, default=True))
+            complete_sections.append(PageSection(items=columns, bbox=d_section.bbox, default=True))
 
         #Merge images with sections
         for i,element in enumerate(images):
             if i not in used_images:
                 complete_sections.append(PageSection(element.bbox, [element]))
-
+                
         return complete_sections
 
     def _process(self, data: Any) -> Any:

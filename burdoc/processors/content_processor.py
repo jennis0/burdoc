@@ -28,7 +28,7 @@ class ContentProcessor(Processor):
     def __init__(self, log_level: int=logging.INFO):
         self.para_size: Dict[str, List[Tuple[float, TextBlockType]]] = {}
         self.list_regex = re.compile(
-            "(?:(\u2022)|\(?([a-z])\).?|\(?([0-9]+)\).?|([0-9]+).)(?:\s|$)", #pylint: disable=W1401
+            "(?:(\u2022)|\(?([a-z])\)\.?|\(?([0-9]+)\)\.?|([0-9]+)\.)(?:\s|$)", #pylint: disable=W1401
             re.UNICODE
         ) 
 
@@ -48,7 +48,6 @@ class ContentProcessor(Processor):
         return ""
 
     def _is_next_list_index(self, last_index: str, next_index: str) -> bool:
-        print(last_index, next_index)
         if last_index == "\u2022":
             if next_index == "\u2022":
                 return True
@@ -245,7 +244,7 @@ class ContentProcessor(Processor):
         hierarchy: List[Dict[str, Any]] = []
         for i,e in enumerate(elements):
 
-            if isinstance(e, Aside):
+            if isinstance(e, PageSection):
                 for j,sub_e in enumerate(e.items):
                     if not isinstance(e, TextBlock):
                         continue

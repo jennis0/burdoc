@@ -194,6 +194,7 @@ class PDFLoadProcessor(Processor):
 
                 if t.bbox.y_overlap(b.bbox, 'second') > 0.6 and abs(t.bbox.x0 - b.bbox.x1) < 25:
                     t.spans.insert(0, Span(t.spans[0].font, "\u2022"))
+                    t.spans.insert(1, Span(t.spans[0].font, " "))
                     t.bbox = Bbox.merge([t.bbox, b.bbox])
                     b_used[i] = True
                     break

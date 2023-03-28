@@ -15,7 +15,7 @@ class TextHandler(object):
     def __init__(self, pdf: fitz.Document, log_level: int=logging.INFO):
         self.logger = get_logger('text-handler', log_level=log_level)
         self.pdf = pdf
-        self.list_regex = re.compile("(?:\u2022|\(?[a-zA-Z]\).?|\(?[0-9]+\).?|[0-9]+.)", re.UNICODE)
+        self.list_regex = re.compile("(?:\u2022|\(?[a-zA-Z]\)\.?|\(?[0-9]+\)\.?|[0-9]+\.)(\s|$)", re.UNICODE)
 
     def _filter_and_clean_lines(self, lines: List[LineElement]) -> List[LineElement]:
         """Apply basic filtering over all lines in a page. Currently:

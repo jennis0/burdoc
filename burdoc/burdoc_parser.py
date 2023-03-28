@@ -84,7 +84,7 @@ class BurdocParser(object):
            }, True, )
         )
 
-        self.return_fields = ['metadata', 'content', 'page_hierarchy']
+        self.return_fields = ['metadata', "content", 'page_hierarchy']
         
         if extract_images:
             self.return_fields.append("images")

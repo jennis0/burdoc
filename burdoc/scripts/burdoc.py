@@ -10,7 +10,6 @@ from ..burdoc_parser import BurdocParser
 def parse_range(text_range: str) -> List[int]:
     numbers = []
     comma_parts = text_range.split(",")
-    print(text_range)
     for part in comma_parts:
         vals = part.split("-")
         

@@ -14,7 +14,7 @@ class JSONOutProcessor(Processor):
 
     Requires: ["elements", "images"]
     Optional: []
-    Generators: ["json"]
+    Generators: ["content"]
     """
 
     name: str = "json-out"

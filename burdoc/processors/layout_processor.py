@@ -186,7 +186,7 @@ class LayoutProcessor(Processor):
         blocks: List[TextBlock] = []
         block_open_state: Dict[str, bool] = {}
         section.items.sort(key=lambda l: l.bbox.y0*1000 + l.bbox.x0)
-        list_regex = re.compile("(\u2022|\(?[a-z]\).?|\(?[0-9]+\).?|[0-9]+.)(?:\s|$)", re.UNICODE) #pylint: disable=W1401
+        list_regex = re.compile("(\u2022|\(?[a-z]\)\.?|\(?[0-9]+\)\.?|[0-9]+\.)(?:\s|$)", re.UNICODE) #pylint: disable=W1401
 
         for line in section.items: #type:LineElement #type:ignore
             self.logger.debug("line: %s", line.get_text())
