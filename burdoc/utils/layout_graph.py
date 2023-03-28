@@ -1,52 +1,106 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Sequence, Tuple
+from typing import List, Sequence, Tuple, Union
 
 import numpy as np
 
-from ..elements.bbox import Bbox
-from ..elements.element import LayoutElement
-
+from ..elements import Bbox, LayoutElement, LayoutElementGroup
 
 class LayoutGraph(object):
+    """LayoutGraph attempts to efficiently build a modified adjacency graph over the passed elements.
+    
+    Each node in the graph is labelled with all 'adjacent' nodes in each of the cardinal directions, ordered by 
+    edge-to-edge distance.  
+    Here adjacency means that no horizontal or vertical line drawn between opposing edges of the boxes intersects
+    and other box.
+    
+    ```
+    [   a   ]    [   b   ]
+    [ c ]      
+    [         d          ]
+    ```
+    Under this diagram the adjacency relationships are (a,right,b), (a,down,c), (c,down,d), and (b,down,d) but not (a,down,d).  
+    Note that adjacency is symettric, so (a,right,b) imports (b,left,a) and so on.
+    """
 
 
     class Node:
-        def __init__(self, id: int, element: LayoutElement):
+        """Container for graph node, storing it's adjacent nodes and the original element
+        """
+        def __init__(self, id: int, element:LayoutElement):
+            
             self.id = id
             self.element = element
             self.up: List[Tuple[int, float]] = []
+            """All up adjacent nodes, sorted closest to furthest
+            """
+            
             self.down: List[Tuple[int, float]] = []
+            """All down adjacent nodes, sorted closest to furthest
+            """
+            
             self.left: List[Tuple[int, float]] = []
+            """All left adjacent nodes, sorted closest to furthest
+            """
             self.right: List[Tuple[int, float]] = []
+            """All right adjacent nodes, sorted closest to furthest
+            """
 
         def __repr__(self):
             el_str = str(self.element)
             el_str = el_str[10:min(30, len(el_str))]
             return f"<N:{self.id} element:{el_str}>"
 
-    def get_node(self, id_dist_pair) -> Node:
-        if id_dist_pair[0] < len(self.nodes):
-            return self.nodes[id_dist_pair[0]]
+    def get_node(self, id_or_id_dist_pair: Union[int, Tuple[int, float]]) -> Node:
+        """Retrieves a graph node from it's Id, or an (Id, distance) tuple.
+
+        Args:
+            id_or_id_dist_pair (Union[int, Tuple[int, float]]): Node Id or the (Id, distance) tuple used for storing node adjacencies
+
+        Raises:
+            IndexError: Id does not exist in the graph
+
+        Returns:
+            Node: The requested node
+        """
+        if isinstance(id_or_id_dist_pair, int):
+            node_id = id_or_id_dist_pair
+        else:
+            node_id = id_or_id_dist_pair[0]
+            
+        if node_id < len(self.nodes):
+            return self.nodes[node_id]
+        raise IndexError()
 
 
     def node_has_ancester(self, node_id: int, target_id: int) -> bool:
+        """Check whether the target node is an 'ancestor' of the primary node.
+        Here 'ancestor' means that there is a leftwards or upwards adjacency
+        relations that get from the node to the target.
+
+        Args:
+            node_id (int): Starting node
+            target_id (int): Node to check if in ancestry
+
+        Returns:
+            bool: Target node is ancester of starting node
+        """
         if node_id == target_id:
             return True
 
         anc = self.nodes[node_id]
-        for a in anc.up:
-            if self.node_has_ancester(a[0], target_id):
+        if any(self.node_has_ancester(up_adj_node_and_distance[0], target_id) \
+            for up_adj_node_and_distance in anc.up):
                 return True
         
-        for a in anc.left:
-            if self.node_has_ancester(a[0], target_id):
+        if any(self.node_has_ancester(left_adj_node_and_distance[0], target_id) \
+            for left_adj_node_and_distance in anc.left):
                 return True
         
         return False
 
-    def __get_next_overlaps_from_projection(self, node: Node, matrix_slice: np.array, transpose: bool=False):
+    def __get_next_overlaps_from_projection(self, node: Node, matrix_slice: np.ndarray, transpose: bool=False):
 
             if not transpose:
                 if node.element.bbox.y1 >= self.pagebound.y1 - 1:
@@ -59,7 +113,7 @@ class LayoutGraph(object):
                     return []
                 overlap_func = lambda e1, e2: e1.element.bbox.y_overlap(e2.element.bbox, 'min')
                 reject_overlap_func = lambda e1: node.element.bbox.x_overlap(e1.element.bbox)
-                distance_func = lambda e1, e2: max(e2.element.bbox.x0 - e1.element.bbox.x1, 0)
+                distance_func = lambda e1, e2: max(e2.element.bbox.x0 - e1.element.bbox.x1, 0.)
                 matrix_slice = matrix_slice.T
 
             #Find intersections with other nodes  
@@ -78,7 +132,7 @@ class LayoutGraph(object):
                     continue
                 if overlap_func(node, candidate) <= 0.1:
                     continue    
-                node_distances.append([i, distance_func(node, candidate)])
+                node_distances.append((i, distance_func(node, candidate)))
             node_distances.sort(key=lambda d: d[1] + 0.01*self.nodes[d[0]].element.bbox.y0)
 
             #Remove nodes which would intersect with closer ones
@@ -157,9 +211,9 @@ class LayoutGraph(object):
             text += "'"*30
             text += f"\n{n}"
             text += "\nU: " +',\n   '.join(['(' + str(self.nodes[n2[0]]) + ',' + str(round(n2[1], 1)) + ')' for n2 in n.up])
-            text += f"\nL: " +',\n   '.join(['(' + str(self.nodes[n2[0]]) + ',' + str(round(n2[1], 1)) + ')' for n2 in n.left])
-            text += f"\nR: " +',\n   '.join(['(' + str(self.nodes[n2[0]]) + ',' + str(round(n2[1], 1)) + ')' for n2 in n.right])
-            text += f"\nD: " +',\n   '.join(['(' + str(self.nodes[n2[0]]) + ',' + str(round(n2[1], 1)) + ')' for n2 in n.down])
+            text += "\nL: " +',\n   '.join(['(' + str(self.nodes[n2[0]]) + ',' + str(round(n2[1], 1)) + ')' for n2 in n.left])
+            text += "\nR: " +',\n   '.join(['(' + str(self.nodes[n2[0]]) + ',' + str(round(n2[1], 1)) + ')' for n2 in n.right])
+            text += "\nD: " +',\n   '.join(['(' + str(self.nodes[n2[0]]) + ',' + str(round(n2[1], 1)) + ')' for n2 in n.down])
             text += "\n" + "'"*30
 
         text += '"'*30

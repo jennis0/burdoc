@@ -40,12 +40,12 @@ def run():
     """
     argparser = argparse.ArgumentParser()
 
-    argparser.add_argument("--in-file", "-i", type=str, help="Path to the PDF file you want to parse", required=True)
-    argparser.add_argument('--out-file', "-o", type=str, help="Path to file to write output to.\nDefaults to [in-file-stem].json", nargs="?")
+    argparser.add_argument("in_file", type=str, help="Path to the PDF file you want to parse")
+    argparser.add_argument('out_file', type=str, help="Path to file to write output to.\nDefaults to [in-file-stem].json", nargs="?")
     argparser.add_argument('--pages',  help="List of pages to process. Accept comma separated list, specify ranged with '-'", required=False, default=None)
     argparser.add_argument('--ml-table-finding', action='store_true', required=False, default=None, 
                            help="Use ML table finding. Warning, this can be slow without GPU acceleration.\nDefaults to True in transformers library installed, False otherwise.")
-    argparser.add_argument('--images', action='store_false', required=False, default=True, help="Extract images from PDF and store in output. This can lead to very large output JSON files.")
+    argparser.add_argument('--images', action='store_true', required=False, default=False, help="Extract images from PDF and store in output. This can lead to very large output JSON files.")
     argparser.add_argument("--single-threaded", action="store_true", required=False, default=False, help="Force Burdoc to run in single-threaded mode")
     argparser.add_argument("--profile", action="store_true", help="Dump timing information at end of processing", default=False)
     argparser.add_argument("--debug", action="store_true", help="Dump debug messages to log")

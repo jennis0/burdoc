@@ -236,7 +236,7 @@ class LayoutProcessor(Processor):
                 total_overlap = line.bbox.overlap(block.bbox, 'first')
 
                 if line_font and block_font and not superscript:
-                    matched_font = abs(line_font.size - block_font.size) < 0.1 and \
+                    matched_font = abs(line_font.size - block_font.size) < 0.25 and \
                         line_font.family == block_font.family
                     matched_bold = (line_font.bold == block_font.bold) and (line_font.italic == block_font.italic)
                     fuzzy_line_continuation = len(block.items) < 2 or ((abs(last_real_item.bbox.x1 - block.bbox.x1) < 20) and (line.bbox.x0 - last_real_item.bbox.x0) < 2)
