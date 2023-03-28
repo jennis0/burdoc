@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import io
 import logging
@@ -203,7 +204,7 @@ class ImageHandler(object):
         image_elements: Dict[ImageType, List[ImageElement]] = {
             image_type:[] for image_type in ImageType
         }
-        images = []
+        images: List[str] = []
 
         for page_image in page_images:
             image = self._get_image(page_image['xref'])
@@ -222,9 +223,10 @@ class ImageHandler(object):
                 image_element.type = self._classify_image(image_element, image, page_colour, page_bbox)
                 image_elements[image_element.type].append(image_element)
 
-                im_hash = hashlib.md5(image.tobytes(), usedforsecurity=False).hexdigest()
+                image_as_str = base64.encodebytes(image.tobytes())
+                im_hash = hashlib.md5(image_as_str, usedforsecurity=False).hexdigest()
                 if im_hash not in self.cache:
-                    images.append(image)
+                    images.append(image_as_str.decode('utf-8'))
                     self.cache[im_hash] = len(images) - 1
 
                 image_element.image = self.cache[im_hash]

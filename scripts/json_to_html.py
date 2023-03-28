@@ -13,6 +13,14 @@ line_map = {
 }
 
 def cell_to_html(cell: List[Dict[str, Any]]) -> str:
+    """Turns table cell into HTML
+
+    Args:
+        cell (List[Dict[str, Any]])
+
+    Returns:
+        str: HTML
+    """
     return ' '.join([item_to_html(e) for e in cell])
 
 def table_to_html(table: Dict[str, Any]) -> str:

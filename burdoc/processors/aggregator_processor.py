@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any, Dict, List, Tuple, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 from plotly.graph_objects import Figure
 
@@ -18,15 +18,44 @@ class AggregatorProcessor(Processor):
 
     def __init__(self,
                  processors: List[Type[Processor]],
-                 processor_args: List[Any],
-                 render_processors: List[bool],
-                 additional_reqs: List[str],
+                 processor_args: Optional[Dict[str, Dict[str, Any]]]=None,
+                 additional_reqs: Optional[List[str]]=None,
+                 render_default: bool=False,
                  log_level: int=logging.INFO
                 ):
+        """Create AggregatorProcessor.
+
+        Args:
+            processors (List[Type[Processor]]): List of processors to be run together, in desired execution
+                order.
+            processor_args (Optional[Dict[str, Dict[str, Any]]], optional): Any initialisation
+                parameters to be passed to the processors. Can also use a special 'render'
+                argument to control whether each processor output gets drawin if the render
+                step is used. Defaults to None.
+            additional_reqs (Optional[List[str]], optional): Any additional requirements that
+                should be added to the requirements list. Can be used to force ingest of a field
+                that is modified within the AggregatorProcessor. Defaults to None.
+            render_default: Whether each processor renders by default (when global rendering is enabled).
+            log_level (int, optional): Log level. Defaults to logging.INFO.
+        """
         super().__init__(AggregatorProcessor.name, log_level=log_level)
-        self.processors = [proc(**proc_args, log_level=log_level) for proc,proc_args in zip(processors, processor_args)]
-        self.render_processors = render_processors
-        self.additional_reqs = additional_reqs
+
+        self.processors: List[Processor] = []
+        self.render_processors: Dict[str,bool] = {p.name:render_default for p in processors}
+        
+        for p in processors:
+            if processor_args and p.name in processor_args:
+                if 'render' in processor_args[p.name]:
+                    self.render_processors[p.name] = processor_args[p.name]['render']
+                    
+                if 'args' in processor_args[p.name]:
+                    self.processors.append(p(log_level=log_level, **processor_args[p.name]['args'])) #type:ignore
+                else:
+                    self.processors.append(p(log_level=log_level))  #type:ignore
+            else:
+                self.processors.append(p(log_level=log_level))  #type:ignore
+                
+        self.additional_reqs = additional_reqs if additional_reqs else []
 
     def initialise(self):
         """Run initialise for all child processors"""
@@ -86,6 +115,6 @@ class AggregatorProcessor(Processor):
         return data
 
     def add_generated_items_to_fig(self, page_number: int, fig: Figure, data: Dict[str, Any]):
-        for p,render in zip(self.processors, self.render_processors):
-            if render:
+        for p in self.processors:
+            if self.render_processors[p.name]:
                 p.add_generated_items_to_fig(page_number, fig, data)

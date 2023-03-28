@@ -40,13 +40,14 @@ def run():
     """
     argparser = argparse.ArgumentParser()
 
-    argparser.add_argument("file", type=str, help="Path to the PDF file you want to prase")
-    argparser.add_argument('outfile', type=str, help="Path to file to write output to", nargs="?")
-    argparser.add_argument('--pages', help="List of pages to process. Accept comma separated list, specify ranged with '-'", required=False, default=None)
-    argparser.add_argument('--mltables', action='store_true', required=False, default=False, help="Use ML table finding. Warning, this can be slow without GPU acceleration")
-    argparser.add_argument('--images', action='store_true', required=False, default=False, help="Extract images from PDF and store in output. This can lead to very large output JSON files.")
+    argparser.add_argument("--in-file", "-i", type=str, help="Path to the PDF file you want to parse", required=True)
+    argparser.add_argument('--out-file', "-o", type=str, help="Path to file to write output to.\nDefaults to [in-file-stem].json", nargs="?")
+    argparser.add_argument('--pages',  help="List of pages to process. Accept comma separated list, specify ranged with '-'", required=False, default=None)
+    argparser.add_argument('--ml-table-finding', action='store_true', required=False, default=None, 
+                           help="Use ML table finding. Warning, this can be slow without GPU acceleration.\nDefaults to True in transformers library installed, False otherwise.")
+    argparser.add_argument('--images', action='store_false', required=False, default=True, help="Extract images from PDF and store in output. This can lead to very large output JSON files.")
     argparser.add_argument("--single-threaded", action="store_true", required=False, default=False, help="Force Burdoc to run in single-threaded mode")
-    argparser.add_argument("--performance", action="store_true", help="Dump timing infor at end of processing", default=False)
+    argparser.add_argument("--profile", action="store_true", help="Dump timing information at end of processing", default=False)
     argparser.add_argument("--debug", action="store_true", help="Dump debug messages to log")
     args = argparser.parse_args()
 
@@ -56,27 +57,30 @@ def run():
         pages = None
 
     parser = BurdocParser(
-        use_ml_table_finding=args.mltables,
-        extract_images=args.images,
+        use_ml_table_finding=args.ml_table_finding,
         max_threads=1 if args.single_threaded else None,
-        print_performance=args.performance,
         log_level = logging.DEBUG if args.debug else logging.WARNING
     )
 
-    if os.path.exists(args.file):
-        print(f"Parsing {args.file}")
-        out = parser.read(args.file, pages=pages)
+    if os.path.exists(args.in_file):
+        print(f"Parsing {args.in_file}")
+        out = parser.read(args.in_file, 
+                          pages=pages,
+                          extract_images=args.images)
+        
+        if args.profile:
+            parser.print_profile_info()
 
-        if not args.outfile:
-            if ".pdf" in args.file:
-                outfile = args.file.replace(".pdf", ".json")
+        if not args.out_file:
+            if ".pdf" in args.in_file:
+                out_file = args.file.replace(".pdf", ".json")
             else:
-                outfile = str(args.file) + ".json"
+                out_file = str(args.in_file) + ".json"
         else:
-            outfile = args.outfile
+            out_file = args.out_file
 
-        print(f"Writing output to {outfile}")
-        with open(outfile, 'w', encoding='utf-8') as file_handle:
+        print(f"Writing output to {out_file}")
+        with open(out_file, 'w', encoding='utf-8') as file_handle:
             json.dump(out, file_handle)
     else:
         raise FileNotFoundError(args.file)

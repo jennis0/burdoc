@@ -33,14 +33,28 @@ class BurdocParser(object):
     """
  
     def __init__(self,
-                 use_ml_table_finding: bool=True,
-                 extract_images: bool=False,
-                 generate_page_images: bool=False,
+                 use_ml_table_finding: Optional[bool]=None,
                  max_threads: Optional[int]=None,
                  log_level: int=logging.INFO,
-                 do_render_pages: bool=False,
-                 print_performance: bool=False
+                 show_pages: bool=False,
         ):
+        """Instantiate a BurdocParser
+
+        Args:
+            use_ml_table_finding (bool, optional): Whether to use ML table finding algorithms. 
+                Defaults to True if transformers library is detected, False otherwise.
+            max_threads (Optional[int], optional): Maximum number of threads to run. Set to None
+                to use default system limits or 1 to force single-threaded mode. Defaults to None.
+            log_level (int, optional): Defaults to logging.INFO.
+            show_pages (bool, optional): Draw each page as it's extracted with extraction information
+                laid on top. Primarily for debugging. Defaults to False.
+
+        Raises:
+            ImportError: transformer library detected but loading transformer library failed.
+        """
+
+        if not use_ml_table_finding:
+            use_ml_table_finding = _HAS_TRANSFORMERS
         
         self.performance: Dict[str, float] = {}
         self.profile_info: Optional[List[Dict[str, Any]]] = None
@@ -51,8 +65,8 @@ class BurdocParser(object):
         self.min_slice_size = 5
         self.max_slices = 12
         self.max_threads = max_threads
-        self.render = do_render_pages
-        self.print_performance = print_performance
+        self.show_pages = show_pages
+        self.default_return_fields = ['metadata', 'content']
         
         self.processors: List[Tuple[Type[Processor], Dict, bool]] = [
            (PDFLoadProcessor, {}, False),
@@ -76,21 +90,9 @@ class BurdocParser(object):
                 ContentProcessor,
                 JSONOutProcessor
             ],
-            'render_processors': [
-                True, True, True, True, True, False
-            ],
-            'processor_args': [{}, {}, {}, {}, {}, {'extract_images':extract_images}],
             'additional_reqs': ['tables'] if use_ml_table_finding else []
            }, True, )
         )
-
-        self.return_fields = ['metadata', "content", 'page_hierarchy']
-        
-        if extract_images:
-            self.return_fields.append("images")
-        
-        if generate_page_images:
-            self.return_fields.append("page_images")
             
         self.performance['initialise'] = round(time.perf_counter() - start, 3)
 
@@ -159,7 +161,6 @@ class BurdocParser(object):
                 
         return original_data 
         
-
     def _run_processor(self, processor: Type[Processor], processor_args: Dict[str, Any], 
                       pages: List[int], data: Dict[str, Any]):
         
@@ -241,13 +242,23 @@ class BurdocParser(object):
             print("No profile information")
         print("=================================================================")
                 
-
-    def read(self, path: str, pages: Optional[List[int]]=None) -> Any:
-        """_summary_
+    def read(self, path: str, 
+             pages: Optional[List[int]]=None, 
+             extract_images: bool=True,
+             extract_page_images: bool=False,
+             extract_page_hierarchy: bool=True,
+        ) -> Any:
+        """Read a PDF and output a structured response
 
         Args:
             path (str): Path of the pdf to load
             pages (Optional[List[int]], optional): List of pages to extract. Defaults to None.
+            extract_images: (bool): Extract images from PDF. This can cause the output to become extremely large.
+                Default is False
+            extract_page_images: (bool): Extract the page images rendered as part of the processing.
+                Default is False
+            extract_page_hierarchy: Extract a list of headings and titles. Default is False.
+            extract_profile_info: Extract timing profile information for this run
 
         Raises:
             FileNotFoundError: If the file cannot be found. 
@@ -260,7 +271,7 @@ class BurdocParser(object):
             {
                 'metadata' (Dict[str, Any]): Any metadata about the file itself
                 'content' (Dict[int, List[Any]]):  Ordered content organised per-page
-                'page_hierarcy (Dict[int, List[Any]]): Headers found in each page
+                'page_hierarchy (Dict[int, List[Any]]): Headers found in each page
                 'images', (Dict[int, List[PIL.Image.Image]], optional): Images extracted from each page.
                     Only generated if extract_images is True
                 'page_images', (Dict[int, PIL.Image.Image], optional): Image rendered for each page.
@@ -289,14 +300,22 @@ class BurdocParser(object):
     
         self.performance['total'] = round(time.perf_counter() - start, 3)
 
-        if self.render:
+        if self.show_pages:
             render_pages(data, renderers)
             
         self._format_profile_info(data['performance']) #type:ignore
-        if self.print_performance:
-            self.print_profile_info() 
-
-        return {k:data[k] for k in self.return_fields}
+        
+        return_fields = [f for f in self.default_return_fields]
+        if extract_images:
+            return_fields.append("images")
+        
+        if extract_page_images:
+            return_fields.append("page_images")
+            
+        if extract_page_hierarchy:
+            return_fields.append("page_hierarchy")
+            
+        return {k:data[k] for k in return_fields}
 
 
 

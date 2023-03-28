@@ -88,17 +88,22 @@ pip install .
 Burdoc can be used as a library or directly from the command line depending on your usecase.
 
 #### Command Line
-```bash
-burdoc <input-file> [output-file] [--mltables] [--images]
+```
+usage: burdoc [-h] --in-file IN_FILE [--out-file [OUT_FILE]] [--pages PAGES] [--ml-table-finding] [--images] [--single-threaded] [--profile] [--debug]
 
-ARGUMENTS:
-  <input-file> - Path to input pdf
-  [output-file] - Optional path to output location. [default: {input-file}.json]
-
-FLAGS:
-  --mltables  - Use packaged ML table detection algorithm (very slow without GPU acceleration). [default: False]
-  --images    - Extract images from the PDF. Can cause the output file to be very large. [default: False]
-  --single-threaded - By default, Burdoc will split files > 50 pages over multiple threads. Only effects large files. [default: False]
+options:
+  -h, --help            show this help message and exit
+  --in-file IN_FILE, -i IN_FILE
+                        Path to the PDF file you want to parse
+  --out-file [OUT_FILE], -o [OUT_FILE]
+                        Path to file to write output to. Defaults to [in-file-stem].json
+  --pages PAGES         List of pages to process. Accept comma separated list, specify ranged with '-'
+  --ml-table-finding    Use ML table finding. Warning, this can be slow without GPU acceleration. 
+                        Defaults to True in transformers library installed, False otherwise.
+  --images              Extract images from PDF and store in output. This can lead to very large output JSON files.
+  --single-threaded     Force Burdoc to run in single-threaded mode
+  --profile             Dump timing information at end of processing
+  --debug               Dump debug messages to log
 ```
 #### Library
 
