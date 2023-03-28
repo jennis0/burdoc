@@ -43,7 +43,7 @@ class TextList (LayoutElementGroup):
             items (Optional[List[LayoutElement]], optional): Items making up the list. 
                 Defaults to None.
         """
-        super().__init__(bbox=bbox, items=items, open=False, title="TextList")
+        super().__init__(bbox=bbox, items=items, title="TextList")
         self.ordered = ordered
 
     def to_json(self, extras: Optional[Dict]=None, include_bbox: bool=False, **kwargs):

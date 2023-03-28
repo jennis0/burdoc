@@ -28,9 +28,10 @@ class ContentProcessor(Processor):
     def __init__(self, log_level: int=logging.INFO):
         self.para_size: Dict[str, List[Tuple[float, TextBlockType]]] = {}
         self.list_regex = re.compile(
-            "^(\u2022)|^\((\d+)\.?\)|^(\d+)\.\s|^([a-z])\.\s|^\(([a-z])\)\.?",
+            "(?:(\u2022)|\(?([a-z])\).?|\(?([0-9]+)\).?|([0-9]+).)(?:\s|$)", #pylint: disable=W1401
             re.UNICODE
-        )
+        ) 
+
 
         super().__init__(ContentProcessor.name, log_level=log_level)
 
@@ -47,6 +48,7 @@ class ContentProcessor(Processor):
         return ""
 
     def _is_next_list_index(self, last_index: str, next_index: str) -> bool:
+        print(last_index, next_index)
         if last_index == "\u2022":
             if next_index == "\u2022":
                 return True
@@ -162,7 +164,6 @@ class ContentProcessor(Processor):
         for i,e in enumerate(elements):
             if isinstance(e, TextBlock):
                 list_match = self.list_regex.match(e.get_text()[:10].strip())
-
                 processed_tb = self._process_text_block(e)
 
                 ### Does the box start with something that looks like a list/bullet point
@@ -170,37 +171,46 @@ class ContentProcessor(Processor):
                     in_list = True
                     list_elements = [(self._get_list_index_from_match(list_match), [e])]
                     continue
-
-                if in_list and list_match:
-                    list_elements.append((self._get_list_index_from_match(list_match), [e]))
-                    continue
-
-                ### If we're processing a list, do we think we're still in it?
+                
+                ### If we're in a list but don't find a bullet/label. 
                 if in_list and not list_match:
-                    if e.items[0].bbox.x0 - list_elements[-1][1][-1].bbox.x0 > 30 or \
-                            abs(e.bbox.y0 - list_elements[-1][1][-1].bbox.y1) > 3:
-                        in_list = False                            
-                    elif len(elements) > i+1 and isinstance(elements[i+1], TextBlock) and \
-                            processed_tb.type == TextBlockType.PARAGRAPH:
-                        in_list = bool(self.list_regex.match(elements[i+1].get_text())) #type:ignore
-                    else:
-                        in_list = False
 
-                if not in_list and len(list_elements) > 0:
-                    proc_elements += self._create_list(list_elements)
-                    list_elements = []
+                    # Check to see if we're inline with text but not with the bullet
+                    list_line_offset = list_elements[-1][1][-1].items[-1].bbox.x0 - \
+                        list_elements[0][1][0].items[0].bbox.x0
+                    if  list_line_offset < 30 and list_line_offset > 5:
+                        if abs(e.bbox.x0 - list_elements[-1][1][-1].items[-1].bbox.x0) < 2:
+                            list_elements[-1][1].append(e)
+                            continue
+                        
+                    # Check to see if an ordered list continues in the next element
+                    if len(elements) > i+1 and isinstance(elements[i+1], TextBlock):
+                        future_e: TextBlock = elements[i+1] #type:ignore
+                        future_match = self.list_regex.match(future_e.get_text())
+                        if future_match and list_elements[0][0] != "\u2022" and \
+                            self._is_next_list_index(
+                                list_elements[-1][0], 
+                                self._get_list_index_from_match(future_match)
+                            ):
+                            list_elements[-1][1].append(e)
+                            continue
 
                 ### Parse block line by line looking for 
                 if in_list and list_match:
                     next_index = self._get_list_index_from_match(list_match)
                     if self._is_next_list_index(list_elements[-1][0], next_index):
                         list_elements.append((next_index, [e]))
-                        continue
                     else:
                         proc_elements += self._create_list(list_elements)
-                        list_elements = []
+                        list_elements = [(next_index, [e])]
+                    continue
 
-                #Handle any other parts of being a text block
+                #Handle any other parts of being a text block     
+                if len(list_elements) > 0:
+                    proc_elements += self._create_list(list_elements)
+                    in_list = False
+                    list_elements = []
+
                 proc_elements.append(processed_tb)
                 continue
 

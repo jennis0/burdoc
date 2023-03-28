@@ -186,8 +186,7 @@ class LayoutProcessor(Processor):
         blocks: List[TextBlock] = []
         block_open_state: Dict[str, bool] = {}
         section.items.sort(key=lambda l: l.bbox.y0*1000 + l.bbox.x0)
-        list_re = re.compile("^(\u2022)|^\((\d+)\.?\)|^(\d+)\.\s|^([a-z])\.\s|^\(([a-z])\)\.?", re.UNICODE) #pylint: disable=W1401
-
+        list_regex = re.compile("(\u2022|\(?[a-z]\).?|\(?[0-9]+\).?|[0-9]+.)(?:\s|$)", re.UNICODE) #pylint: disable=W1401
 
         for line in section.items: #type:LineElement #type:ignore
             self.logger.debug("line: %s", line.get_text())
@@ -230,7 +229,7 @@ class LayoutProcessor(Processor):
                 ### Only allow merging with the block if it is of comparable width and
                 ### within the same distance as previous lines in this block
 
-                is_bullet = list_re.match(line.spans[0].text.lstrip()) is not None
+                is_bullet = list_regex.match(line.spans[0].text.lstrip()) is not None
                 line_overlap_with_block = line.bbox.x_overlap(block.bbox, 'first')
                 linegap = line.bbox.y0 - block.bbox.y1
                 block_overlap_with_line = line.bbox.x_overlap(block.bbox, 'second')

@@ -39,12 +39,13 @@ class ReadingOrderProcessor(Processor):
         center = page_bound.center()
 
         columns: List[LayoutElementGroup] = []
+        is_column_open: List[bool] = []
         for e in elements:
             used = False
             self.logger.debug(e)
 
-            for c in columns:
-                if not c.open:
+            for i, c in enumerate(columns):
+                if not is_column_open[i]:
                     continue
 
                 c_full_page = c.bbox.width() / page_width > 0.6
@@ -104,14 +105,15 @@ class ReadingOrderProcessor(Processor):
                     self.logger.debug("Appended")
                     break
                 elif dx_col > 0.1:
-                    c.open = False
+                    is_column_open[i] = False
                     self.logger.debug("Closing column")
 
 
             if not used:
                 columns.append(
-                    LayoutElementGroup(items=[e], open=True, title="Column")
+                    LayoutElementGroup(items=[e], title="Column")
                 )
+                is_column_open.append(True)
                 self.logger.debug("Creating new column")
 
         #Merge overlapping columns

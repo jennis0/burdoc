@@ -1,9 +1,10 @@
 import logging
+import re
 from typing import List
 
 import fitz
 
-from ...elements import Bbox, LineElement
+from ...elements import Bbox, LineElement, Span
 from ...utils.logging import get_logger
 
 
@@ -14,6 +15,7 @@ class TextHandler(object):
     def __init__(self, pdf: fitz.Document, log_level: int=logging.INFO):
         self.logger = get_logger('text-handler', log_level=log_level)
         self.pdf = pdf
+        self.list_regex = re.compile("(?:\u2022|\(?[a-zA-Z]\).?|\(?[0-9]+\).?|[0-9]+.)", re.UNICODE)
 
     def _filter_and_clean_lines(self, lines: List[LineElement]) -> List[LineElement]:
         """Apply basic filtering over all lines in a page. Currently:
@@ -62,18 +64,18 @@ class TextHandler(object):
                     skip[j] = True
             
             #Merge separated bullet points
-            if line_text == "\u2022":
+            list_match = self.list_regex.match(line_text)
+            if list_match and list_match.end() == len(line_text):
                 for j, test_line in enumerate(lines):
                     if i == j or skip[j]:
                         continue
 
                     if test_line.bbox.y_overlap(line.bbox, 'second') > 0.5 and abs(line.bbox.x1 - test_line.bbox.x0) < 20:
                         test_line.spans.insert(0, line.spans[0])
+                        test_line.spans.insert(1, Span(font=line.spans[0].font, text=" "))
                         test_line.bbox = Bbox.merge([line.bbox, test_line.bbox])
                         skip[i] = True
                         break
-                if skip[i]:
-                    break
                 continue
                         
             #Merge large paragraph starting characters
@@ -89,8 +91,7 @@ class TextHandler(object):
                         test_line.bbox = Bbox.merge([line.bbox, test_line.bbox])
                         skip[i] = True
                         break
-                if skip[i]:
-                    break
+                continue
 
         lines = [line for i,line in enumerate(lines) if not skip[i]]
         
