@@ -1,21 +1,66 @@
 import argparse
 import json
 import os
+import re
 import shutil
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from burdoc import BurdocParser
 from burdoc.utils.compare import compare
 
 
-def build_file_list(directory: str, file_type:str, exclude: List[str], include: List[str]) -> Dict[str, str]:
+def build_file_list(directory: str, file_type:str, exclude: List[str], include: List[str], root: Optional[str]=None) -> Dict[str, str]:
+    """Builds a dictionary of valid files with key being a directory-aware title and the value being the relative path.
+
+    Args:
+        directory (str): Root directory to start the search
+        file_type (str): File type to accept (e.g. '.pdf', or '.json')
+        exclude (List[str]): List of regexes that will be compared against the file stem and any files matching at least one will be excluded
+        include (List[str]): List of regexes that will be compared against the file stem and only files matching at least one will be included.
+        root (Optional[str], optional): Additional directory path to attach to the start of each stem
+
+    Returns:
+        Dict[str, str]: 
+        {
+            root_file: /path/to/directory/root_file.file_type,
+            dir1/file: /path/to/directory/dir1/file.file_type,
+            dir2/file: /path/to/directory/dir2/file.file_type,
+        }
+    """
     files = os.listdir(directory)
-    if len(exclude) > 0:
-        files = {f[:-len(file_type)]: f for f in files if f.endswith(file_type) and f[:-len(file_type)] not in exclude}
-    elif len(include) > 0:
-        files = {f[:-len(file_type)]: f for f in files if f.endswith(file_type) and f[:-len(file_type)] in include}
-    return files
+    filtered_files: Dict[str, str] = {}
+    
+    for f in files:
+        path = os.path.join(directory, f)
+        
+        if os.path.isdir(os.path.join(directory, f)):
+            if root:
+                this_root = os.path.join(root, f)
+            else:
+                this_root = f
+            filtered_files |= build_file_list(os.path.join(directory, f), file_type, exclude, include, root=this_root)
+        
+        if not os.path.isfile(path):
+            continue
+        
+        if not f.endswith(file_type):
+            continue
+            
+        stem = os.path.join(root, f[:-len(file_type)]) if root else f[:-len(file_type)]
+            
+        if len(exclude) > 0:
+            if any(re.match(e, stem) for e in exclude):
+                continue
+        
+        if len(include) > 0:
+            if any(re.match(i, stem) for i in include):
+                filtered_files[stem] = path
+            continue
+            
+        filtered_files[stem] = path
+        
+    return filtered_files
 
 def run_parser(source_dir: str, out_dir: str, gold_dir: str, do_update: bool, 
                exclude: List[str], include: List[str]) -> Dict[str, Any]:
@@ -42,6 +87,8 @@ def run_parser(source_dir: str, out_dir: str, gold_dir: str, do_update: bool,
     in_files = build_file_list(source_dir, ".pdf", exclude, include)
     gold_files = build_file_list(gold_dir, ".json", exclude, include)
     
+    print(in_files)
+    
     if not do_update and in_files.keys() != gold_files.keys():
         extra_in = [f for f in in_files if f not in gold_files]
         extra_gold = [f for f in gold_files if f not in in_files]
@@ -56,24 +103,24 @@ def run_parser(source_dir: str, out_dir: str, gold_dir: str, do_update: bool,
 
     for filetitle, filename in in_files.items():
         
-        path = os.path.join(source_dir, filename)
-        if not os.path.isfile(path):
+        if not os.path.isfile(filename):
             continue
         
         test_data['files'].append({'filename':filename, 'filetitle':filetitle, 'changes':{}})
         
         print(f"Reading {filename}")
         start = time.perf_counter()
-        json_out = burdoc.read(path)
+        json_out = burdoc.read(filename)
         test_data['files'][-1]['processing_time'] = round(time.perf_counter() - start, 3)
 
         json_filename = filetitle + ".json"
+        gold_path = os.path.join(gold_dir, json_filename) 
         
         #Round-trip via JSON for consistency
         json_out = json.loads(json.dumps(json_out))
         
         if not do_update or filename in gold_files:
-            gold_path = os.path.join(gold_dir, json_filename)        
+                            
             with open(gold_path, 'r', encoding='utf-8') as f_gold: 
                 print("Running comparison")
                 json_gold = json.load(f_gold)
@@ -81,12 +128,20 @@ def run_parser(source_dir: str, out_dir: str, gold_dir: str, do_update: bool,
                 print(f"Found {len(test_data['files'][-1]['changes'])} changes")
             
         if out_dir:
+            
             out_path = os.path.join(out_dir, json_filename)
+            if not os.path.exists(os.path.dirname(out_path)):
+                os.makedirs(os.path.dirname(out_path))
+            
             with open(out_path, 'w', encoding='utf-8') as f_out:
                 print(f"Writing result to {out_path}")
                 json.dump(json_out, f_out)
             
         if do_update:
+            
+            if not os.path.exists(os.path.dirname(gold_path)):
+                os.makedirs(os.path.dirname(gold_path))
+            
             with open(gold_path, 'w', encoding='utf-8') as f_gold:
                 print(f"Updating gold result in {gold_path}")
                 json.dump(json_out, f_gold)

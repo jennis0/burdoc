@@ -192,10 +192,8 @@ class ImageHandler(object):
         return [i for i,u in zip(images, used_images) if not u]
 
                     
-    def get_image_elements(self, page: fitz.Page, page_image: PILImage) -> Tuple[Dict[ImageType, List[ImageElement]], List[PILImage.Image]]:
+    def get_image_elements(self, page: fitz.Page, page_image: PILImage, page_colour: np.ndarray) -> Tuple[Dict[ImageType, List[ImageElement]], List[PILImage.Image]]:
         self.logger.debug("Starting image extraction")
-
-        page_colour = np.array(get_image_palette(page_image, 1)[0][0])
         
         bound = page.bound()
         page_bbox = Bbox(*bound, bound[2], bound[3]) #type:ignore

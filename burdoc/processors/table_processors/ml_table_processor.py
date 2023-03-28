@@ -75,6 +75,9 @@ class MLTableProcessor(Processor):
                 if len(all_cols) < 2:
                     continue
                 
+                if len(all_rows) < 1:
+                    continue
+                
                 all_rows.sort(key=lambda r: r[1].y0)
                 all_cols.sort(key=lambda r: r[1].x0)
 

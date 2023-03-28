@@ -36,7 +36,7 @@ def table_to_html(table: Dict[str, Any]) -> str:
     
     #For now, only consider first column header. More complex table parsing to come!
     skip_rows = set()
-    if 'col_header_index' in table and table['col_header_index'][0] == 0:
+    if 'col_header_index' in table and len(table['col_header_index']) >0 and table['col_header_index'][0] == 0:
         header = "<theader>"
         header += "".join([f"<th>{cell_to_html(cell)}</th>" for cell in table['cells'][0]])
         header += "</theader>"

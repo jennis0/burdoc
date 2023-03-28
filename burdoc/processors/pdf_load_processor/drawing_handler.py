@@ -1,7 +1,8 @@
 import logging
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import fitz
+import numpy as np
 
 from ...elements import Bbox, DrawingElement, DrawingType
 from ...utils.logging import get_logger
@@ -18,11 +19,51 @@ class DrawingHandler(object):
         self.pdf: fitz.Document = pdf
         self.merge_rects = True
 
-    def get_page_drawings(self, page: fitz.Page) -> Dict[DrawingType, List[DrawingElement]]:
+    def _is_filled_rect(self, shape_info: Dict[str, Any], page_colour: np.ndarray) -> bool:
+        """Check whether shape is filled with a colour distinct from the page background
+
+        Args:
+            shape_info (Dict[str, Any]): A PyMuPDF shape dictionary
+            page_colour (np.ndarray): An (r,g,b) array representing the primary page colour
+
+        Returns:
+            bool: True if this looks like a filled rectangle, False if it is not likely to be visible
+        """
+        if 'fill_opacity' not in shape_info or shape_info['fill_opacity'] < 0.1:
+            return False
+        
+        if np.linalg.norm(255.*np.array(shape_info['fill']) - page_colour) < 10:
+            return False
+        
+        return True
+    
+    def _is_stroked_rect(self, shape_info: Dict[str, Any], page_colour: np.ndarray) -> bool:
+        """Check whether shape outline is a colour distinct from the page background
+
+        Args:
+            shape_info (Dict[str, Any]): A PyMuPDF shape dictionary
+            page_colour (np.ndarray): An (r,g,b) array representing the primary page colour
+
+        Returns:
+            bool: True if this looks like a filled rectangle, False if it is not likely to be visible
+        """
+        if 'stroke_opacity' not in shape_info or shape_info['stroke_opacity'] < 0.1:
+            return False
+        
+        if 'width' not in shape_info or shape_info['width'] < 0.05: 
+            return False
+        
+        if 'color' not in shape_info or np.linalg.norm(np.array(shape_info['color']) - page_colour) < 10:
+            return False
+        
+        return True
+
+    def get_page_drawings(self, page: fitz.Page, page_colour: np.ndarray) -> Dict[DrawingType, List[DrawingElement]]:
         """Extract all drawings from the page and apply basic classification
 
         Args:
-            page (fitz.Page)
+            page (fitz.Page): THe page to extract drawings from
+            page_color (np.ndarray): The primary background colour of the page
 
         Returns:
             Dict[DrawingType, List[DrawingElement]]: Drawings found, separated by type
@@ -34,6 +75,8 @@ class DrawingHandler(object):
 
         processed_drawings: Dict[DrawingType, List[DrawingElement]] = {t:[] for t in DrawingType}
         for d in self.page.get_cdrawings():
+                                
+            # Detect things that look like bullets                        
             if d['type'] == 'f' and d['fill_opacity'] > 0.9 and len(d['items']) > 2:
                 width = d['rect'][2] - d['rect'][0]
                 height = d['rect'][3] - d['rect'][1]
@@ -45,20 +88,28 @@ class DrawingHandler(object):
                     self.logger.debug("Found bullet with box %s", str(drawing.bbox))
                     continue
                 
-            if d['type'] == 'f':
-                if d['fill_opacity'] < 0.1:
-                    self.logger.debug("Filtered drawing due to low fill opacity")
-                    continue
-
+            is_meaningful_fill = 'f' in d['type'] and self._is_filled_rect(d, page_colour)
+            is_meaningful_stroke = 's' in d['type'] and self._is_stroked_rect(d, page_colour)
+            is_meaningful_rect = is_meaningful_fill or is_meaningful_stroke
+            
+            fill_opacity = 0.0
+            stroke_opacity = 0.0
+            if is_meaningful_fill:
+                fill_opacity = d['fill_opacity']
+            if is_meaningful_stroke:
+                stroke_opacity = d['stroke_opacity']
+                
+            if is_meaningful_rect:
+                
                 drawing = DrawingElement(bbox=Bbox(*d['rect'], bound[2], bound[3]), #type:ignore
                                          drawing_type=DrawingType.UNKNOWN, 
-                                         opacity=d['fill_opacity'])
+                                         opacity=max(stroke_opacity, fill_opacity))
                 drawing.bbox.x0 = max(drawing.bbox.x0, 0)
                 drawing.bbox.y0 = max(drawing.bbox.y0, 0)
                 drawing.bbox.x1 = min(drawing.bbox.x1, bound.x1)
                 drawing.bbox.y1 = min(drawing.bbox.y1, bound.y1)
                 overlap = drawing.bbox.overlap(self.page_bbox, normalisation='second')
-
+            
                 if (drawing.bbox.height() < 10) or (drawing.bbox.width() < 10):
                     if overlap > 0:
                         self.logger.debug("Found line %d with box %s", 

@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+import numpy as np
 from typing import Any, Dict, List, Tuple
 
 import fitz
@@ -9,6 +10,7 @@ from plotly.graph_objects import Figure
 
 from ...elements import (Bbox, DrawingElement, DrawingType, ImageType,
                          LineElement, Span)
+from ...utils.image_manip import get_image_palette
 from ..processor import Processor
 from .drawing_handler import DrawingHandler
 from .image_handler import ImageHandler
@@ -151,16 +153,18 @@ class PDFLoadProcessor(Processor):
             start = time.perf_counter()
             data['page_images'][page_number] = self.get_page_image(page)
             performance_tracker['page_image_generation'].append(time.perf_counter() - start)
+            
+            page_colour = np.array(get_image_palette(data['page_images'][page_number], n_colours=1)[0][0])
                 
             start = time.perf_counter()
-            image_elements, images = image_handler.get_image_elements(page, data['page_images'][page_number])
+            image_elements, images = image_handler.get_image_elements(page, data['page_images'][page_number], page_colour)
             performance_tracker['image_handler'].append(time.perf_counter() - start)
         
             data['image_elements'][int(page_number)] = image_elements
             data['images'][int(page_number)] = images
             
             start = time.perf_counter()
-            data['drawing_elements'][page_number] = drawing_handler.get_page_drawings(page)
+            data['drawing_elements'][page_number] = drawing_handler.get_page_drawings(page, page_colour)
             performance_tracker['drawing_handler'].append(time.perf_counter() - start)
             
             start = time.perf_counter()

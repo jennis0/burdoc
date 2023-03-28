@@ -221,6 +221,7 @@ class LayoutProcessor(Processor):
                 self.logger.debug("block: %s", block.get_text())
                 self.logger.debug(block.items[-1])
 
+                block_font = None
                 for i in range(len(block.items[-1].spans)):
                     if last_real_item.spans[-(i+1)].text.strip() != "":
                         block_font = last_real_item.spans[-(i+1)].font
