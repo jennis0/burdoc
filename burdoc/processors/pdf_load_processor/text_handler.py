@@ -112,7 +112,11 @@ class TextHandler(object):
         """
         fitz.TOOLS.set_small_glyph_heights(True)
         self.logger.debug("Starting text extraction")
-        textpage = page.get_textpage(flags=fitz.TEXTFLAGS_DICT & fitz.TEXT_DEHYPHENATE & ~fitz.TEXT_PRESERVE_LIGATURES)
+        textpage = page.get_textpage(
+            flags=fitz.TEXTFLAGS_DICT & 
+            fitz.TEXT_DEHYPHENATE & 
+            ~fitz.TEXT_PRESERVE_LIGATURES
+        )
         data = textpage.extractDICT()
         bound = page.bound()
 

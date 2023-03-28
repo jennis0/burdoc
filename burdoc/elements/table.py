@@ -17,81 +17,48 @@ class TableParts(Enum):
 
 
 class Table(LayoutElement):
+    """Representation of a table within the text.
+    """
 
     def __init__(self, 
                  bbox: Bbox, 
-                 cells: List[List[Any]], 
-                 row_headers: Optional[List[Any]]=None,
-                 col_headers: Optional[List[Any]]=None,
-                 row_boxes: Optional[List[Tuple[TableParts, Bbox]]]=None,
-                 col_boxes: Optional[List[Tuple[TableParts, Bbox]]]=None,
-                 merges: Optional[Dict[Tuple[int, int], List[Tuple[int,int]]]]=None
+                 row_boxes: List[Tuple[TableParts, Bbox]],
+                 col_boxes: List[Tuple[TableParts, Bbox]],
     ):
+        """Creates a Table element
+
+        Args:
+            bbox (Bbox): Bounding box of the the table
+            row_boxes (List[Tuple[TableParts, Bbox]]): Bounding box and descriptor of each row - 
+                use TableParts.COLUMNHEADER to indicate a row used as a column header
+            col_boxes (List[Tuple[TableParts, Bbox]]): Bounding box and descriptor of each column - 
+                use TableParts.ROWHEADER to indicate a column used as a row header
+        """
         super().__init__(bbox, title='Table')
-        self.cells = cells
-        self.row_headers = row_headers
-        self.col_headers = col_headers
-        self.merges = merges
+        self.cells: List[List[List[LayoutElement]]] = \
+            [[[] for _ in range(len(col_boxes))] for _ in range(len(row_boxes))]
         self.row_boxes = row_boxes
         self.col_boxes = col_boxes
+        self.row_headers = [i for i,s in enumerate(col_boxes) if s[0] == TableParts.ROWHEADER]
+        self.col_headers = [i for i,s in enumerate(row_boxes) if s[0] == TableParts.COLUMNHEADER]
 
-    def _get_cell(self, row:int, col: int):
-        val = {'c':self.cells[row][col]}
-        if self.row_headers:
-            val['rh'] = self.row_headers[row]
-        if self.col_headers:
-            val['ch'] = self.col_headers[col]
-
-        return val
-
-    def get_cell(self, row: int, col: int):
-        val = {}
-        if (row, col) in self.merges:
-            for r,c in self.merges[(row, col)]:
-                cell = self._get_cell(r, c)
-                for k,cell_item in cell.items():
-                    if k not in val:
-                        val[k] = [cell_item]
-                    else:
-                        val[k].append(cell_item)
-        else:
-            val = self._get_cell(row, col)
-
-        return val
-
-    def to_html(self):
-        text = "<table>"
-        if self.col_headers:
-            headers = [f"<th>{ch.to_html()}</th>" for ch in self.col_headers]
-            text += f"<tr>{''.join(headers)}</tr>"
-
-        for i,row in enumerate(self.cells):
-            cells = []
-            if self.row_headers:
-                cells.append(f"<th>{self.row_headers[i]}</th>")
-            cells += [f"<td>{r}</td>" for r in row]
-            text += f"<tr>{''.join(cells)}</tr>"
-
-        text += "</table>"
-        return text
-    
     def to_json(self, extras: Optional[Dict]=None, include_bbox: bool=False, **kwargs):
-        extras = {}
-        if self.row_headers:
-            extras['rh'] = [r.to_json() for r in self.row_headers]
-        if self.col_headers:
-            extras['ch'] = [c.to_json() for c in self.col_headers]
-        if self.cells:
-            json_cells: List[List[Any]] = []
-            for row in self.cells:
-                json_cells.append([])
-                for col in row:
-                    json_cells[-1].append([l.to_json() for l in col])
-            extras['cells'] = json_cells
+        if not extras:
+            extras = {}
+            
+        extras['row_header_index'] = self.row_headers
+        extras['col_header_index'] = self.col_headers
+        json_cells: List[List[Any]] = []
+        for row in self.cells:
+            json_cells.append([])
+            for col in row:
+                json_cells[-1].append([l.to_json() for l in col])
+        extras['cells'] = json_cells
 
-        return super().to_json(extras=extras, **kwargs)
+        return super().to_json(extras=extras, include_bbox=include_bbox, **kwargs)
     
     def __str__(self):
-        return f"<Table Id={self.id[:8]}... Bbox={str(self.bbox)}>"
+        n_cells = sum([len(r) for r in self.cells])
+        return f"<Table Id={self.id[:8]}... Bbox={str(self.bbox)} N_Cells={n_cells}>"
             
         

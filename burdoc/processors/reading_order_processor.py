@@ -208,13 +208,13 @@ class ReadingOrderProcessor(Processor):
         
         return full_sorted_elements
 
-    def _flow_content(self, page_bound: Bbox, sections: List[PageSection], images: List[ImageElement], tables: List[Table]) -> List[PageSection]:
+    def _flow_content(self, page_bound: Bbox, sections: List[PageSection], global_elements: List[ImageElement], tables: List[Table]) -> List[PageSection]:
         default_sections = [s for s in sections if s.default]
         other_sections = [s for s in sections if not s.default]
 
-        global_elements: Sequence[LayoutElement] = images + tables #type:ignore
+        global_elements: Sequence[LayoutElement] = global_elements + tables #type:ignore
 
-        used_images = set()
+        used_global_elements = set()
 
         for o_section in other_sections:
             self.logger.debug("Ordering section {section}", section=o_section)
@@ -222,7 +222,7 @@ class ReadingOrderProcessor(Processor):
             in_line_elements = []
             out_of_line_elements = []
             for i,element in enumerate(global_elements):
-                if i in used_images:
+                if i in used_global_elements:
                     continue
                 if element.bbox.overlap(o_section.bbox, 'first') > 0.9:
                     overlap = 0.0
@@ -231,8 +231,8 @@ class ReadingOrderProcessor(Processor):
                     if overlap > 0.2:
                         out_of_line_elements.append(PageSection(element.bbox, [element]))
                     else:
-                        in_line_elements.append(LayoutElementGroup(items=[element]))
-                    used_images.add(i)
+                        in_line_elements.append(element)
+                    used_global_elements.add(i)
                         
             columns = self._flow_items(page_bound, o_section.items + in_line_elements) #type:ignore
             columns = self._flow_columns(page_bound, columns + out_of_line_elements)
@@ -258,14 +258,14 @@ class ReadingOrderProcessor(Processor):
 
             in_line_elements = []
             out_of_line_elements = []
-            for i,element in enumerate(images):
-                if i in used_images:
+            for i,element in enumerate(global_elements):
+                if i in used_global_elements:
                     continue
 
                 if element.bbox.overlap(d_section.bbox, 'first') > 0.9:
                     if isinstance(element, ImageElement) and (element.bbox.width(norm=True) > 0.6 or element.bbox.height(norm=True) > 0.6):
                         out_of_line_elements.append(PageSection(element.bbox, [element]))
-                        used_images.add(i)
+                        used_global_elements.add(i)
                         continue
 
                     overlap = 0
@@ -276,16 +276,16 @@ class ReadingOrderProcessor(Processor):
                         out_of_line_elements.append(PageSection(element.bbox, [element]))
                     else:
                         self.logger.debug("Assigning %s as inline image", str(element))
-                        in_line_elements.append(LayoutElementGroup(items=[element]))
-                    used_images.add(i)
+                        in_line_elements.append(element)
+                    used_global_elements.add(i)
 
             columns = self._flow_items(page_bound, d_section.items + in_line_elements) #type:ignore            
             columns = self._flow_columns(page_bound, columns + out_of_line_elements)
             complete_sections.append(PageSection(items=columns, bbox=d_section.bbox, default=True))
 
         #Merge images with sections
-        for i,element in enumerate(images):
-            if i not in used_images:
+        for i,element in enumerate(global_elements):
+            if i not in used_global_elements:
                 complete_sections.append(PageSection(element.bbox, [element]))
                 
         return complete_sections

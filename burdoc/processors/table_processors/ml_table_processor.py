@@ -67,16 +67,18 @@ class MLTableProcessor(Processor):
                 rows        = [s for s in table_parts[1:] if s[0] == TableParts.ROW]
                 col_headers = [s for s in table_parts[1:] if s[0] == TableParts.COLUMNHEADER]
                 cols        = [s for s in table_parts[1:] if s[0] == TableParts.COLUMN]
-                merges      = [s for s in table_parts[1:] if s[0] == TableParts.SPANNINGCELL]  
+                #merges      = [s for s in table_parts[1:] if s[0] == TableParts.SPANNINGCELL]  
             
                 all_rows = col_headers + rows
                 all_cols = row_headers + cols
                 
                 if len(all_cols) < 2:
                     continue
+                
+                all_rows.sort(key=lambda r: r[1].y0)
+                all_cols.sort(key=lambda r: r[1].x0)
 
-                page_table_candidates.append(Table(table_bbox, [[[] for _ in all_cols] for _ in all_rows], 
-                                         row_boxes=all_rows, col_boxes=all_cols, merges=merges))
+                page_table_candidates.append(Table(table_bbox, all_rows, all_cols))
                 
     
             bad_lines = np.array([0 for _ in page_table_candidates])
@@ -146,6 +148,22 @@ class MLTableProcessor(Processor):
                 if bad_line_count >= 11:
                     used_text[used_text == line_index] = -1
                     continue
+                
+                remove_rows = set()
+                remove_cols = set()
+                for i, iter_row in enumerate(table.cells):
+                    count = sum(len(cell) for cell in iter_row)
+                    if count == 0:
+                        remove_rows.add(i)
+                        
+                for j in range(len(table.cells[0])):
+                    count = sum(len(row[j]) for row in table.cells)
+                    if count == 0:
+                        remove_cols.add(j)
+                        
+                table.cells = [
+                    [cell for j,cell in enumerate(row) if j not in remove_cols] \
+                        for i, row in enumerate(table.cells) if i not in remove_rows]
 
                 data['tables'][page].append(table)
 

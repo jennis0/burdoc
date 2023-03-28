@@ -42,7 +42,7 @@ class RulesTableProcessor(Processor):
                 table_candidates = self._generate_table_candidates(page_bound, [i for i in section.items if isinstance(i, TextBlock)])
                 table_candidates.sort(key=lambda c: c[0][0].bbox.y0*10 + c[0][0].bbox.x0)
                 
-                section_tables = []
+                section_tables: List[List[Tuple[TableParts, Bbox]]] = []
                 for cand in table_candidates:
                     skip = False
                     for tab in section_tables:
@@ -50,34 +50,34 @@ class RulesTableProcessor(Processor):
                             skip=True
                             break
                     if not skip:
-                        tab_parts = self._create_table_from_candidate(cand)
-                        if tab_parts:
-                            section_tables.append(tab_parts)
+                        section_tables.append(self._create_table_from_candidate(cand))
 
                 if len(section_tables) == 0:
                     continue
 
-                table_elements = []
-                for table_bbox, structure in section_tables:
-                    row_headers = [s for s in structure if s[0] == TableParts.ROWHEADER]
-                    rows = [s for s in structure if s[0] == TableParts.ROW]
-                    col_headers = [s for s in structure if s[0] == TableParts.COLUMNHEADER]
-                    cols = [s for s in structure if s[0] == TableParts.COLUMN]
+                section_table_candidates: List[Table] = []
+                for table_parts in section_tables:
+                    table_bbox = table_parts[0][1]
+                    row_headers = [s for s in table_parts[1:] if s[0] == TableParts.ROWHEADER]
+                    rows        = [s for s in table_parts[1:] if s[0] == TableParts.ROW]
+                    col_headers = [s for s in table_parts[1:] if s[0] == TableParts.COLUMNHEADER]
+                    cols        = [s for s in table_parts[1:] if s[0] == TableParts.COLUMN]
+                    #merges      = [s for s in table_parts[1:] if s[0] == TableParts.SPANNINGCELL]  
                 
-                    rs = col_headers + rows
-                    cs = row_headers + cols
+                    all_rows = col_headers + rows
+                    all_cols = row_headers + cols
 
-                    if len(cs) == 2:
-                        if cs[0][1].width() / cs[1][1].width() > 0.9:
+                    if len(all_cols) == 2:
+                        if all_cols[0][1].width() / all_cols[1][1].width() > 0.9:
                             continue
 
-                    merges  = [s for s in structure if s[0] == TableParts.SPANNINGCELL]
+                    all_rows.sort(key=lambda r: r[1].y0)
+                    all_cols.sort(key=lambda r: r[1].x0)
 
-                    table_elements.append(Table(table_bbox[1], [[[] for _ in cs] for _ in rs], 
-                                            row_boxes=rs, col_boxes=cs, merges=merges))
-                
+                    section_table_candidates.append(Table(table_bbox, all_rows, all_cols))
+                        
 
-                bad_lines = np.array([0 for _ in table_elements])
+                bad_lines = np.array([0 for _ in section_table_candidates])
                 used_text = np.array([-1 for _ in section.items])
                 for element_index,element in enumerate(section.items):
                     e_bbox = element.bbox
@@ -85,7 +85,7 @@ class RulesTableProcessor(Processor):
                     if not isinstance(element, TextBlock):
                         continue
 
-                    for table_index,table in enumerate(table_elements):
+                    for table_index,table in enumerate(section_table_candidates):
                         table_element_x_overlap = e_bbox.x_overlap(table.bbox, 'first')
                         table_element_y_overlap = e_bbox.y_overlap(table.bbox, 'first')
 
@@ -119,16 +119,16 @@ class RulesTableProcessor(Processor):
                             bad_lines[table_index] += 1
 
 
-                for element_index,z in enumerate(zip(table_elements, bad_lines)):
-                    table = z[0]
-                    bl = z[1]
-                    if bl > 0:
+                for element_index,table_and_bad_line_count in enumerate(zip(section_table_candidates, bad_lines)):
+                    table = table_and_bad_line_count[0]
+                    bad_line_count = table_and_bad_line_count[1]
+                    if bad_line_count > 0:
                         used_text[used_text == element_index] = -1
                         continue
 
                     skip = False
-                    for row in table.cells:
-                        if len(row[0]) == 0:
+                    for table_row in table.cells:
+                        if len(table_row[0]) == 0:
                             skip = True
                             break
                     if skip:
@@ -345,7 +345,7 @@ class RulesTableProcessor(Processor):
 
         return tables
     
-    def _create_table_from_candidate(self, candidate: List[List[TextBlock]]) -> Optional[Table]:
+    def _create_table_from_candidate(self, candidate: List[List[TextBlock]]) -> List[Tuple[TableParts, Bbox]]:
         #Generate bounding box for table
         self.logger.debug(f"Attempting to create table from seed {candidate[0][0]}")
         dims = candidate[0][0].bbox
@@ -478,16 +478,15 @@ class RulesTableProcessor(Processor):
         # fig = plt.imshow(5*(ah + av) + arr)
         # fig.show()
 
-        table = [TableParts.TABLE, dims.clone()]
-        parts = []
+        parts = [(TableParts.TABLE, dims.clone())]
         for i in range(len(h_lines) - 1):
             parts.append(
-                [TableParts.ROW, Bbox(dims.x0, h_lines[i], dims.x1, h_lines[i+1], dims.page_width, dims.page_height)]
+                (TableParts.ROW, Bbox(dims.x0, h_lines[i], dims.x1, h_lines[i+1], dims.page_width, dims.page_height))
             )
 
         for i in range(len(v_lines) - 1):
             parts.append(
-                [TableParts.COLUMN, Bbox(v_lines[i], dims.y0, v_lines[i+1], dims.y1, dims.page_width, dims.page_height)]
+                (TableParts.COLUMN, Bbox(v_lines[i], dims.y0, v_lines[i+1], dims.y1, dims.page_width, dims.page_height))
             )
 
-        return (table, parts)
+        return parts
