@@ -9,14 +9,7 @@ import fitz
 from .processors import (AggregatorProcessor, ContentProcessor,
                          JSONOutProcessor, LayoutProcessor, MarginProcessor,
                          PDFLoadProcessor, Processor, ReadingOrderProcessor,
-                         RulesTableProcessor)
-
-try:
-    from .processors import MLTableProcessor
-    _HAS_TRANSFORMERS = True
-except ImportError as e:
-    print(e)
-    _HAS_TRANSFORMERS = False
+                         RulesTableProcessor, MLTableProcessor, LOADED_ML_PROCESSORS)
 
 from .utils.logging import get_logger
 from .utils.render_pages import render_pages
@@ -51,10 +44,9 @@ class BurdocParser(object):
 
         Raises:
             ImportError: transformer library detected but loading transformer library failed.
-        """
-
+        """        
         if not use_ml_table_finding:
-            use_ml_table_finding = _HAS_TRANSFORMERS
+            use_ml_table_finding = LOADED_ML_PROCESSORS
         
         self.performance: Dict[str, float] = {}
         self.profile_info: Optional[List[Dict[str, Any]]] = None
@@ -73,7 +65,7 @@ class BurdocParser(object):
         ]
         
         if use_ml_table_finding:
-            if not _HAS_TRANSFORMERS:
+            if not LOADED_ML_PROCESSORS:
                 raise ImportError("Transformer library needed for ML table finding")
             
             self.processors.append(

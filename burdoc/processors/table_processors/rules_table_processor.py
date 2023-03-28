@@ -480,12 +480,12 @@ class RulesTableProcessor(Processor):
         # fig.show()
 
         parts = [(TableParts.TABLE, dims.clone())]
-        for i in range(len(h_lines) - 1):
+        for i in range(len(h_line_centers) - 1):
             parts.append(
                 (TableParts.ROW, Bbox(dims.x0, h_line_centers[i], dims.x1, h_line_centers[i+1], dims.page_width, dims.page_height))
             )
 
-        for i in range(len(v_lines) - 1):
+        for i in range(len(v_line_centers) - 1):
             parts.append(
                 (TableParts.COLUMN, Bbox(v_line_centers[i], dims.y0, v_line_centers[i+1], dims.y1, dims.page_width, dims.page_height))
             )

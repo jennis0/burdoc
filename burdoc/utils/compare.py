@@ -18,10 +18,12 @@ def _diff_dict(path: str, dict1: Dict[str, Any], dict2: Dict[str, Any]) -> List[
             k_path = f"{path}.{k}"
         else:
             k_path = k
+                        
         if k not in dict2:
             changes.append({'path':k_path, 'type':'deletion', 'old':dict1[k]})
         else:
             changes += _do_diff(k_path, dict1[k], dict2[k])
+            
     for k in dict2:
         if k not in dict1:
             changes.append({'path':k_path, 'type':'addition', 'new':dict2[k]})
@@ -30,6 +32,7 @@ def _diff_dict(path: str, dict1: Dict[str, Any], dict2: Dict[str, Any]) -> List[
 
 def _diff_list(path: str, list1: List[Any], list2: List[Any]) -> List[Dict[str, Any]]:
     changes = []
+        
     l1_hashes = {_hash(v):i for i,v in enumerate(list1)}
     l2_hashes = {_hash(v):j for j,v in enumerate(list2)}
 
@@ -56,13 +59,13 @@ def _do_diff(path: str, obj1: Any, obj2: Any) -> List[Dict[str, Any]]:
     v2_type = type(obj2).__name__
     if v1_type != v2_type:
         return [{'path':path, 'type':'change', 'old':obj1, 'new':obj2}]
-    
+        
     if isinstance(obj1, dict):
         return _diff_dict(path, obj1, obj2)
     
     if isinstance(obj1, list):
         return _diff_list(path, obj1, obj2)
-    
+        
     return _diff_value(path, obj1, obj2)
 
 def compare(obj1: Dict[str, Any], obj2: Dict[str, Any]) -> List[Dict[str, Any]]:
