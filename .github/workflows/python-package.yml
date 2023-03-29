@@ -46,7 +46,7 @@ jobs:
       if: failure()
       with:
         name: integration-output
-        path: tests/integration/.results/
+        path: tests\integration\.results\
       
     
 
