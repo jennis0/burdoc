@@ -21,7 +21,10 @@ dependencies = [
     "plotly>=5.12",
     "PyMuPDF>=1.21",
     "scipy>=1.10",
-    "pandas>=1.5"
+    "pandas>=1.5",
+    "torchvision>=0.14",
+    "transformers>=4.26",
+    "timm>=0.6.13"
 ]
 
 [tool.setuptools]
@@ -31,10 +34,8 @@ packages=["burdoc"]
 burdoc="burdoc.scripts.burdoc:run"
 
 [project.optional-dependencies]
-transformers=["torch>=1.13","transformers>=4.26"]
-dev=["pdoc>=13.0","pytest>=7.2.2","pylint>=2.17","pytest-cov>=4.0"]
+dev=["pdoc>=13.0","pytest>=7.2.2","pylint>=2.17","pytest-cov>=4.0", "mypy", "pylint_pytest"]
 
 [project.urls]
 "Homepage" = "https://github.com/jennis0/burdoc"
 "Bug Tracker" = "https://github.com/jennis0/burdoc/issues"
-

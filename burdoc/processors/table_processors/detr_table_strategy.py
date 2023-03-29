@@ -42,7 +42,7 @@ class DetrTableStrategy(TableExtractorStrategy):
             self.batch_size = 10
         else:
             self.cuda = False
-            self.batch_size = -1
+            self.batch_size = 1
 
 
     @staticmethod
@@ -51,10 +51,22 @@ class DetrTableStrategy(TableExtractorStrategy):
 
     def extract_tables(self, page_numbers: List[int], page_images: Dict[int, Image.Image]) \
         -> Dict[int, List[List[Tuple[TableParts, Bbox]]]]: #type:ignore
+        """Identifies tables within a page image and for each table returns a list of table parts.
+        If a GPU is used, pages are batched together to improve efficiency
+
+        Returns:
+            {
+                page_index (int): [
+                    [(TableParts, Bbox) for a table] for each table
+                ]
+            }
+        """
 
         i = 0
         results = {}
+        
         while i < len(page_images):
+                        
             batch_images = list(page_images.values())[i:i+self.batch_size]
             batch_page_numbers = page_numbers[i:i+self.batch_size]
 
@@ -67,6 +79,16 @@ class DetrTableStrategy(TableExtractorStrategy):
     
 
     def _preprocess_image(self, page_images: List[Image.Image]) -> BatchFeature:
+        """Apply any required preprocessing to images and converts them to the 
+        correct format
+
+        Args:
+            page_images (List[Image.Image]): A single batch of page images
+
+        Returns:
+            BatchFeature: Converted images, ready for processing
+        """
+        
         page_images = [i.convert("RGB") for i in page_images]
         s = time.time()
         encoding = self.extractor.preprocess(page_images, return_tensors='pt', 
@@ -74,7 +96,19 @@ class DetrTableStrategy(TableExtractorStrategy):
         self.logger.debug("Encoding %f", round(time.time() - s, 3))
         return encoding
 
-    def _do_extraction(self, model, images: List[Image.Image], threshold: float) -> List[Dict[str, Any]]:
+    def _do_extraction(self, model: TableTransformerForObjectDetection, 
+                       images: List[Image.Image], threshold: float) -> List[Dict[str, Any]]:
+        """Apply a model to the images suppled and keep any detections above the threshold
+
+        Args:
+            model (TableTransformerForObjectDetection): Model to apply
+            images (List[Image.Image]): List of page images
+            threshold (float): Model confidence threshold, should be [0,1]
+
+        Returns:
+            List[Dict[str, Any]]: List of results.
+        """
+        
         features = self._preprocess_image(images)
         sizes = torch.Tensor([[i.size[1], i.size[0]] for i in images])
         if self.cuda:
@@ -91,6 +125,14 @@ class DetrTableStrategy(TableExtractorStrategy):
         return results
 
     def _extract_tables_batch(self, page_images: List[Image.Image]) -> List[List[List[Tuple[TableParts, Bbox]]]]:
+        """Iterate over an entire batch of page images and extract tables
+
+        Args:
+            page_images (List[Image.Image])
+
+        Returns:
+            List[List[List[Tuple[TableParts, Bbox]]]]
+        """
         results = self._do_extraction(self.detector_model, page_images, self.detection_threshold)
 
         table_images = []

@@ -8,6 +8,7 @@ from ..elements.bbox import Bbox
 from ..elements.element import LayoutElement
 from ..elements.line import LineElement
 from ..utils.layout_graph import LayoutGraph
+from ..utils.render_pages import add_rect_to_figure
 from .processor import Processor
 
 
@@ -119,16 +120,9 @@ class MarginProcessor(Processor):
             'right_sidebar':'pink',
         }
 
-        def add_rect(fig, bbox, colour):
-            fig.add_shape(
-                type='rect', xref='x', yref='y', opacity=0.6,
-                x0 = bbox.x0, y0=bbox.y0, x1 = bbox.x1, y1 = bbox.y1,
-                line=dict(color=colour, width=3)
-            )
-
         for field in ['headers', 'footers', 'left_sidebar', 'right_sidebar']:
             for e in data[field][page_number]:
-                add_rect(fig, e.bbox, colours[field])
+                add_rect_to_figure(fig, e.bbox, colours[field])
 
         fig.add_scatter(x=[None], y=[None], name="Footers", line=dict(width=3, color=colours['headers']))
         fig.add_scatter(x=[None], y=[None], name="Headers", line=dict(width=3, color=colours['footers']))

@@ -2,13 +2,20 @@ import argparse
 import json
 import os
 import re
-import shutil
+import sys
 import time
 from typing import Any, Dict, List, Optional
 
 from burdoc import BurdocParser
 from burdoc.utils.compare import compare
 
+def get_data_dir() -> str:
+    """Get the local directory storing test data
+
+    Returns:
+        str: Local data directory
+    """
+    return os.path.join(os.path.dirname(__file__), 'data')
 
 def build_file_list(directory: str, file_type:str, exclude: List[str], include: List[str], root: Optional[str]=None) -> Dict[str, str]:
     """Builds a dictionary of valid files with key being a directory-aware title and the value being the relative path.
@@ -64,6 +71,32 @@ def build_file_list(directory: str, file_type:str, exclude: List[str], include: 
 
 def run_parser(source_dir: str, out_dir: str, gold_dir: str, do_update: bool, 
                exclude: List[str], include: List[str]) -> Dict[str, Any]:
+    """Run the parser over all files and check for changes
+
+    Args:
+        source_dir (str): Input file directory
+        out_dir (str): Directory to store any test outputs
+        gold_dir (str): Gold file directory
+        do_update (bool): Whether to update the gold files after running
+        exclude (List[str]): List of regexes used to exclude files from testing
+        include (List[str]): List of regexes used to inlucde files in testing
+
+    Raises:
+        NotADirectoryError: One of the source, out, gold directories are not directories
+        RuntimeError: Something else went wrong
+
+    Returns:
+        Dict[str, Any]: {
+            in_dir: input directory,
+            out_dir: output directory,
+            gold_dir: gold directory,
+            files: {
+                filename: short file name,
+                filepath: full path,
+                changes: list of changes between generated json and the gold
+            }
+        }
+    """
            
     if not (os.path.exists(source_dir) and os.path.isdir(source_dir)):
         raise NotADirectoryError(f"{source_dir} does not exist or is not a directory")
@@ -168,20 +201,35 @@ def print_results(report_data: Dict[str, Any]):
     print("========================================================================")
 
 def run():
+    """Parse local arguments and run tests
+
+    Raises:
+        RuntimeError: _description_
+    """
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--source", "-s", type=str, help="Directory of input files", required=True)
-    argparser.add_argument("--out", "-o", type=str, help="Target directory for output files", required=False)
-    argparser.add_argument("--gold", "-g", type=str, required=True, help="Directory of gold files. These will be overwritten if --update is passed")
-    argparser.add_argument("--report", "-r", type=str, help="Location to write detailed report")
+    argparser.add_argument("--inputs", "-s", type=str, help="Directory of input files. Defaults to standard location", required=False, default=None)
+    argparser.add_argument("--outputs", "-o", type=str, help="Target directory for output files. Defaults to standard location", required=False)
+    argparser.add_argument("--gold", "-g", type=str, required=False, help="Directory of gold files. Defaults to standard location. These will be overwritten if --update is passed")
+    argparser.add_argument("--report", "-r", type=str, help="Location to write detailed report. Defaults to standard location", default=None)
     argparser.add_argument("--update", required=False, default=False, action="store_true", help="Update gold files rather than run tests")
     argparser.add_argument("--exclude", type=str, required=False, default=[])
     argparser.add_argument("--include", type=str, required=False, default=[])
     args = argparser.parse_args()
-    
+
+    data_dir = get_data_dir()    
+    if not args.inputs:
+        args.inputs = os.path.join(data_dir, 'inputs')
+    if not args.gold:
+        args.gold = os.path.join(data_dir, 'gold')
+    if not args.report:
+        args.report = os.path.join(data_dir, '.results', 'report.json')
+    if not args.outputs:
+        args.outputs = os.path.join(data_dir, '.results')
+           
     if len(args.include) > 0 and len(args.exclude) > 0:
         raise RuntimeError("Cannot specify both include and exclude lists")
     
-    report_data = run_parser(args.source, args.out, args.gold, args.update, 
+    report_data = run_parser(args.inputs, args.outputs, args.gold, args.update, 
                              args.exclude.split(",") if args.exclude else [],
                              args.include.split(",") if args.include else []
                              )
@@ -190,8 +238,13 @@ def run():
             json.dump(report_data, f_report)
     else:
         print_results(report_data)
+        
+    for r in report_data['files']:
+        if len(r['changes']) > 0:
+            print("Tests Failed. Found changes to validation data.")
+            sys.exit(1)
             
 
-if __name__ == "__main__":
+if __name__ == "__main__":    
     run()
 

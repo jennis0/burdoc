@@ -2,10 +2,10 @@ import argparse
 import json
 import logging
 import os
-
 from typing import List
 
 from ..burdoc_parser import BurdocParser
+
 
 def parse_range(text_range: str) -> List[int]:
     numbers = []
@@ -42,11 +42,12 @@ def run():
 
     argparser.add_argument("in_file", type=str, help="Path to the PDF file you want to parse")
     argparser.add_argument('out_file', type=str, help="Path to file to write output to.\nDefaults to [in-file-stem].json", nargs="?")
-    argparser.add_argument('--pages',  help="List of pages to process. Accept comma separated list, specify ranged with '-'", required=False, default=None)
-    argparser.add_argument('--ml-table-finding', action='store_true', required=False, default=None, 
-                           help="Use ML table finding. Warning, this can be slow without GPU acceleration.\nDefaults to True in transformers library installed, False otherwise.")
-    argparser.add_argument('--images', action='store_true', required=False, default=False, help="Extract images from PDF and store in output. This can lead to very large output JSON files.")
-    argparser.add_argument("--single-threaded", action="store_true", required=False, default=False, help="Force Burdoc to run in single-threaded mode")
+    argparser.add_argument('--pages',  help="List of pages to process. Accepts comma separated list and ranges specified with '-'", required=False, default=None)
+    argparser.add_argument('--no-ml-tables', action='store_true', required=False, default=False, 
+                           help="Turn off ML table finding.\nDefaults to False.")
+    argparser.add_argument('--images', action='store_true', required=False, default=False, 
+                           help="Extract images from PDF and store in output. This can lead to very large output JSON files. Default is False")
+    argparser.add_argument("--single-threaded", action="store_true", required=False, default=False, help="Force Burdoc to run in single-threaded mode. Default to off")
     argparser.add_argument("--profile", action="store_true", help="Dump timing information at end of processing", default=False)
     argparser.add_argument("--debug", action="store_true", help="Dump debug messages to log")
     args = argparser.parse_args()
@@ -57,7 +58,7 @@ def run():
         pages = None
 
     parser = BurdocParser(
-        use_ml_table_finding=args.ml_table_finding,
+        use_ml_table_finding=not args.disable_ml_table_finding,
         max_threads=1 if args.single_threaded else None,
         log_level = logging.DEBUG if args.debug else logging.WARNING
     )

@@ -1,16 +1,17 @@
 import logging
 import os
 import time
-import numpy as np
 from typing import Any, Dict, List, Tuple
 
 import fitz
+import numpy as np
 from PIL import Image
 from plotly.graph_objects import Figure
 
 from ...elements import (Bbox, DrawingElement, DrawingType, ImageType,
                          LineElement, Span)
 from ...utils.image_manip import get_image_palette
+from ...utils.render_pages import add_rect_to_figure
 from ..processor import Processor
 from .drawing_handler import DrawingHandler
 from .image_handler import ImageHandler
@@ -217,27 +218,20 @@ class PDFLoadProcessor(Processor):
             "text_elements":"Grey",
         }
 
-        def add_rect(fig, bbox, colour):
-            fig.add_shape(
-                type='rect', xref='x', yref='y', opacity=0.6,
-                x0 = bbox.x0, y0=bbox.y0, x1 = bbox.x1, y1 = bbox.y1,
-                line=dict(color=colour, width=3)
-            )
-
         for e in data['text_elements'][page_number]:
-            add_rect(fig, e.bbox, colours['text_elements'])
+            add_rect_to_figure(fig, e.bbox, colours['text_elements'])
         fig.add_scatter(x=[None], y=[None], name="Line", line=dict(width=3, color=colours['text_elements']))
 
         for im_type in data['images'][page_number]:
             if im_type in colours:
                 colour = colours[im_type]
                 for im in data['images'][page_number][im_type]:
-                    add_rect(fig, im.bbox, colour)
+                    add_rect_to_figure(fig, im.bbox, colour)
                 fig.add_scatter(x=[None], y=[None], name=f"{im_type.name}", line=dict(width=3, color=colour))
 
         for dr_type in data['drawing_elements'][page_number]:
             if dr_type in colours:
                 colour = colours[dr_type]
                 for dr in data['drawing_elements'][page_number][dr_type]:
-                    add_rect(fig, dr.bbox, colour)
+                    add_rect_to_figure(fig, dr.bbox, colour)
                 fig.add_scatter(x=[None], y=[None], name=f"{dr_type.name}", line=dict(width=3, color=colour))

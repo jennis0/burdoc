@@ -30,7 +30,9 @@ A python library for extracting structured text, images, and tables from PDFs wi
   - [Limitations](#limitations)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
+    - [ML Prerequisites](#ml-prerequisites)
   - [Installation](#installation)
+    - [Developer Install](#developer-install)
 - [Usage](#usage)
     - [Command Line](#command-line)
     - [Library](#library)
@@ -54,10 +56,14 @@ Excellent question! Between pdfminer, PyMuPDF, Tika, and many others there are a
    -  Lists (ordered and unordered)
    -  Headers, footers and sidebars,
    -  Visual Asides such as read-out boxes
+
+-  **Structured Output:** Burdoc generates a comprehensive JSON representation of the text. Unlike many other tools it preserves information such metadata, fonts, and original bounding boxes to give downstream users as much information as is needed.
    
  - **Complex Reading Order Inference:** Burdoc uses a multi-stage algorithm to infer reading order even in complex pages with changing numbers of columns, split sections, and asides.
   
- - **ML-Powered Table Extraction:** Burdoc (optionally) makes use of the latest machine learning models for identifying tables, alongside a rules-based approach to identify inline tables.
+ - **ML-Powered Table Extraction:** Burdoc makes use of the latest machine learning models for identifying tables, alongside a rules-based approach to identify inline tables.
+
+
 
 
 ### Limitations
@@ -78,7 +84,12 @@ To get a local copy up and running follow these simple example steps.
 This is an example of how to list things you need to use the software and how to install them.
 
 * Python3
-* Cuda11 [Optional] - *ML Table extraction is greatly accelerated by GPUs if available*
+
+#### ML Prerequisites
+The transformer-based table detection use by Burdoc by default can be quite slow on CPU, often taking several seconds per page, you'll see a large performance increase by running it on a GPU. To avoid messing around with package versions after the fact, it's generally better to install GPU drivers and GPU accelerated versions of PyTorch first if available.
+
+* [Cuda](https://developer.nvidia.com/cuda-downloads)
+* [PyTorch](https://pytorch.org/get-started/locally/)
 
 ### Installation
 To install burdoc from pip
@@ -92,26 +103,37 @@ cd burdoc
 pip install .
 ```
 
+#### Developer Install
+To reproduce the development environment for running builds, tests, etc. use
+```bash
+pip install burdoc[dev]
+```
+or 
+```bash
+git clone https://github.com/jennis0/burdoc
+cd burdoc
+pip install -e ".[dev]"
+```
+
 ## Usage
 Burdoc can be used as a library or directly from the command line depending on your usecase.
 
 #### Command Line
 ```
-usage: burdoc [-h] --in-file IN_FILE [--out-file [OUT_FILE]] [--pages PAGES] [--ml-table-finding] [--images] [--single-threaded] [--profile] [--debug]
+usage: burdoc [-h] [--pages PAGES] [--no-ml-tables] [--images] [--single-threaded] [--profile] [--debug] in_file [out_file]
 
-options:
-  -h, --help            show this help message and exit
-  --in-file IN_FILE, -i IN_FILE
-                        Path to the PDF file you want to parse
-  --out-file [OUT_FILE], -o [OUT_FILE]
-                        Path to file to write output to. Defaults to [in-file-stem].json
-  --pages PAGES         List of pages to process. Accept comma separated list, specify ranged with '-'
-  --ml-table-finding    Use ML table finding. Warning, this can be slow without GPU acceleration. 
-                        Defaults to True in transformers library installed, False otherwise.
-  --images              Extract images from PDF and store in output. This can lead to very large output JSON files.
-  --single-threaded     Force Burdoc to run in single-threaded mode
-  --profile             Dump timing information at end of processing
-  --debug               Dump debug messages to log
+positional arguments:
+  in_file            Path to the PDF file you want to parse
+  out_file           Path to file to write output to. Defaults to [in-file-stem].json
+
+optional arguments:
+  -h, --help         show this help message and exit
+  --pages PAGES      List of pages to process. Accepts comma separated list and ranges specified with '-'
+  --no-ml-tables     Turn off ML table finding. Defaults to False.
+  --images           Extract images from PDF and store in output. This can lead to very large output JSON files. Default is False
+  --single-threaded  Force Burdoc to run in single-threaded mode
+  --profile          Dump timing information at end of processing
+  --debug            Dump debug messages to log
 ```
 #### Library
 
@@ -126,6 +148,7 @@ parser = BurdocParser(
                                             # to force single threaded
 )
 content = parser.read('file.pdf')
+
 ```
 
 ## Roadmap

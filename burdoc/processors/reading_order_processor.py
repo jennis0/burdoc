@@ -9,6 +9,7 @@ from ..elements.image import ImageElement, ImageType
 from ..elements.section import PageSection
 from ..elements.table import Table
 from ..utils.layout_graph import LayoutGraph
+from ..utils.render_pages import add_text_to_figure
 from .processor import Processor
 
 
@@ -307,21 +308,6 @@ class ReadingOrderProcessor(Processor):
             "Table":"Aqua",
         }
 
-        def add_rect(fig, bbox, colour, order=None, draw=True):
-            if draw:
-                fig.add_shape(
-                    type='rect', xref='x', yref='y', opacity=0.6,
-                    x0 = bbox.x0, y0=bbox.y0, x1 = bbox.x1, y1 = bbox.y1,
-                    line=dict(color=colour, width=3)
-                )
-            if order is not None:
-                fig.add_annotation(dict(font=dict(color=colour,size=20),
-                                        x=bbox.center().x,
-                                        y=bbox.center().y,
-                                        showarrow=False,
-                                        font_family="Arial Black",
-                                        text=order))
-
         item_order = 1
 
         def recursive_add(colours, fig, e, item_order):
@@ -329,7 +315,7 @@ class ReadingOrderProcessor(Processor):
                 for i in e:
                     item_order = recursive_add(colours, fig, i, item_order)
             elif type(e).__name__ in colours:
-                add_rect(fig, e.bbox, colours[type(e).__name__], item_order, draw=False)
+                add_text_to_figure(fig, e.bbox.center(), colours[type(e).__name__], item_order)
                 item_order += 1
             elif isinstance(e, LayoutElementGroup):
                 for item in e:

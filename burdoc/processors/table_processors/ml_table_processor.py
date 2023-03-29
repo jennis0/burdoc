@@ -6,6 +6,7 @@ import numpy as np
 from plotly.graph_objects import Figure
 
 from ...elements import Table, TableParts
+from ...utils.render_pages import add_rect_to_figure
 from ..processor import Processor
 from .detr_table_strategy import DetrTableStrategy
 from .table_extractor_strategy import TableExtractorStrategy
@@ -51,7 +52,7 @@ class MLTableProcessor(Processor):
         fields['page_numbers'] = list(data[required_fields[0]].keys())
         
         data['tables'] = {p:[] for p  in fields['page_numbers']}
-        
+                    
         extracted_tables = self.strategy.extract_tables(**fields)
 
         if len(extracted_tables) == 0:
@@ -183,22 +184,15 @@ class MLTableProcessor(Processor):
             "merges": "Turquoise"
         }
 
-        def add_rect(fig, bbox, colour):
-            fig.add_shape(
-                type='rect', xref='x', yref='y', opacity=0.6,
-                x0 = bbox.x0, y0=bbox.y0, x1 = bbox.x1, y1 = bbox.y1,
-                line=dict(color=colour, width=3)
-            )
+        for table in data['tables'][page_number]:
+            add_rect_to_figure(fig, table.bbox, colours["table"])
 
-        for t in data['tables'][page_number]:
-            add_rect(fig, t.bbox, colours["table"])
-
-            for row_box in t.row_boxes:
-                add_rect(fig, row_box[1], colours['row'])
-            for col_box in t.col_boxes:
-                add_rect(fig, col_box[1], colours['col'])
-            for merged_box in t.merges:
-                add_rect(fig, merged_box[1], colours['merges'])
+            for row_box in table.row_boxes:
+                add_rect_to_figure(fig, row_box[1], colours['row'])
+            for col_box in table.col_boxes:
+                add_rect_to_figure(fig, col_box[1], colours['col'])
+            for merged_box in table.merges:
+                add_rect_to_figure(fig, merged_box[1], colours['merges'])
 
 
 

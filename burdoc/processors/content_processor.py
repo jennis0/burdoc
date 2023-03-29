@@ -12,6 +12,8 @@ from ..elements.textblock import TextBlock, TextBlockType
 from ..elements.textlist import TextList, TextListItem
 from .processor import Processor
 
+from ..utils.render_pages import add_rect_to_figure, add_text_to_figure
+
 
 class ContentProcessor(Processor):
     """The ContentProcessor takes the correctly ordered layout elements and applies additional 
@@ -294,29 +296,20 @@ class ContentProcessor(Processor):
             'e': 'darkgrey'
         }
 
-        def add_rect(fig, bbox, colour, text=None, add_shape=True, side="left"):
-            if add_shape:
-                fig.add_shape(
-                    type='rect', xref='x', yref='y', opacity=0.6,
-                    x0 = bbox.x0, y0=bbox.y0, x1 = bbox.x1, y1 = bbox.y1,
-                    line=dict(color=colour, width=3)
-                )
-            if text is not None:
-                fig.add_annotation(dict(font=dict(color=colour,size=15),
-                                        x=bbox.x0 - 20 if side == "left" else bbox.x1 - 10,
-                                        y=bbox.y0,
-                                        showarrow=False,
-                                        font_family="Arial Black",
-                                        text=text))
-
         def recursive_add(fig: Figure, element: LayoutElement):
             if isinstance(element, PageSection):
                 for i in element.items:
                     recursive_add(fig, i)
             elif isinstance(element, TextBlock):
-                add_rect(fig, element.bbox, colours[element.type.name[0].lower()], add_shape=False, text=element.type.name, side="right")
+                point = element.bbox.center()
+                point.x -= 15
+                add_rect_to_figure(fig, element.bbox, colours[element.type.name[0].lower()])
+                add_text_to_figure(fig, point, colours[element.type.name[0].lower()], element.type.name)
             elif isinstance(element, TextListItem):
-                add_rect(fig, element.bbox, colours[TextListItem], f"L:{element.label}")
+                point = element.bbox.center()
+                point.x -= 15
+                add_rect_to_figure(fig, element.bbox, colours[TextListItem])
+                add_text_to_figure(fig, point, colours[TextListItem], f"L:{element.label}")
             elif isinstance(element, TextList):
                 for i in element.items:
                     recursive_add(fig, i)

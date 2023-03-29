@@ -1,16 +1,15 @@
 import logging
 import multiprocessing as mp
-import time
 import os
+import time
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 import fitz
 
 from .processors import (AggregatorProcessor, ContentProcessor,
                          JSONOutProcessor, LayoutProcessor, MarginProcessor,
-                         PDFLoadProcessor, Processor, ReadingOrderProcessor,
-                         RulesTableProcessor, MLTableProcessor, LOADED_ML_PROCESSORS)
-
+                         MLTableProcessor, PDFLoadProcessor, Processor,
+                         ReadingOrderProcessor, RulesTableProcessor)
 from .utils.logging import get_logger
 from .utils.render_pages import render_pages
 
@@ -26,7 +25,7 @@ class BurdocParser(object):
     """
  
     def __init__(self,
-                 use_ml_table_finding: Optional[bool]=None,
+                 use_ml_table_finding: Optional[bool]=True,
                  max_threads: Optional[int]=None,
                  log_level: int=logging.INFO,
                  show_pages: bool=False,
@@ -44,10 +43,7 @@ class BurdocParser(object):
 
         Raises:
             ImportError: transformer library detected but loading transformer library failed.
-        """        
-        if not use_ml_table_finding:
-            use_ml_table_finding = LOADED_ML_PROCESSORS
-        
+        """                
         self.performance: Dict[str, float] = {}
         self.profile_info: Optional[List[Dict[str, Any]]] = None
         start = time.perf_counter()
@@ -65,9 +61,6 @@ class BurdocParser(object):
         ]
         
         if use_ml_table_finding:
-            if not LOADED_ML_PROCESSORS:
-                raise ImportError("Transformer library needed for ML table finding")
-            
             self.processors.append(
                 (MLTableProcessor, {}, False)
             )

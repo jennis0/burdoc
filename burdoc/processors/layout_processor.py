@@ -11,6 +11,7 @@ from ..elements.image import ImageElement, ImageType
 from ..elements.line import LineElement
 from ..elements.section import PageSection
 from ..elements.textblock import TextBlock
+from ..utils.render_pages import add_rect_to_figure
 from .processor import Processor
 
 
@@ -363,20 +364,15 @@ class LayoutProcessor(Processor):
             TextBlock:"Black"
         }
 
-        def add_rect(fig, bbox, colour):
-            fig.add_shape(
-                type='rect', xref='x', yref='y', opacity=0.6,
-                x0 = bbox.x0, y0=bbox.y0, x1 = bbox.x1, y1 = bbox.y1,
-                line=dict(color=colour, width=3)
-            )
+
 
         def recursive_add(fig, e):
             if isinstance(e, PageSection):
-                add_rect(fig, e.bbox, colours[PageSection])
+                add_rect_to_figure(fig, e.bbox, colours[PageSection])
                 for i in e.items:
                     recursive_add(fig, i)
             elif isinstance(e, TextBlock):
-                add_rect(fig, e.bbox, colours[TextBlock])
+                add_rect_to_figure(fig, e.bbox, colours[TextBlock])
             elif isinstance(e, LayoutElementGroup) or isinstance(e, list):
                 for i in e:
                     recursive_add(fig, i)
