@@ -1,12 +1,12 @@
 <br/>
 <p align="center">
-  <!-- <a href="https://github.com/jennis0/burdoc">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
-  </a> -->
+  <a href="https://github.com/jennis0/burdoc">
+    <img src="images/Burdoc-1.png" height="250">
+  </a>
 
-  <h1 align="center">Burdoc: Advanced PDF Parser</h1>
+  <h1 align="center">Burdoc: Advanced PDF Parsing</h1>
   <p align="center">
-A python library for parsing structured text, images, and tables from PDFs.
+A python library for extracting structured text, images, and tables from PDFs with context and reading order.
   </p>
 </p>
 
@@ -17,6 +17,7 @@ A python library for parsing structured text, images, and tables from PDFs.
 <a href="">![Contributors](https://img.shields.io/github/contributors/jennis0/burdoc?color=dark-green)</a>
 <a href="">![Issues](https://img.shields.io/github/issues/jennis0/burdoc)</a>
 <a href="">![License](https://img.shields.io/github/license/jennis0/burdoc)</a>
+<a href="">[![codecov](https://codecov.io/gh/jennis0/burdoc/branch/main/graph/badge.svg?token=7X7146BQ72)](https://codecov.io/gh/jennis0/burdoc)</a>
 
 </div>
 
@@ -44,12 +45,19 @@ A python library for parsing structured text, images, and tables from PDFs.
 ## About the Project
 
 #### Why Another PDF Parsing Library?
-Excellent question! Between pdfminer, PyMuPDF, Tika, and many others there are a plethora of tools for parsing PDFs, but nearly all are focused on the initial step of either pulling out raw content. Burdoc's goal is to generate a rich semantic representation of a PDF, including headings, reading order, tables, and images.
+Excellent question! Between pdfminer, PyMuPDF, Tika, and many others there are a plethora of tools for parsing PDFs, but nearly all are focused on the initial step of pulling out raw content, not on representing the documents actual meaning. Burdoc's goal is to generate a rich semantic representation of a PDF, including headings, reading order, tables, and images that can be used for downstream processing.
 
 ### Key Features
- - **Rich Document Representation:** Burdoc is able to identify most common types of text, including lists, headers/footers, asides, and multiple levels of titles.
+ - **Rich Document Representation:** Burdoc is able to identify most common types of text, including:
+   -  Paragraphs
+   -  Headings
+   -  Lists (ordered and unordered)
+   -  Headers, footers and sidebars,
+   -  Visual Asides such as read-out boxes
+   
  - **Complex Reading Order Inference:** Burdoc uses a multi-stage algorithm to infer reading order even in complex pages with changing numbers of columns, split sections, and asides.
- - **ML-Powered Table Extraction:** Burdoc (optionally) makes use of the latest ML models for identifying tables, alongside a rules-based approach to identify inline tables.
+  
+ - **ML-Powered Table Extraction:** Burdoc (optionally) makes use of the latest machine learning models for identifying tables, alongside a rules-based approach to identify inline tables.
 
 
 ### Limitations
