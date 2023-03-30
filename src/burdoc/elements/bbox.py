@@ -318,10 +318,17 @@ class Bbox:
 
     def to_json(self, include_page=False) -> Dict[str, float]:
         """Convert a Bbox to JSON format.
-        Format: {
-            'x0':float, 'y0':float, 'x1':float, 'y1':float,
-            'pw':float [optional], 'ph':float [optional]
-        }
+        
+        Example:
+        ::
+            {
+                'x0':float, 
+                'y0':float, 
+                'x1':float, 
+                'y1':float,
+                'pw':float [optional], 
+                'ph':float [optional]
+            }
 
         Args:
             include_page (bool, optional): Include page width and height. 

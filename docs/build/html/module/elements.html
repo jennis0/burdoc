@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elements &mdash; Burdoc  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Processors" href="processors/index.html" />
+    <link rel="prev" title="BurdocParser" href="burdoc_parser.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Burdoc
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Burdoc: Advanced PDF Parsing For Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../output.html">Working with Burdoc Output</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="module.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="burdoc_parser.html">BurdocParser</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Elements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#layoutelement">LayoutElement</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.element.LayoutElement"><code class="docutils literal notranslate"><span class="pre">LayoutElement</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#layoutelementgroup">LayoutElementGroup</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.element.LayoutElementGroup"><code class="docutils literal notranslate"><span class="pre">LayoutElementGroup</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-burdoc.elements.aside">Aside</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.aside.Aside"><code class="docutils literal notranslate"><span class="pre">Aside</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-burdoc.elements.bbox">Bbox</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.bbox.Bbox"><code class="docutils literal notranslate"><span class="pre">Bbox</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.bbox.Point"><code class="docutils literal notranslate"><span class="pre">Point</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-burdoc.elements.drawing">DrawingElement</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.drawing.DrawingElement"><code class="docutils literal notranslate"><span class="pre">DrawingElement</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.drawing.DrawingType"><code class="docutils literal notranslate"><span class="pre">DrawingType</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-burdoc.elements.font">Font</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.font.Font"><code class="docutils literal notranslate"><span class="pre">Font</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-burdoc.elements.image">ImageElement</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.image.ImageElement"><code class="docutils literal notranslate"><span class="pre">ImageElement</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.image.ImageType"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-burdoc.elements.line">LineElement</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.line.LineElement"><code class="docutils literal notranslate"><span class="pre">LineElement</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-burdoc.elements.section">PageSection</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.section.PageSection"><code class="docutils literal notranslate"><span class="pre">PageSection</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-burdoc.elements.span">Span</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.span.Span"><code class="docutils literal notranslate"><span class="pre">Span</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-burdoc.elements.table">Table</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.table.Table"><code class="docutils literal notranslate"><span class="pre">Table</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.table.TableParts"><code class="docutils literal notranslate"><span class="pre">TableParts</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-burdoc.elements.textblock">TextBlock</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.textblock.TextBlock"><code class="docutils literal notranslate"><span class="pre">TextBlock</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.textblock.TextBlockType"><code class="docutils literal notranslate"><span class="pre">TextBlockType</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-burdoc.elements.textlist">TextList</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.textlist.TextList"><code class="docutils literal notranslate"><span class="pre">TextList</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.elements.textlist.TextListItem"><code class="docutils literal notranslate"><span class="pre">TextListItem</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="processors/index.html">Processors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Burdoc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="module.html">API Documentation</a></li>
+      <li class="breadcrumb-item active">Elements</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/module/elements.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="elements">
+<h1>Elements<a class="headerlink" href="#elements" title="Permalink to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-burdoc.elements"></span><p>Classes used internally by Burdoc to represents elements within a pdf page.</p>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#layoutelement" id="id1">LayoutElement</a></p></li>
+<li><p><a class="reference internal" href="#layoutelementgroup" id="id2">LayoutElementGroup</a></p></li>
+<li><p><a class="reference internal" href="#module-burdoc.elements.aside" id="id3">Aside</a></p></li>
+<li><p><a class="reference internal" href="#module-burdoc.elements.bbox" id="id4">Bbox</a></p></li>
+<li><p><a class="reference internal" href="#module-burdoc.elements.drawing" id="id5">DrawingElement</a></p></li>
+<li><p><a class="reference internal" href="#module-burdoc.elements.font" id="id6">Font</a></p></li>
+<li><p><a class="reference internal" href="#module-burdoc.elements.image" id="id7">ImageElement</a></p></li>
+<li><p><a class="reference internal" href="#module-burdoc.elements.line" id="id8">LineElement</a></p></li>
+<li><p><a class="reference internal" href="#module-burdoc.elements.section" id="id9">PageSection</a></p></li>
+<li><p><a class="reference internal" href="#module-burdoc.elements.span" id="id10">Span</a></p></li>
+<li><p><a class="reference internal" href="#module-burdoc.elements.table" id="id11">Table</a></p></li>
+<li><p><a class="reference internal" href="#module-burdoc.elements.textblock" id="id12">TextBlock</a></p></li>
+<li><p><a class="reference internal" href="#module-burdoc.elements.textlist" id="id13">TextList</a></p></li>
+</ul>
+</nav>
+<section id="layoutelement">
+<h2><a class="toc-backref" href="#contents" role="doc-backlink">LayoutElement</a><a class="headerlink" href="#layoutelement" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.elements.element.LayoutElement">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.element.</span></span><span class="sig-name descname"><span class="pre">LayoutElement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'LayoutElement'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.element.LayoutElement" title="Permalink to this definition"></a></dt>
+<dd><p>Base class for any layout object within the PDF. LayoutElements can be used to describe
+anything that has a bbox.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.element.LayoutElement.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.elements.element.LayoutElement.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>Convert the LayoutElement into a JSON object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extras</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Any additional items that
+should be included within the JSON. Defaults to None.</p></li>
+<li><p><strong>include_bbox</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include the bounding box. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A JSON representation of the object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="layoutelementgroup">
+<h2><a class="toc-backref" href="#contents" role="doc-backlink">LayoutElementGroup</a><a class="headerlink" href="#layoutelementgroup" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.elements.element.LayoutElementGroup">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.element.</span></span><span class="sig-name descname"><span class="pre">LayoutElementGroup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#burdoc.elements.element.LayoutElement" title="burdoc.elements.element.LayoutElement"><span class="pre">LayoutElement</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'LayoutElementGroup'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.element.LayoutElementGroup" title="Permalink to this definition"></a></dt>
+<dd><p>Base class for any coherent group of layout objects within the PDF. The BBox of the
+LayoutElementGroup is the rectangle encompassing all Bboxes of it’s members.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.element.LayoutElementGroup.append">
+<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.element.LayoutElement" title="burdoc.elements.element.LayoutElement"><span class="pre">LayoutElement</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.element.LayoutElementGroup.append" title="Permalink to this definition"></a></dt>
+<dd><p>Add an item to the group</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>item</strong> (<a class="reference internal" href="#burdoc.elements.element.LayoutElement" title="burdoc.elements.element.LayoutElement"><em>LayoutElement</em></a>) – Item to add</p></li>
+<li><p><strong>update_bbox</strong> (<em>bool</em><em>, </em><em>optional</em>) – Should the group Bbox be recalculated or ignored?
+Useful when items are non-contigous (e.g. they cross columns or pages).
+Defaults to True.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.element.LayoutElementGroup.merge">
+<span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">leg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.element.LayoutElementGroup" title="burdoc.elements.element.LayoutElementGroup"><span class="pre">LayoutElementGroup</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#burdoc.elements.element.LayoutElementGroup" title="burdoc.elements.element.LayoutElementGroup"><span class="pre">LayoutElementGroup</span></a></span></span><a class="headerlink" href="#burdoc.elements.element.LayoutElementGroup.merge" title="Permalink to this definition"></a></dt>
+<dd><p>In-place merge with another LayoutElementGroup</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>leg</strong> (<a class="reference internal" href="#burdoc.elements.element.LayoutElementGroup" title="burdoc.elements.element.LayoutElementGroup"><em>LayoutElementGroup</em></a>) – LEG to merge with</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A reference to self</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#burdoc.elements.element.LayoutElementGroup" title="burdoc.elements.element.LayoutElementGroup">LayoutElementGroup</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.element.LayoutElementGroup.remove">
+<span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.element.LayoutElement" title="burdoc.elements.element.LayoutElement"><span class="pre">LayoutElement</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.element.LayoutElementGroup.remove" title="Permalink to this definition"></a></dt>
+<dd><p>Remove an item from the group</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>item</strong> (<a class="reference internal" href="#burdoc.elements.element.LayoutElement" title="burdoc.elements.element.LayoutElement"><em>LayoutElement</em></a>) – Item to remove</p></li>
+<li><p><strong>update_bbox</strong> (<em>bool</em><em>, </em><em>optional</em>) – Should the group Bbox be recalculated or ignored?
+Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Item not present in list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.element.LayoutElementGroup.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.elements.element.LayoutElementGroup.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extras</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Any additional items that
+need to be included in the JSON. Defaults to None.</p></li>
+<li><p><strong>include_bbox</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include the bounding box. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A JSON representation of the group</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-burdoc.elements.aside">
+<span id="aside"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">Aside</a><a class="headerlink" href="#module-burdoc.elements.aside" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.elements.aside.Aside">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.aside.</span></span><span class="sig-name descname"><span class="pre">Aside</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#burdoc.elements.element.LayoutElement" title="burdoc.elements.element.LayoutElement"><span class="pre">LayoutElement</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.aside.Aside" title="Permalink to this definition"></a></dt>
+<dd><p>A small delimited section of text that is separate from the surrounding
+flow.</p>
+</dd></dl>
+
+</section>
+<section id="module-burdoc.elements.bbox">
+<span id="bbox"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">Bbox</a><a class="headerlink" href="#module-burdoc.elements.bbox" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.bbox.</span></span><span class="sig-name descname"><span class="pre">Bbox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.bbox.Bbox" title="Permalink to this definition"></a></dt>
+<dd><p>Utility class for storing and manipulating bounding boxes.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.area">
+<span class="sig-name descname"><span class="pre">area</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.area" title="Permalink to this definition"></a></dt>
+<dd><p>Returns total area of bbox</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.area_norm">
+<span class="sig-name descname"><span class="pre">area_norm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.area_norm" title="Permalink to this definition"></a></dt>
+<dd><p>Returns total area of bbox as a percentage of the page area.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.center">
+<span class="sig-name descname"><span class="pre">center</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#burdoc.elements.bbox.Point" title="burdoc.elements.bbox.Point"><span class="pre">Point</span></a></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.center" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a point representing the center of the bounding box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>norm</strong> (<em>bool</em><em>, </em><em>optional</em>) – Return page-normalised co-ordinates.</p></li>
+<li><p><strong>False.</strong> (<em>Defaults to</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Point</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.clone">
+<span class="sig-name descname"><span class="pre">clone</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.clone" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a clone of the bounding box</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Bbox</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.from_points">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Point" title="burdoc.elements.bbox.Point"><span class="pre">Point</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">p2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Point" title="burdoc.elements.bbox.Point"><span class="pre">Point</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.from_points" title="Permalink to this definition"></a></dt>
+<dd><p>Create a Bbox spanning two points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p1</strong> (<a class="reference internal" href="#burdoc.elements.bbox.Point" title="burdoc.elements.bbox.Point"><em>Point</em></a>) – Top-left corner</p></li>
+<li><p><strong>p2</strong> (<a class="reference internal" href="#burdoc.elements.bbox.Point" title="burdoc.elements.bbox.Point"><em>Point</em></a>) – Bottom-right corner</p></li>
+<li><p><strong>page_width</strong> (<em>float</em>) – Width of page</p></li>
+<li><p><strong>page_height</strong> (<em>float</em>) – Height of page</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Bbox</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.height">
+<span class="sig-name descname"><span class="pre">height</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.height" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the height of the bounding box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>norm</strong> (<em>bool</em><em>, </em><em>optional</em>) – Return page-normalised co-ordinates.</p></li>
+<li><p><strong>False.</strong> (<em>Defaults to</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.is_vertical">
+<span class="sig-name descname"><span class="pre">is_vertical</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.is_vertical" title="Permalink to this definition"></a></dt>
+<dd><p>Test if the Bounding box is oriented vertically. I.e. that the height is greater than the width.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>_description_</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.merge">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bboxes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.merge" title="Permalink to this definition"></a></dt>
+<dd><p>Merge several Bboxes into a single bbox spanning all of them</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>bboxes</strong> (<em>List</em><em>[</em><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><em>Bbox</em></a><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – No bboxes passed</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Bbox</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.overlap">
+<span class="sig-name descname"><span class="pre">overlap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalisation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.overlap" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the overall overlap between this Bbox and another.</p>
+<p>Several normalisation options are provided:
+* “”: No normalisation
+* “first”: Return as percent of calling bounding box width
+* “second”: Return as percent of passed bounding box width
+* “min”: Return as percent of thinnest box width
+* “max”: Return as percent of widest box width
+* “page”: Return as percent of page width</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>other_bbox</strong> (<a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><em>Bbox</em></a>) – Passed bbox</p></li>
+<li><p><strong>normalisation</strong> (<em>str</em><em>, </em><em>optional</em>) – Normalisation option. Defaults to “”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">include_page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>Convert a Bbox to JSON format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>include_page</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include page width and height.
+Defaults to False.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>Dict[str, float]</p>
+<dl>
+<dt>::</dt><dd><dl class="simple">
+<dt>{</dt><dd><p>‘x0’:float, ‘y0’:float, ‘x1’:float, ‘y1’:float,
+‘pw’:float [optional], ‘ph’:float [optional]</p>
+</dd>
+</dl>
+<p>}</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.to_rect">
+<span class="sig-name descname"><span class="pre">to_rect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.to_rect" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a four point representation of the box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[x0, y0, x1, y1]</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.width">
+<span class="sig-name descname"><span class="pre">width</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.width" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the width of the bounding box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>norm</strong> (<em>bool</em><em>, </em><em>optional</em>) – Return page-normalised co-ordinates.</p></li>
+<li><p><strong>False.</strong> (<em>Defaults to</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.x0_norm">
+<span class="sig-name descname"><span class="pre">x0_norm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.x0_norm" title="Permalink to this definition"></a></dt>
+<dd><p>x0 normalised by its position on the page</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.x1_norm">
+<span class="sig-name descname"><span class="pre">x1_norm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.x1_norm" title="Permalink to this definition"></a></dt>
+<dd><p>x1 normalised by its position on the page</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.x_distance">
+<span class="sig-name descname"><span class="pre">x_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.x_distance" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the distance between called and passed Bbox in the x direction.</p>
+<p>Note that this is calculated centre to centre. It returns negatively if passed Bbox is below
+this Bbox.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other_bbox</strong> (<a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><em>Bbox</em></a>) – </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.x_overlap">
+<span class="sig-name descname"><span class="pre">x_overlap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalisation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.x_overlap" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the projected overlap between this Bbox and another in the x axis.</p>
+<p>Several normalisation options are provided:
+* “”: No normalisation
+* “first”: Return as percent of calling bounding box width
+* “second”: Return as percent of passed bounding box width
+* “min”: Return as percent of thinnest box width
+* “max”: Return as percent of widest box width
+* “page”: Return as percent of page width</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>other_bbox</strong> (<a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><em>Bbox</em></a>) – Passed bbox</p></li>
+<li><p><strong>normalisation</strong> (<em>str</em><em>, </em><em>optional</em>) – Normalisation option. Defaults to “”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.y0_norm">
+<span class="sig-name descname"><span class="pre">y0_norm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.y0_norm" title="Permalink to this definition"></a></dt>
+<dd><p>y0 normalised by its position on the page</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.y1_norm">
+<span class="sig-name descname"><span class="pre">y1_norm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.y1_norm" title="Permalink to this definition"></a></dt>
+<dd><p>y1 normalised by its position on the page</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.y_distance">
+<span class="sig-name descname"><span class="pre">y_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.y_distance" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the distance between called and passed Bbox in the y direction.</p>
+<p>Note that this is calculated centre to centre. It returns negatively if passed Bbox is to the
+right of this Bbox.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other_bbox</strong> (<a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><em>Bbox</em></a>) – </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Bbox.y_overlap">
+<span class="sig-name descname"><span class="pre">y_overlap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalisation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#burdoc.elements.bbox.Bbox.y_overlap" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the projected overlap between this Bbox and another in the y axis.</p>
+<p>Several normalisation options are provided:
+* “”: No normalisation
+* “first”: Return as percent of calling bounding box width
+* “second”: Return as percent of passed bounding box width
+* “min”: Return as percent of thinnest box width
+* “max”: Return as percent of widest box width
+* “page”: Return as percent of page width</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>other_bbox</strong> (<a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><em>Bbox</em></a>) – Passed bbox</p></li>
+<li><p><strong>normalisation</strong> (<em>str</em><em>, </em><em>optional</em>) – Normalisation option. Defaults to “”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.elements.bbox.Point">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.bbox.</span></span><span class="sig-name descname"><span class="pre">Point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'float'</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'float'</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.bbox.Point" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-burdoc.elements.drawing">
+<span id="drawingelement"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">DrawingElement</a><a class="headerlink" href="#module-burdoc.elements.drawing" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.elements.drawing.DrawingElement">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.drawing.</span></span><span class="sig-name descname"><span class="pre">DrawingElement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">opacity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drawing_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.drawing.DrawingType" title="burdoc.elements.drawing.DrawingType"><span class="pre">DrawingType</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">DrawingType.UNKNOWN</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.drawing.DrawingElement" title="Permalink to this definition"></a></dt>
+<dd><p>Core element representing a drawing</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.drawing.DrawingElement.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.drawing.DrawingElement.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>Convert the LayoutElement into a JSON object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extras</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Any additional items that
+should be included within the JSON. Defaults to None.</p></li>
+<li><p><strong>include_bbox</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include the bounding box. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A JSON representation of the object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class enum">
+<dt class="sig sig-object py" id="burdoc.elements.drawing.DrawingType">
+<em class="property"><span class="pre">enum</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.drawing.</span></span><span class="sig-name descname"><span class="pre">DrawingType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.drawing.DrawingType" title="Permalink to this definition"></a></dt>
+<dd><p>Enumeration of types of drawing Burdoc understands.</p>
+<p>LINE: Anything long and thin used as a visual separator</p>
+<p>RECT: Usually means a square or outer edge defining an aside or section</p>
+<p>BULLET: A small circle indicating a textual bullet point.</p>
+<p>Valid values are as follows:</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.drawing.DrawingType.LINE">
+<span class="sig-name descname"><span class="pre">LINE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;DrawingType.LINE:</span> <span class="pre">1&gt;</span></em><a class="headerlink" href="#burdoc.elements.drawing.DrawingType.LINE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.drawing.DrawingType.RECT">
+<span class="sig-name descname"><span class="pre">RECT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;DrawingType.RECT:</span> <span class="pre">2&gt;</span></em><a class="headerlink" href="#burdoc.elements.drawing.DrawingType.RECT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.drawing.DrawingType.BULLET">
+<span class="sig-name descname"><span class="pre">BULLET</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;DrawingType.BULLET:</span> <span class="pre">3&gt;</span></em><a class="headerlink" href="#burdoc.elements.drawing.DrawingType.BULLET" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.drawing.DrawingType.UNKNOWN">
+<span class="sig-name descname"><span class="pre">UNKNOWN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;DrawingType.UNKNOWN:</span> <span class="pre">4&gt;</span></em><a class="headerlink" href="#burdoc.elements.drawing.DrawingType.UNKNOWN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-burdoc.elements.font">
+<span id="font"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">Font</a><a class="headerlink" href="#module-burdoc.elements.font" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.elements.font.Font">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.font.</span></span><span class="sig-name descname"><span class="pre">Font</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">family</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colour</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">italic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">superscript</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.font.Font" title="Permalink to this definition"></a></dt>
+<dd><p>Representation of font information</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.font.Font.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.font.Font.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>Convert the Font into a JSON object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A JSON representation of the font.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-burdoc.elements.image">
+<span id="imageelement"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">ImageElement</a><a class="headerlink" href="#module-burdoc.elements.image" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.elements.image.ImageElement">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.image.</span></span><span class="sig-name descname"><span class="pre">ImageElement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.image.ImageType" title="burdoc.elements.image.ImageType"><span class="pre">ImageType</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ImageType.UNKNOWN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.image.ImageElement" title="Permalink to this definition"></a></dt>
+<dd><p>Core element representing an image with a page layout</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.image.ImageElement.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.image.ImageElement.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>Convert the LayoutElement into a JSON object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extras</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Any additional items that
+should be included within the JSON. Defaults to None.</p></li>
+<li><p><strong>include_bbox</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include the bounding box. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A JSON representation of the object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class enum">
+<dt class="sig sig-object py" id="burdoc.elements.image.ImageType">
+<em class="property"><span class="pre">enum</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.image.</span></span><span class="sig-name descname"><span class="pre">ImageType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.image.ImageType" title="Permalink to this definition"></a></dt>
+<dd><p>Enumeration of the types of images Burdoc understands.</p>
+<p>INVISIBLE: Image isn’t visible on page</p>
+<p>BACKGROUND: Image is used as background for the whole page</p>
+<p>SECTION: Image is used as a background for a page section or aside</p>
+<p>INLINE: Image is part of the flow of text (currently unused)</p>
+<p>DECORATIVE: Image is a decorative element in the page layout but has no semantic menaing</p>
+<p>PRIMARY: Image is a ‘hero’ image on the page</p>
+<p>GRADIENT: Image is a smooth gradient used as a background</p>
+<p>LINE: Image is used to semantically separate page sections</p>
+<p>Valid values are as follows:</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.image.ImageType.INVISIBLE">
+<span class="sig-name descname"><span class="pre">INVISIBLE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;ImageType.INVISIBLE:</span> <span class="pre">1&gt;</span></em><a class="headerlink" href="#burdoc.elements.image.ImageType.INVISIBLE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.image.ImageType.BACKGROUND">
+<span class="sig-name descname"><span class="pre">BACKGROUND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;ImageType.BACKGROUND:</span> <span class="pre">2&gt;</span></em><a class="headerlink" href="#burdoc.elements.image.ImageType.BACKGROUND" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.image.ImageType.SECTION">
+<span class="sig-name descname"><span class="pre">SECTION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;ImageType.SECTION:</span> <span class="pre">3&gt;</span></em><a class="headerlink" href="#burdoc.elements.image.ImageType.SECTION" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.image.ImageType.INLINE">
+<span class="sig-name descname"><span class="pre">INLINE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;ImageType.INLINE:</span> <span class="pre">4&gt;</span></em><a class="headerlink" href="#burdoc.elements.image.ImageType.INLINE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.image.ImageType.DECORATIVE">
+<span class="sig-name descname"><span class="pre">DECORATIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;ImageType.DECORATIVE:</span> <span class="pre">5&gt;</span></em><a class="headerlink" href="#burdoc.elements.image.ImageType.DECORATIVE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.image.ImageType.PRIMARY">
+<span class="sig-name descname"><span class="pre">PRIMARY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;ImageType.PRIMARY:</span> <span class="pre">6&gt;</span></em><a class="headerlink" href="#burdoc.elements.image.ImageType.PRIMARY" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.image.ImageType.GRADIENT">
+<span class="sig-name descname"><span class="pre">GRADIENT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;ImageType.GRADIENT:</span> <span class="pre">7&gt;</span></em><a class="headerlink" href="#burdoc.elements.image.ImageType.GRADIENT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.image.ImageType.LINE">
+<span class="sig-name descname"><span class="pre">LINE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;ImageType.LINE:</span> <span class="pre">8&gt;</span></em><a class="headerlink" href="#burdoc.elements.image.ImageType.LINE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.image.ImageType.UNKNOWN">
+<span class="sig-name descname"><span class="pre">UNKNOWN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;ImageType.UNKNOWN:</span> <span class="pre">9&gt;</span></em><a class="headerlink" href="#burdoc.elements.image.ImageType.UNKNOWN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-burdoc.elements.line">
+<span id="lineelement"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">LineElement</a><a class="headerlink" href="#module-burdoc.elements.line" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.elements.line.LineElement">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.line.</span></span><span class="sig-name descname"><span class="pre">LineElement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">spans</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#burdoc.elements.span.Span" title="burdoc.elements.span.Span"><span class="pre">Span</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.line.LineElement" title="Permalink to this definition"></a></dt>
+<dd><p>Core element representing a line of text</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.line.LineElement.from_dict">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.line.LineElement.from_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Create a LineElement from a PyMuPDF line dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>l</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – The PyMuPDF dictionary</p></li>
+<li><p><strong>page_width</strong> (<em>float</em>) – Used to normalise bbox</p></li>
+<li><p><strong>page_height</strong> (<em>float</em>) – Used to normalise bbox</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>LineElement</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.line.LineElement.get_text">
+<span class="sig-name descname"><span class="pre">get_text</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#burdoc.elements.line.LineElement.get_text" title="Permalink to this definition"></a></dt>
+<dd><p>Returns all text contained within the line as a string.
+This strips out any format or font information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.line.LineElement.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.line.LineElement.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>Convert the LayoutElement into a JSON object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extras</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Any additional items that
+should be included within the JSON. Defaults to None.</p></li>
+<li><p><strong>include_bbox</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include the bounding box. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A JSON representation of the object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-burdoc.elements.section">
+<span id="pagesection"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">PageSection</a><a class="headerlink" href="#module-burdoc.elements.section" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.elements.section.PageSection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.section.</span></span><span class="sig-name descname"><span class="pre">PageSection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#burdoc.elements.element.LayoutElement" title="burdoc.elements.element.LayoutElement"><span class="pre">LayoutElement</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backing_drawing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backing_image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.section.PageSection" title="Permalink to this definition"></a></dt>
+<dd><p>A fully contained section of the page on which layout analysis should be
+done independently.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.section.PageSection.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.section.PageSection.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extras</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Any additional items that
+need to be included in the JSON. Defaults to None.</p></li>
+<li><p><strong>include_bbox</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include the bounding box. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A JSON representation of the group</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-burdoc.elements.span">
+<span id="span"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">Span</a><a class="headerlink" href="#module-burdoc.elements.span" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.elements.span.Span">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.span.</span></span><span class="sig-name descname"><span class="pre">Span</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.font.Font" title="burdoc.elements.font.Font"><span class="pre">Font</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.span.Span" title="Permalink to this definition"></a></dt>
+<dd><p>Representation of a continuous run of text with the same
+font information.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.span.Span.from_dict">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">span_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.span.Span.from_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Creates a Span from a PyMuPDF spac dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>span_dict</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Span</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.span.Span.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.span.Span.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>Convert the Span into a JSON object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A JSON representation of the span.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-burdoc.elements.table">
+<span id="table"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">Table</a><a class="headerlink" href="#module-burdoc.elements.table" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.elements.table.Table">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.table.</span></span><span class="sig-name descname"><span class="pre">Table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">row_boxes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#burdoc.elements.table.TableParts" title="burdoc.elements.table.TableParts"><span class="pre">TableParts</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_boxes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#burdoc.elements.table.TableParts" title="burdoc.elements.table.TableParts"><span class="pre">TableParts</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.table.Table" title="Permalink to this definition"></a></dt>
+<dd><p>Representation of a table within the text.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.table.Table.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.table.Table.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>Convert the LayoutElement into a JSON object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extras</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Any additional items that
+should be included within the JSON. Defaults to None.</p></li>
+<li><p><strong>include_bbox</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include the bounding box. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A JSON representation of the object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class enum">
+<dt class="sig sig-object py" id="burdoc.elements.table.TableParts">
+<em class="property"><span class="pre">enum</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.table.</span></span><span class="sig-name descname"><span class="pre">TableParts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.table.TableParts" title="Permalink to this definition"></a></dt>
+<dd><p>Enum defining the different parts of a table that can be extracted</p>
+<p>Valid values are as follows:</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.table.TableParts.TABLE">
+<span class="sig-name descname"><span class="pre">TABLE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;TableParts.TABLE:</span> <span class="pre">0&gt;</span></em><a class="headerlink" href="#burdoc.elements.table.TableParts.TABLE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.table.TableParts.COLUMN">
+<span class="sig-name descname"><span class="pre">COLUMN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;TableParts.COLUMN:</span> <span class="pre">1&gt;</span></em><a class="headerlink" href="#burdoc.elements.table.TableParts.COLUMN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.table.TableParts.ROW">
+<span class="sig-name descname"><span class="pre">ROW</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;TableParts.ROW:</span> <span class="pre">2&gt;</span></em><a class="headerlink" href="#burdoc.elements.table.TableParts.ROW" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.table.TableParts.COLUMNHEADER">
+<span class="sig-name descname"><span class="pre">COLUMNHEADER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;TableParts.COLUMNHEADER:</span> <span class="pre">3&gt;</span></em><a class="headerlink" href="#burdoc.elements.table.TableParts.COLUMNHEADER" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.table.TableParts.ROWHEADER">
+<span class="sig-name descname"><span class="pre">ROWHEADER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;TableParts.ROWHEADER:</span> <span class="pre">4&gt;</span></em><a class="headerlink" href="#burdoc.elements.table.TableParts.ROWHEADER" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.table.TableParts.SPANNINGCELL">
+<span class="sig-name descname"><span class="pre">SPANNINGCELL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;TableParts.SPANNINGCELL:</span> <span class="pre">5&gt;</span></em><a class="headerlink" href="#burdoc.elements.table.TableParts.SPANNINGCELL" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-burdoc.elements.textblock">
+<span id="textblock"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">TextBlock</a><a class="headerlink" href="#module-burdoc.elements.textblock" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.elements.textblock.TextBlock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.textblock.</span></span><span class="sig-name descname"><span class="pre">TextBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#burdoc.elements.line.LineElement" title="burdoc.elements.line.LineElement"><span class="pre">LineElement</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.textblock.TextBlockType" title="burdoc.elements.textblock.TextBlockType"><span class="pre">TextBlockType</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">TextBlockType.PARAGRAPH</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.textblock.TextBlock" title="Permalink to this definition"></a></dt>
+<dd><p>Represents a standard grouping of lines into a paragraph. All text
+within a textblock can be considered to be of semantically equivalent
+fonts. This may include variations in bold or italics.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.textblock.TextBlock.get_text">
+<span class="sig-name descname"><span class="pre">get_text</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#burdoc.elements.textblock.TextBlock.get_text" title="Permalink to this definition"></a></dt>
+<dd><p>Returns all text contained within the block as a string
+This strips out any format or font information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.textblock.TextBlock.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.textblock.TextBlock.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>Convert the textblock into a JSON object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extras</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>optional</em>) – Any additional fields that should be included.
+Defaults to None</p></li>
+<li><p><strong>include_bbox</strong> (<em>bool</em><em>, </em><em>optional</em>) – Defaults to False.</p></li>
+<li><p><strong>**kwargs</strong> – Arbitrary keyword arguments to be pass to superclass</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class enum">
+<dt class="sig sig-object py" id="burdoc.elements.textblock.TextBlockType">
+<em class="property"><span class="pre">enum</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.textblock.</span></span><span class="sig-name descname"><span class="pre">TextBlockType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.textblock.TextBlockType" title="Permalink to this definition"></a></dt>
+<dd><p>Possible types of text supported by the semantic classifier.</p>
+<p>Valid values are as follows:</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.textblock.TextBlockType.SMALL">
+<span class="sig-name descname"><span class="pre">SMALL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;TextBlockType.SMALL:</span> <span class="pre">1&gt;</span></em><a class="headerlink" href="#burdoc.elements.textblock.TextBlockType.SMALL" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.textblock.TextBlockType.PARAGRAPH">
+<span class="sig-name descname"><span class="pre">PARAGRAPH</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;TextBlockType.PARAGRAPH:</span> <span class="pre">2&gt;</span></em><a class="headerlink" href="#burdoc.elements.textblock.TextBlockType.PARAGRAPH" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.textblock.TextBlockType.H1">
+<span class="sig-name descname"><span class="pre">H1</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;TextBlockType.H1:</span> <span class="pre">3&gt;</span></em><a class="headerlink" href="#burdoc.elements.textblock.TextBlockType.H1" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.textblock.TextBlockType.H2">
+<span class="sig-name descname"><span class="pre">H2</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;TextBlockType.H2:</span> <span class="pre">4&gt;</span></em><a class="headerlink" href="#burdoc.elements.textblock.TextBlockType.H2" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.textblock.TextBlockType.H3">
+<span class="sig-name descname"><span class="pre">H3</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;TextBlockType.H3:</span> <span class="pre">5&gt;</span></em><a class="headerlink" href="#burdoc.elements.textblock.TextBlockType.H3" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.textblock.TextBlockType.H4">
+<span class="sig-name descname"><span class="pre">H4</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;TextBlockType.H4:</span> <span class="pre">6&gt;</span></em><a class="headerlink" href="#burdoc.elements.textblock.TextBlockType.H4" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.textblock.TextBlockType.H5">
+<span class="sig-name descname"><span class="pre">H5</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;TextBlockType.H5:</span> <span class="pre">7&gt;</span></em><a class="headerlink" href="#burdoc.elements.textblock.TextBlockType.H5" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.elements.textblock.TextBlockType.EMPHASIS">
+<span class="sig-name descname"><span class="pre">EMPHASIS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;TextBlockType.EMPHASIS:</span> <span class="pre">8&gt;</span></em><a class="headerlink" href="#burdoc.elements.textblock.TextBlockType.EMPHASIS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-burdoc.elements.textlist">
+<span id="textlist"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">TextList</a><a class="headerlink" href="#module-burdoc.elements.textlist" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.elements.textlist.TextList">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.textlist.</span></span><span class="sig-name descname"><span class="pre">TextList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ordered</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#burdoc.elements.element.LayoutElement" title="burdoc.elements.element.LayoutElement"><span class="pre">LayoutElement</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.textlist.TextList" title="Permalink to this definition"></a></dt>
+<dd><p>An ordered or unordered list</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.textlist.TextList.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.textlist.TextList.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extras</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Any additional items that
+need to be included in the JSON. Defaults to None.</p></li>
+<li><p><strong>include_bbox</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include the bounding box. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A JSON representation of the group</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.elements.textlist.TextListItem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.elements.textlist.</span></span><span class="sig-name descname"><span class="pre">TextListItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#burdoc.elements.textblock.TextBlock" title="burdoc.elements.textblock.TextBlock"><span class="pre">TextBlock</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.textlist.TextListItem" title="Permalink to this definition"></a></dt>
+<dd><p>A single item within a list. Equivalent to &lt;li&gt;</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.elements.textlist.TextListItem.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.elements.textlist.TextListItem.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extras</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Any additional items that
+need to be included in the JSON. Defaults to None.</p></li>
+<li><p><strong>include_bbox</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include the bounding box. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A JSON representation of the group</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="burdoc_parser.html" class="btn btn-neutral float-left" title="BurdocParser" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="processors/index.html" class="btn btn-neutral float-right" title="Processors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, jennis0.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -9,8 +9,7 @@ from ...utils.logging import get_logger
 
 
 class DrawingHandler(object):
-    """Extracts drawings from a PDF and applies standardisation and basic type inference
-    """
+    """Extracts drawings from a PDF and applies standardisation and basic type inference"""
 
     def __init__(self, pdf: fitz.Document, log_level: int=logging.INFO):
         self.logger = get_logger('drawing-handler', log_level=log_level)

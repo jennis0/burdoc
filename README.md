@@ -1,10 +1,10 @@
 <br/>
 <p align="center">
   <a href="https://github.com/jennis0/burdoc">
-    <img src="images/Burdoc-1.png" height="250">
+    <img src="images/Burdoc-1.png" height="180">
   </a>
 
-  <h1 align="center">Burdoc: Advanced PDF Parsing</h1>
+  <h1 align="center">Burdoc: Advanced PDF Parsing for Python</h1>
   <p align="center">
 A python library for extracting structured text, images, and tables from PDFs with context and reading order.
   </p>
@@ -28,8 +28,8 @@ A python library for extracting structured text, images, and tables from PDFs wi
     - [Why Another PDF Parsing Library?](#why-another-pdf-parsing-library)
   - [Key Features](#key-features)
   - [Limitations](#limitations)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
+- [Quickstart](#quickstart)
+    - [Prerequisites](#prerequisites)
     - [ML Prerequisites](#ml-prerequisites)
   - [Installation](#installation)
     - [Developer Install](#developer-install)
@@ -67,23 +67,18 @@ Excellent question! Between pdfminer, PyMuPDF, Tika, and many others there are a
 
 
 ### Limitations
- - **OCR:** As Burdoc relies on high-precision font and location information for it's processing it is likely to do spectacularly badly at parsing OCR'd PDFsBurdoc is not suitable for use with OCR'd PDFs.
+ - **OCR:** As Burdoc relies on high-precision font and location information for it's processing it is likely to perform badly when parsing OCR'd files. 
  - **Right-to-Left Text:** All parsing is for left-to-right languages only.
  - **Complex Figures:** Areas with large amounts of text arranged around figures in a arbitrary fashion will not be extracted correctly.
  - **Forms:** Currently Burdoc has no way to recognise complex forms.
 
-## Getting Started
+## Quickstart
 
-[Docs](https://jennis0.github.io/burdoc/burdoc.html)
+More detailed information on running Burdoc can be found here - [Docs](https://jennis0.github.io/burdoc/burdoc.html)
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+#### Prerequisites
 
-### Prerequisites
-
-This is an example of how to list things you need to use the software and how to install them.
-
-* Python3
+* [Python >= 3.8](https://www.python.org/downloads/)
 
 #### ML Prerequisites
 The transformer-based table detection use by Burdoc by default can be quite slow on CPU, often taking several seconds per page, you'll see a large performance increase by running it on a GPU. To avoid messing around with package versions after the fact, it's generally better to install GPU drivers and GPU accelerated versions of PyTorch first if available.

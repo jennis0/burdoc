@@ -1,4 +1,8 @@
-"""Classes used internally by Burdoc to represents elements within a pdf page."""
+"""Elements are (mostly) objects that have a physical location within a PDF page.
+
+Elements generally inherit from LayoutElement to provide a consistent interface for accessing location
+information.
+"""
 
 from .aside import Aside
 from .bbox import Bbox, Point

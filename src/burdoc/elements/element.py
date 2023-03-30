@@ -35,6 +35,13 @@ class LayoutElement:
         
     def to_json(self, extras: Optional[Dict[str, Any]]=None, include_bbox: bool=False) -> Dict[str, Any]:
         """Convert the LayoutElement into a JSON object
+        
+        Example JSON:
+        ::
+            {
+                "name": "LayoutElement",
+                "bbox": {...} [optional]
+            }
 
         Args:
             extras (Optional[Dict[str, Any]], optional): Any additional items that
@@ -143,7 +150,15 @@ class LayoutElementGroup(LayoutElement):
         return self.__str__()
 
     def to_json(self, extras: Optional[Dict[str, Any]]=None, include_bbox: bool=False) -> Dict[str, Any]:
-        """_summary_
+        """Creates JSON object from LayoutElementGroup
+        
+        Example JSON:
+        ::
+            {
+                "name": "LayoutElementGroup",
+                "bbox": {...} [optional]
+                "items": [{...}]
+            }
 
         Args:
             extras (Optional[Dict[str, Any]], optional): Any additional items that

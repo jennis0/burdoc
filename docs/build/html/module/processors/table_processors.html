@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Table Processors &mdash; Burdoc  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Utils" href="../utils.html" />
+    <link rel="prev" title="ReadingOrderProcessor" href="reading_order_processor.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Burdoc
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Burdoc: Advanced PDF Parsing For Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../output.html">Working with Burdoc Output</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../module.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../burdoc_parser.html">BurdocParser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../elements.html">Elements</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Processors</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="processor.html">Processor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="aggregator_processor.html">AggregatorProcessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="content_processor.html">ContentProcessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="json_out_processor.html">JSONOutProcessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="layout_processor.html">LayoutProcessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="margin_processor.html">MarginProcessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pdf_load_processor.html">PDFLoadProcessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reading_order_processor.html">ReadingOrderProcessor</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Table Processors</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rules-based-processors">Rules-based Processors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ml-based-processors">ML-based Processors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#strategy-interface-class">Strategy Interface Class</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../utils.html">Utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Burdoc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../module.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Processors</a></li>
+      <li class="breadcrumb-item active">Table Processors</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module/processors/table_processors.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="table-processors">
+<h1>Table Processors<a class="headerlink" href="#table-processors" title="Permalink to this heading"></a></h1>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#rules-based-processors" id="id1">Rules-based Processors</a></p></li>
+<li><p><a class="reference internal" href="#ml-based-processors" id="id2">ML-based Processors</a></p></li>
+<li><p><a class="reference internal" href="#strategy-interface-class" id="id3">Strategy Interface Class</a></p></li>
+</ul>
+</nav>
+<span class="target" id="module-burdoc.processors.table_processors"></span><section id="rules-based-processors">
+<h2><a class="toc-backref" href="#contents" role="doc-backlink">Rules-based Processors</a><a class="headerlink" href="#rules-based-processors" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.rules_table_processor.RulesTableProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.processors.table_processors.rules_table_processor.</span></span><span class="sig-name descname"><span class="pre">RulesTableProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.processors.table_processors.rules_table_processor.RulesTableProcessor" title="Permalink to this definition"></a></dt>
+<dd><p>Applies a simple rules-based algorithm to identify tables in text.
+This looks for patterns in text blocks and makes no use of lines/images.
+Very good at pulling out dense inline tables missed by the ML algorithms.</p>
+<p>Requires: [‘page_bounds’, ‘elements’]
+Optional: []
+Generates: [‘tables’, ‘elements’]</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.rules_table_processor.RulesTableProcessor.add_generated_items_to_fig">
+<span class="sig-name descname"><span class="pre">add_generated_items_to_fig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Figure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.processors.table_processors.rules_table_processor.RulesTableProcessor.add_generated_items_to_fig" title="Permalink to this definition"></a></dt>
+<dd><p>Draw any items generated by this processor to a page image</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.rules_table_processor.RulesTableProcessor.generates">
+<span class="sig-name descname"><span class="pre">generates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.processors.table_processors.rules_table_processor.RulesTableProcessor.generates" title="Permalink to this definition"></a></dt>
+<dd><p>Return list of fields added by this processor</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.rules_table_processor.RulesTableProcessor.requirements">
+<span class="sig-name descname"><span class="pre">requirements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.processors.table_processors.rules_table_processor.RulesTableProcessor.requirements" title="Permalink to this definition"></a></dt>
+<dd><p>Return list of required data fields and list of optional data fields</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="ml-based-processors">
+<h2><a class="toc-backref" href="#contents" role="doc-backlink">ML-based Processors</a><a class="headerlink" href="#ml-based-processors" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.ml_table_processor.MLTableProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.processors.table_processors.ml_table_processor.</span></span><span class="sig-name descname"><span class="pre">MLTableProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.Strategies" title="burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.Strategies"><span class="pre">Strategies</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Strategies.DETR</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.processors.table_processors.ml_table_processor.MLTableProcessor" title="Permalink to this definition"></a></dt>
+<dd><p>Wrapper for ML models to detect tables. Separated from rules based processor as
+it can only be run single-threaded.</p>
+<p>Requires: [‘text_elements’] and additional requirements from specific strategy
+Optional: []
+Generates: [‘tables’, ‘text_elements’]</p>
+<dl class="py class enum">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.Strategies">
+<em class="property"><span class="pre">enum</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Strategies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.Strategies" title="Permalink to this definition"></a></dt>
+<dd><p>An enumeration.</p>
+<p>Valid values are as follows:</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.Strategies.DETR">
+<span class="sig-name descname"><span class="pre">DETR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;Strategies.DETR:</span> <span class="pre">1&gt;</span></em><a class="headerlink" href="#burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.Strategies.DETR" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.add_generated_items_to_fig">
+<span class="sig-name descname"><span class="pre">add_generated_items_to_fig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Figure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.add_generated_items_to_fig" title="Permalink to this definition"></a></dt>
+<dd><p>Draw any items generated by this processor to a page image</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.generates">
+<span class="sig-name descname"><span class="pre">generates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.generates" title="Permalink to this definition"></a></dt>
+<dd><p>Return list of fields added by this processor</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.initialise">
+<span class="sig-name descname"><span class="pre">initialise</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.initialise" title="Permalink to this definition"></a></dt>
+<dd><p>Perform any expensive operations required to create a processor</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.requirements">
+<span class="sig-name descname"><span class="pre">requirements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.requirements" title="Permalink to this definition"></a></dt>
+<dd><p>Return list of required data fields and list of optional data fields</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.detr_table_strategy.DetrTableStrategy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.processors.table_processors.detr_table_strategy.</span></span><span class="sig-name descname"><span class="pre">DetrTableStrategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.processors.table_processors.detr_table_strategy.DetrTableStrategy" title="Permalink to this definition"></a></dt>
+<dd><p>Use Microsofts table-transformer to identify tables.</p>
+<ul class="simple">
+<li><p>[microsoft/table-transformer-detection](<a class="reference external" href="https://huggingface.co/microsoft/table-transformer-detection">https://huggingface.co/microsoft/table-transformer-detection</a>) used for finding tables</p></li>
+<li><p>[microsoft/table-transformer-structure-recognition](<a class="reference external" href="https://huggingface.co/microsoft/table-transformer-structure-recognition">https://huggingface.co/microsoft/table-transformer-structure-recognition</a>) used for identifying table parts</p></li>
+</ul>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.detr_table_strategy.DetrTableStrategy.extract_tables">
+<span class="sig-name descname"><span class="pre">extract_tables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page_numbers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Image</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../elements.html#burdoc.elements.table.TableParts" title="burdoc.elements.table.TableParts"><span class="pre">TableParts</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="../elements.html#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.processors.table_processors.detr_table_strategy.DetrTableStrategy.extract_tables" title="Permalink to this definition"></a></dt>
+<dd><p>Identifies tables within a page image and for each table returns a list of table parts.
+If a GPU is used, pages are batched together to improve efficiency</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl>
+<dt>{</dt><dd><dl class="simple">
+<dt>page_index (int): [</dt><dd><p>[(TableParts, Bbox) for a table] for each table</p>
+</dd>
+</dl>
+<p>]</p>
+</dd>
+</dl>
+<p>}</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.detr_table_strategy.DetrTableStrategy.requirements">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">requirements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.processors.table_processors.detr_table_strategy.DetrTableStrategy.requirements" title="Permalink to this definition"></a></dt>
+<dd><p>Return list of data requirements for this strategy</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="strategy-interface-class">
+<h2><a class="toc-backref" href="#contents" role="doc-backlink">Strategy Interface Class</a><a class="headerlink" href="#strategy-interface-class" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.table_extractor_strategy.TableExtractorStrategy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.processors.table_processors.table_extractor_strategy.</span></span><span class="sig-name descname"><span class="pre">TableExtractorStrategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.processors.table_processors.table_extractor_strategy.TableExtractorStrategy" title="Permalink to this definition"></a></dt>
+<dd><p>Abstract base class defining the interface for table extraction methods. This is consistent between ML and rules based methods</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.table_extractor_strategy.TableExtractorStrategy.extract_tables">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extract_tables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page_numbers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Image</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../elements.html#burdoc.elements.table.TableParts" title="burdoc.elements.table.TableParts"><span class="pre">TableParts</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="../elements.html#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.processors.table_processors.table_extractor_strategy.TableExtractorStrategy.extract_tables" title="Permalink to this definition"></a></dt>
+<dd><p>Extracts tables and returns them in a complex JSON format</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="burdoc.processors.table_processors.table_extractor_strategy.TableExtractorStrategy.requirements">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">requirements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.processors.table_processors.table_extractor_strategy.TableExtractorStrategy.requirements" title="Permalink to this definition"></a></dt>
+<dd><p>Return list of data requirements for this strategy</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="reading_order_processor.html" class="btn btn-neutral float-left" title="ReadingOrderProcessor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../utils.html" class="btn btn-neutral float-right" title="Utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, jennis0.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
