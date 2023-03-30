@@ -20,10 +20,10 @@ def render_pages(data: Dict[str, Any], processors: List[Processor], pages: Optio
         pages = list(data['page_images'].keys())
 
     for page_number in pages:
-        pi = data['page_images'][page_number]
-        fig = plt.imshow(pi)
-        for p in processors:
-            p.add_generated_items_to_fig(page_number, fig, data)
+        page_image = data['page_images'][page_number]
+        fig = plt.imshow(page_image)
+        for processor in processors:
+            processor.add_generated_items_to_fig(page_number, fig, data)
 
         fig.update_layout({'showlegend': True, 'height': 1000, 'xaxis': {
                           'showticklabels': False}, 'yaxis': {'showticklabels': False}})

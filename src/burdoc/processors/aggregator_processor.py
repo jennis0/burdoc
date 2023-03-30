@@ -42,28 +42,29 @@ class AggregatorProcessor(Processor):
 
         self.processors: List[Processor] = []
         self.render_processors: Dict[str, bool] = {
-            p.name: render_default for p in processors}
+            processor.name: render_default for processor in processors}
 
-        for p in processors:
-            if processor_args and p.name in processor_args:
-                if 'render' in processor_args[p.name]:
-                    self.render_processors[p.name] = processor_args[p.name]['render']
+        for processor in processors:
+            if processor_args and processor.name in processor_args:
+                if 'render' in processor_args[processor.name]:
+                    self.render_processors[processor.name] = processor_args[processor.name]['render']
 
-                if 'args' in processor_args[p.name]:
+                if 'args' in processor_args[processor.name]:
                     self.processors.append(
-                        p(log_level=log_level, **processor_args[p.name]['args']))  # type:ignore
+                        processor(log_level=log_level, **processor_args[processor.name]['args']))  # type:ignore
                 else:
                     self.processors.append(
-                        p(log_level=log_level))  # type:ignore
+                        processor(log_level=log_level))  # type:ignore
             else:
-                self.processors.append(p(log_level=log_level))  # type:ignore
+                self.processors.append(
+                    processor(log_level=log_level))  # type:ignore
 
         self.additional_reqs = additional_reqs if additional_reqs else []
 
     def initialise(self):
         """Run initialise for all child processors"""
-        for p in self.processors:
-            p.initialise()
+        for processor in self.processors:
+            processor.initialise()
 
     def requirements(self) -> Tuple[List[str], List[str]]:
         """Generates a smart superset of fields required by the child procesors.
@@ -105,21 +106,21 @@ class AggregatorProcessor(Processor):
             List[str]
         """
         gens = set()
-        for p in self.processors:
-            gens |= set(p.generates())
+        for processor in self.processors:
+            gens |= set(processor.generates())
         return list(gens)
 
     def _process(self, data: Any) -> Any:
-        for p in self.processors:
+        for processor in self.processors:
             self.logger.debug(
-                "----------------------- Running %s --------------------", {type(p).__name__})
+                "----------------------- Running %s --------------------", {type(processor).__name__})
             start = time.perf_counter()
-            p._process(data)  # pylint: disable=protected-access
-            data['performance'][self.name][p.name] = [
+            processor._process(data)  # pylint: disable=protected-access
+            data['performance'][self.name][processor.name] = [
                 round(time.perf_counter() - start, 3)]
         return data
 
     def add_generated_items_to_fig(self, page_number: int, fig: Figure, data: Dict[str, Any]):
-        for p in self.processors:
-            if self.render_processors[p.name]:
-                p.add_generated_items_to_fig(page_number, fig, data)
+        for processor in self.processors:
+            if self.render_processors[processor.name]:
+                processor.add_generated_items_to_fig(page_number, fig, data)

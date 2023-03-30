@@ -30,10 +30,19 @@ class PDFLoadProcessor(Processor):
     name: str = 'pdf-load'
     threadable = True
 
-    def __init__(self, log_level: int = logging.INFO):
+    def __init__(self, log_level: int = logging.INFO, ignore_images: bool = False):
+        """Creates a PDF Load Processor
+
+        Args:
+            log_level (int, optional): Log level. Defaults to logging.INFO.
+            ignore_images (bool, optional): Ignore images. This will greatly increase
+                the speed but will likely cause issues if images are used for layout
+                purposes, such as as section background or section breaks. Defaults to False.
+        """
         super().__init__(PDFLoadProcessor.name, log_level=log_level)
 
         self.log_level = log_level
+        self.ignore_images = ignore_images
 
     def requirements(self) -> Tuple[List[str], List[str]]:
         return ([], [])
@@ -165,11 +174,17 @@ class PDFLoadProcessor(Processor):
             page_colour = np.array(get_image_palette(
                 data['page_images'][page_number], n_colours=1)[0][0])
 
-            start = time.perf_counter()
-            image_elements, images = image_handler.get_image_elements(
-                page, data['page_images'][page_number], page_colour)
-            performance_tracker['image_handler'].append(
-                time.perf_counter() - start)
+            # Sometimes choose to ignore images if not needed
+            if not self.ignore_images:
+                start = time.perf_counter()
+                image_elements, images = image_handler.get_image_elements(
+                    page, data['page_images'][page_number], page_colour
+                )
+                performance_tracker['image_handler'].append(
+                    time.perf_counter() - start)
+            else:
+                image_elements = []
+                images = []
 
             data['image_elements'][int(page_number)] = image_elements
             data['images'][int(page_number)] = images

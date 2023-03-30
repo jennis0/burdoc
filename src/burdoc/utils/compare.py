@@ -7,8 +7,8 @@ from typing import Any, Dict, List, Optional
 
 
 def _hash(obj):
-    s = json.dumps(obj, sort_keys=True, indent=2)
-    return hashlib.md5(s.encode('utf-8'), usedforsecurity=False).hexdigest()
+    obj_as_json_string = json.dumps(obj, sort_keys=True, indent=2)
+    return hashlib.md5(obj_as_json_string.encode('utf-8'), usedforsecurity=False).hexdigest()
 
 
 def _diff_value(path: str, value1: Any, value2: Any) -> List[Dict[str, Any]]:
@@ -44,13 +44,13 @@ def _diff_list(path: str, list1: List[Any], list2: List[Any]) -> List[Dict[str, 
     l1_hashes = {_hash(v): i for i, v in enumerate(list1)}
     l2_hashes = {_hash(v): j for j, v in enumerate(list2)}
 
-    for h in l1_hashes:
-        l1_index = l1_hashes[h]
-        if h not in l2_hashes:
+    for l1_hash in l1_hashes:
+        l1_index = l1_hashes[l1_hash]
+        if l1_hash not in l2_hashes:
             changes.append(
                 {'path': path, 'type': 'deletion', 'old': list1[l1_index]})
             continue
-        l2_index = l2_hashes[h]
+        l2_index = l2_hashes[l1_hash]
         if l1_index != l2_index:
             changes.append({'path': path, 'type': 'reorder',
                            'value': list1[l1_index], 'old': l1_index, 'new': l2_index})
@@ -58,10 +58,10 @@ def _diff_list(path: str, list1: List[Any], list2: List[Any]) -> List[Dict[str, 
         changes += _do_diff(f"{path}.[{l1_index},{l2_index}]",
                             list1[l1_index], list2[l2_index])
 
-    for h in l2_hashes:
-        if h not in l1_hashes:
+    for l1_hash in l2_hashes:
+        if l1_hash not in l1_hashes:
             changes.append({'path': path, 'type': 'addition',
-                           'new': list2[l2_hashes[h]]})
+                           'new': list2[l2_hashes[l1_hash]]})
 
     return changes
 
@@ -93,7 +93,8 @@ def compare(obj1: Dict[str, Any], obj2: Dict[str, Any], ignore_paths: Optional[L
     Returns:
         List[Dict[str, Any]]: A list of changes in format:
             [
-                {'path':path to change in object, 'type':[change, addition, deletion, reorder], 'old':old value, 'new':new value, 'value':value of the object (only used for reorder)}
+                {'path':path to change in object, 'type':[change, addition, deletion, reorder], 
+                'old':old value, 'new':new value, 'value':value of the object (only used for reorder)}
             ]
     """
     if not ignore_paths:

@@ -107,21 +107,21 @@ class ContentProcessor(Processor):
             self.para_size['default'] = self.para_size[default_font]
 
     def _get_text_class(self, block: TextBlock):
-        fs = block.items[0].spans[-1].font.size
-        fam = block.items[0].spans[-1].font.family
+        font_size = block.items[0].spans[-1].font.size
+        font_fam = block.items[0].spans[-1].font.family
 
         if len(block.items) > 3:
             return TextBlockType.PARAGRAPH
 
-        variant = TextBlockType.H1
-        if fam not in self.para_size:
-            fam = 'default'
-        for v, t in self.para_size[fam]:
-            if fs < v:
-                variant = t
+        subtype = TextBlockType.H1
+        if font_fam not in self.para_size:
+            font_fam = 'default'
+        for max_font_size, textblock_type in self.para_size[font_fam]:
+            if font_size < max_font_size:
+                subtype = textblock_type
                 break
 
-        if variant == TextBlockType.PARAGRAPH:
+        if subtype == TextBlockType.PARAGRAPH:
             all_italic = True
             for i in block.items:
                 if not all(s.font.italic for s in i.spans):
@@ -130,7 +130,7 @@ class ContentProcessor(Processor):
             if all_italic:
                 return TextBlockType.EMPHASIS
 
-        return variant
+        return subtype
 
     def _create_list(self, list_items: List[Tuple[str, List[TextBlock]]]) -> Union[List[TextList], List[TextBlock]]:
         ordered = list_items[0][0] != "\u2022"
@@ -166,16 +166,16 @@ class ContentProcessor(Processor):
         in_list = False
         list_elements: List[Tuple[str, List[TextBlock]]] = []
 
-        for i, e in enumerate(elements):
-            if isinstance(e, TextBlock):
-                list_match = self.list_regex.match(e.get_text()[:10].strip())
-                processed_tb = self._process_text_block(e)
+        for i, element in enumerate(elements):
+            if isinstance(element, TextBlock):
+                list_match = self.list_regex.match(element.get_text()[:10].strip())
+                processed_tb = self._process_text_block(element)
 
                 # Does the box start with something that looks like a list/bullet point
                 if not in_list and list_match:
                     in_list = True
                     list_elements = [
-                        (self._get_list_index_from_match(list_match), [e])]
+                        (self._get_list_index_from_match(list_match), [element])]
                     continue
 
                 # If we're in a list but don't find a bullet/label.
@@ -184,9 +184,9 @@ class ContentProcessor(Processor):
                     # Check to see if we're inline with text but not with the bullet
                     list_line_offset = list_elements[-1][1][-1].items[-1].bbox.x0 - \
                         list_elements[0][1][0].items[0].bbox.x0
-                    if list_line_offset < 30 and list_line_offset > 5:
-                        if abs(e.bbox.x0 - list_elements[-1][1][-1].items[-1].bbox.x0) < 2:
-                            list_elements[-1][1].append(e)
+                    if list_line_offset > 5 and list_line_offset < 30:
+                        if abs(element.bbox.x0 - list_elements[-1][1][-1].items[-1].bbox.x0) < 2:
+                            list_elements[-1][1].append(element)
                             continue
 
                     # Check to see if an ordered list continues in the next element
@@ -199,17 +199,17 @@ class ContentProcessor(Processor):
                                 list_elements[-1][0],
                                 self._get_list_index_from_match(future_match)
                         ):
-                            list_elements[-1][1].append(e)
+                            list_elements[-1][1].append(element)
                             continue
 
                 # Parse block line by line looking for
                 if in_list and list_match:
                     next_index = self._get_list_index_from_match(list_match)
                     if self._is_next_list_index(list_elements[-1][0], next_index):
-                        list_elements.append((next_index, [e]))
+                        list_elements.append((next_index, [element]))
                     else:
                         proc_elements += self._create_list(list_elements)
-                        list_elements = [(next_index, [e])]
+                        list_elements = [(next_index, [element])]
                     continue
 
                 # Handle any other parts of being a text block
@@ -221,17 +221,17 @@ class ContentProcessor(Processor):
                 proc_elements.append(processed_tb)
                 continue
 
-            if isinstance(e, PageSection):
-                if e.default or not (e.backing_drawing or e.backing_image):
-                    proc_elements += self._preprocess(e.items)
-                    continue
-                else:
-                    proc_elements.append(
-                        Aside(e.bbox, self._preprocess(e.items)))
+            if isinstance(element, PageSection):
+                if element.default or not (element.backing_drawing or element.backing_image):
+                    proc_elements += self._preprocess(element.items)
                     continue
 
+                proc_elements.append(
+                    Aside(element.bbox, self._preprocess(element.items)))
+                continue
+
             # If not a list
-            proc_elements.append(e)
+            proc_elements.append(element)
 
         if len(list_elements) > 0:
             proc_elements += self._create_list(list_elements)
@@ -240,7 +240,8 @@ class ContentProcessor(Processor):
 
     def _build_page_hierarchy(self, page_number: int, elements: List[LayoutElement]) -> List[Any]:
 
-        def add_to_hierarchy(textblock: TextBlock, hierarchy: List[Dict[str, Any]], index: int, sub_index: Optional[int] = None):
+        def add_to_hierarchy(textblock: TextBlock, hierarchy: List[Dict[str, Any]], 
+                             index: int, sub_index: Optional[int] = None):
             if textblock.type in [TextBlockType.PARAGRAPH, TextBlockType.EMPHASIS, TextBlockType.SMALL]:
                 return
 
@@ -251,19 +252,19 @@ class ContentProcessor(Processor):
             )
 
         hierarchy: List[Dict[str, Any]] = []
-        for i, e in enumerate(elements):
+        for i, element in enumerate(elements):
 
-            if isinstance(e, PageSection):
-                for j, sub_e in enumerate(e.items):
-                    if not isinstance(e, TextBlock):
+            if isinstance(element, PageSection):
+                for j, sub_e in enumerate(element.items):
+                    if not isinstance(element, TextBlock):
                         continue
                     add_to_hierarchy(sub_e, hierarchy, i, j)  # type:ignore
                 continue
 
-            if not isinstance(e, TextBlock):
+            if not isinstance(element, TextBlock):
                 continue
 
-            add_to_hierarchy(e, hierarchy, i)
+            add_to_hierarchy(element, hierarchy, i)
 
         return hierarchy
 
@@ -326,4 +327,4 @@ class ContentProcessor(Processor):
             recursive_add(fig, element)
 
         fig.add_scatter(x=[None], y=[None], name="List",
-                        line=dict(width=3, color=colours[TextListItem]))
+                        line={'width':3, 'color':colours[TextListItem]})
