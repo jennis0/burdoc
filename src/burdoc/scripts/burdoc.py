@@ -75,7 +75,7 @@ def run():
         pages = None
 
     parser = BurdocParser(
-        use_ml_table_finding=not args.disable_ml_table_finding,
+        skip_ml_table_finding=args.no_ml_tables,
         max_threads=1 if args.single_threaded else None,
         log_level=logging.DEBUG if args.debug else logging.WARNING
     )

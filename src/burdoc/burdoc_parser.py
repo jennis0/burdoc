@@ -244,7 +244,7 @@ class BurdocParser():
 
             # Execute processors
             if len(page_slices) > 1:
-                with mp.Pool(self.max_threads if (self.max_threads and self.max_threads > 1) else None) as process:
+                with mp.Pool(self.max_threads if self.max_threads else None) as process:
                     sliced_results = process.map(
                         BurdocParser._process_slice, thread_args, chunksize=1)
             else:
