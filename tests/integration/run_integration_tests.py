@@ -119,9 +119,7 @@ def run_parser(source_dir: str, out_dir: str, gold_dir: str, do_update: bool,
                 
     in_files = build_file_list(source_dir, ".pdf", exclude, include)
     gold_files = build_file_list(gold_dir, ".json", exclude, include)
-    
-    print(in_files)
-    
+        
     if not do_update and in_files.keys() != gold_files.keys():
         extra_in = [f for f in in_files if f not in gold_files]
         extra_gold = [f for f in gold_files if f not in in_files]
@@ -157,7 +155,7 @@ def run_parser(source_dir: str, out_dir: str, gold_dir: str, do_update: bool,
             with open(gold_path, 'r', encoding='utf-8') as f_gold: 
                 print("Running comparison")
                 json_gold = json.load(f_gold)
-                test_data['files'][-1]['changes']  = compare(json_gold, json_out)
+                test_data['files'][-1]['changes']  = compare(json_gold, json_out, ignore_paths=['metadata.path'])
                 print(f"Found {len(test_data['files'][-1]['changes'])} changes")
             
         if out_dir:
@@ -236,8 +234,8 @@ def run():
     if args.report:
         with open(args.report, 'w', encoding='utf-8') as f_report:
             json.dump(report_data, f_report)
-    else:
-        print_results(report_data)
+
+    print_results(report_data)
         
     for r in report_data['files']:
         if len(r['changes']) > 0:
