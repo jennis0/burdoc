@@ -1,7 +1,7 @@
 <br/>
 <p align="center">
   <a href="https://github.com/jennis0/burdoc">
-    <img src="images/Burdoc-1.png" height="180">
+    <img src="https://github.com/jennis0/burdoc/raw/main/docs/source/_static/Burdoc-1.png" height="180">
   </a>
 
   <h1 align="center">Burdoc: Advanced PDF Parsing for Python</h1>
