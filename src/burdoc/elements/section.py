@@ -9,8 +9,8 @@ class PageSection(LayoutElementGroup):
     done independently.
     """
 
-    def __init__(self, bbox: Optional[Bbox]=None, items: Optional[List[LayoutElement]]=None, default: bool=False, 
-                 backing_drawing: Optional[Any]=None, backing_image: Optional[Any]=None, inline: bool=False):
+    def __init__(self, bbox: Optional[Bbox] = None, items: Optional[List[LayoutElement]] = None, default: bool = False,
+                 backing_drawing: Optional[Any] = None, backing_image: Optional[Any] = None, inline: bool = False):
         """Create a PageSection. One of bbox or items must be provided
 
         Args:
@@ -36,14 +36,16 @@ class PageSection(LayoutElementGroup):
         return self.__repr__()
 
     def __repr__(self):
-        extras = {'Default': self.default, 'Backing':(self.backing_drawing or self.backing_image)}
+        extras = {'Default': self.default, 'Backing': (
+            self.backing_drawing or self.backing_image)}
         return super()._str_rep(extras)
-    
-    def to_json(self, extras: Optional[Dict]=None, include_bbox: bool=False, **kwargs):
+
+    def to_json(self, extras: Optional[Dict] = None, include_bbox: bool = False, **kwargs):
         if not extras:
             extras = {}
         if self.backing_drawing:
-            extras['backing'] = self.backing_drawing.to_json(include_bbox=False)
+            extras['backing'] = self.backing_drawing.to_json(
+                include_bbox=False)
         if self.backing_image:
             extras['backing'] = self.backing_image.to_json(include_bbox=False)
 

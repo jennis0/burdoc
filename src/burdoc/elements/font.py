@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class Font:
     """Representation of font information

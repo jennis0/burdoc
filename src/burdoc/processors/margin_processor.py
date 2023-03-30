@@ -19,29 +19,29 @@ class MarginProcessor(Processor):
     Optional: ['tables']
     Generates: ['text_elements', 'headers', 'footers', 'left_sidebar', 'right_sidebar', 'extracted_page_number']
     """
-    
+
     name: str = "margin"
 
-    def __init__(self, log_level: int=logging.INFO):
+    def __init__(self, log_level: int = logging.INFO):
         super().__init__(MarginProcessor.name, log_level=log_level)
 
     def requirements(self) -> Tuple[List[str], List[str]]:
         return (["page_bounds", 'text_elements'], ['tables'])
-    
+
     def generates(self) -> List[str]:
         return ['text_elements', 'headers', 'footers', 'left_sidebar', 'right_sidebar', 'extracted_page_number']
-    
-    def _process_text(self, page_bound: Bbox, 
-                      text: List[LineElement], 
+
+    def _process_text(self, page_bound: Bbox,
+                      text: List[LineElement],
                       other_elements: Optional[List[LayoutElement]]) -> Tuple[Optional[int], Dict[str, List[Any]]]:
         page_width = page_bound.width()
         page_height = page_bound.height()
         res: Dict[str, List[Any]] = {
-            'headers':[],
-            'footers':[],
-            'left_sidebar':[],
-            'right_sidebar':[],
-            'text_elements':[]
+            'headers': [],
+            'footers': [],
+            'left_sidebar': [],
+            'right_sidebar': [],
+            'text_elements': []
         }
         extracted_page_number: Optional[int] = None
 
@@ -49,7 +49,7 @@ class MarginProcessor(Processor):
             layout_graph = LayoutGraph(page_bound, text + other_elements)
         else:
             layout_graph = LayoutGraph(page_bound, text)
-            
+
         for node in layout_graph.nodes[1:]:
             t = node.element
             if not isinstance(t, LineElement):
@@ -59,7 +59,7 @@ class MarginProcessor(Processor):
                 nearest_up = node.up[0][1]
             else:
                 nearest_up = 10000
-            
+
             if len(node.down) > 0:
                 nearest_down = node.down[0][1]
             else:
@@ -71,7 +71,7 @@ class MarginProcessor(Processor):
             bottom = t.bbox.y0 / page_height
             left = t.bbox.x1 / page_width
             right = t.bbox.x0 / page_width
-            
+
             if top < 0.05 and nearest > 5:
                 res['headers'].append(t)
 
@@ -91,9 +91,9 @@ class MarginProcessor(Processor):
                 res['left_sidebar'].append(t)
 
             else:
-                res['text_elements'].append(t)     
+                res['text_elements'].append(t)
 
-        return extracted_page_number, res       
+        return extracted_page_number, res
 
     def _process(self, data: Any) -> Any:
         data['headers'] = {}
@@ -105,26 +105,27 @@ class MarginProcessor(Processor):
         for page_number, page_bound, text, tables in self.get_page_data(data):
             epn, res = self._process_text(page_bound, text, tables)
             data['extracted_page_number'][page_number] = epn
-            for t,value in res.items():
+            for t, value in res.items():
                 data[t][page_number] = value
 
         return data
 
-
-    def add_generated_items_to_fig(self, page_number:int, fig: Figure, data: Dict[str, Any]):
+    def add_generated_items_to_fig(self, page_number: int, fig: Figure, data: Dict[str, Any]):
 
         colours = {
-            'headers':'violet',
-            'footers':'violet',
-            'left_sidebar':'pink',
-            'right_sidebar':'pink',
+            'headers': 'violet',
+            'footers': 'violet',
+            'left_sidebar': 'pink',
+            'right_sidebar': 'pink',
         }
 
         for field in ['headers', 'footers', 'left_sidebar', 'right_sidebar']:
             for e in data[field][page_number]:
                 add_rect_to_figure(fig, e.bbox, colours[field])
 
-        fig.add_scatter(x=[None], y=[None], name="Footers", line=dict(width=3, color=colours['headers']))
-        fig.add_scatter(x=[None], y=[None], name="Headers", line=dict(width=3, color=colours['footers']))
-        fig.add_scatter(x=[None], y=[None], name="Sidebars", line=dict(width=3, color=colours['left_sidebar']))
-
+        fig.add_scatter(x=[None], y=[None], name="Footers",
+                        line=dict(width=3, color=colours['headers']))
+        fig.add_scatter(x=[None], y=[None], name="Headers",
+                        line=dict(width=3, color=colours['footers']))
+        fig.add_scatter(x=[None], y=[None], name="Sidebars",
+                        line=dict(width=3, color=colours['left_sidebar']))

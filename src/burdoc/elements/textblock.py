@@ -18,19 +18,20 @@ class TextBlockType(Enum):
     H5 = auto()
     EMPHASIS = auto()
 
+
 class TextBlock(LayoutElementGroup):
     """Represents a standard grouping of lines into a paragraph. All text
     within a textblock can be considered to be of semantically equivalent
     fonts. This may include variations in bold or italics."""
-    
-    items: List[LineElement] #type:ignore
+
+    items: List[LineElement]  # type:ignore
 
     def __init__(self,
-                 bbox: Optional[Bbox]=None,
-                 items: Optional[List[LineElement]]=None,
-                 text_type: TextBlockType=TextBlockType.PARAGRAPH
+                 bbox: Optional[Bbox] = None,
+                 items: Optional[List[LineElement]] = None,
+                 text_type: TextBlockType = TextBlockType.PARAGRAPH
                  ):
-        super().__init__(bbox, items, title="TextBlock") #type:ignore
+        super().__init__(bbox, items, title="TextBlock")  # type:ignore
         self.type = text_type
 
     def get_text(self) -> str:
@@ -42,7 +43,7 @@ class TextBlock(LayoutElementGroup):
         """
         return " ".join(i.get_text() for i in self.items)
 
-    def to_json(self, extras: Optional[Dict[str, Any]]=None, include_bbox: bool=False, **kwargs):
+    def to_json(self, extras: Optional[Dict[str, Any]] = None, include_bbox: bool = False, **kwargs):
         """Convert the textblock into a JSON object
 
         Args:
@@ -67,4 +68,4 @@ class TextBlock(LayoutElementGroup):
             text = self.items[0].spans[0].text + "..."
         else:
             text = ""
-        return super()._str_rep(extras={'type':self.type, 'text':text})
+        return super()._str_rep(extras={'type': self.type, 'text': text})

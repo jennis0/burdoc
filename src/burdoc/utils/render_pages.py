@@ -45,7 +45,7 @@ def add_rect_to_figure(
     fig.add_shape(
         type='rect', xref='x', yref='y', opacity=0.6,
         x0=bbox.x0, y0=bbox.y0, x1=bbox.x1, y1=bbox.y1,
-        line=dict(color=colour, width=3)
+        line={'color': colour, 'width': 3}
     )
 
 
@@ -62,9 +62,12 @@ def add_text_to_figure(
         point (Point): Top left coordinates of the text
         colour (str): Text colour
     """
-    fig.add_annotation(dict(font=dict(color=colour, size=20),
-                            x=point.x,
-                            y=point.y,
-                            showarrow=False,
-                            font_family="Arial Black",
-                            text=text))
+    fig.add_annotation({
+        'font': {'color': colour, 'size': 20},
+        'x': point.x,
+        'y': point.y,
+        'showarrow': False,
+        'font_family': "Arial Black",
+        'text': text
+    }
+    )

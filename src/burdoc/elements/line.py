@@ -12,7 +12,7 @@ class LineElement(LayoutElement):
     spans: List[Span]
     rotation: Tuple[float, float]
 
-    def __init__(self, bbox: Bbox, spans: List[Span], rotation:Tuple[float, float]):
+    def __init__(self, bbox: Bbox, spans: List[Span], rotation: Tuple[float, float]):
         """Creates a line element
 
         Args:
@@ -39,7 +39,7 @@ class LineElement(LayoutElement):
         """
         return LineElement(
             spans=[Span.from_dict(s) for s in line_dict['spans']],
-            bbox=Bbox(line_dict['bbox'][0], line_dict['bbox'][1], line_dict['bbox'][2], 
+            bbox=Bbox(line_dict['bbox'][0], line_dict['bbox'][1], line_dict['bbox'][2],
                       line_dict['bbox'][3], page_width, page_height),
             rotation=line_dict['dir']
         )
@@ -56,16 +56,11 @@ class LineElement(LayoutElement):
         return ""
 
     def __str__(self):
-        extras ={"Text":self.spans[0].text if len(self.spans)>0 else ''}
-        return self._str_rep(extras)           
-    
-    def to_json(self, extras: Optional[Dict]=None, include_bbox: bool=False, **kwargs):
+        extras = {"Text": self.spans[0].text if len(self.spans) > 0 else ''}
+        return self._str_rep(extras)
+
+    def to_json(self, extras: Optional[Dict] = None, include_bbox: bool = False, **kwargs):
         if not extras:
             extras = {}
         extras['spans'] = [s.to_json() for s in self.spans]
         return super().to_json(**kwargs, extras=extras, include_bbox=include_bbox)
-
-
-
-
-

@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
-#from ..table_strategies.table_extractor_strategy import TableExtractorStrategy
+# from ..table_strategies.table_extractor_strategy import TableExtractorStrategy
 from .bbox import Bbox
 from .element import LayoutElement
 
@@ -20,11 +20,11 @@ class Table(LayoutElement):
     """Representation of a table within the text.
     """
 
-    def __init__(self, 
-                 bbox: Bbox, 
+    def __init__(self,
+                 bbox: Bbox,
                  row_boxes: List[Tuple[TableParts, Bbox]],
                  col_boxes: List[Tuple[TableParts, Bbox]],
-    ):
+                 ):
         """Creates a Table element
 
         Args:
@@ -36,16 +36,19 @@ class Table(LayoutElement):
         """
         super().__init__(bbox, title='Table')
         self.cells: List[List[List[LayoutElement]]] = \
-            [[[] for _ in range(len(col_boxes))] for _ in range(len(row_boxes))]
+            [[[] for _ in range(len(col_boxes))]
+             for _ in range(len(row_boxes))]
         self.row_boxes = row_boxes
         self.col_boxes = col_boxes
-        self.row_headers = [i for i,s in enumerate(col_boxes) if s[0] == TableParts.ROWHEADER]
-        self.col_headers = [i for i,s in enumerate(row_boxes) if s[0] == TableParts.COLUMNHEADER]
+        self.row_headers = [i for i, s in enumerate(
+            col_boxes) if s[0] == TableParts.ROWHEADER]
+        self.col_headers = [i for i, s in enumerate(
+            row_boxes) if s[0] == TableParts.COLUMNHEADER]
 
-    def to_json(self, extras: Optional[Dict]=None, include_bbox: bool=False, **kwargs):
+    def to_json(self, extras: Optional[Dict] = None, include_bbox: bool = False, **kwargs):
         if not extras:
             extras = {}
-            
+
         extras['row_header_index'] = self.row_headers
         extras['col_header_index'] = self.col_headers
         json_cells: List[List[Any]] = []
@@ -56,9 +59,7 @@ class Table(LayoutElement):
         extras['cells'] = json_cells
 
         return super().to_json(extras=extras, include_bbox=include_bbox, **kwargs)
-    
+
     def __str__(self):
         n_cells = sum([len(r) for r in self.cells])
-        return f"<Table Id={self.id[:8]}... Bbox={str(self.bbox)} N_Cells={n_cells}>"
-            
-        
+        return f"<Table Id={self.element_id[:8]}... Bbox={str(self.bbox)} N_Cells={n_cells}>"

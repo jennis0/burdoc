@@ -11,16 +11,16 @@ class TestLayoutElement():
     def test_unique_id(self, bbox):
         e1 = LayoutElement(bbox)
         e2 = LayoutElement(bbox)
-        assert e1.id != e2.id
+        assert e1.element_id != e2.element_id
         
     def test_str_rep(self, bbox):
         element = LayoutElement(bbox)
-        element.id = "aaaaaaaa"
+        element.element_id = "aaaaaaaa"
         assert element._str_rep() == f"<LayoutElement Id=aaaaaaaa... Bbox={str(bbox)}>"
         
     def test_str_rep_with_extras(self, bbox):
         element = LayoutElement(bbox)
-        element.id = "aaaaaaaa"
+        element.element_id = "aaaaaaaa"
         extras = {'Test':'test'}
         assert element._str_rep(extras=extras) == f"<LayoutElement Id=aaaaaaaa... Bbox={str(bbox)} Test=test>"
         

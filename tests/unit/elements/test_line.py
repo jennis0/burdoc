@@ -25,7 +25,7 @@ class TestLineElement():
             ]
         }
         test_line = LineElement.from_dict(pymupdf_line, page_width, page_height)
-        test_line.id = line.id
+        test_line.element_id = line.element_id
         assert test_line.spans[0].font == line.spans[0].font
         assert test_line.spans == line.spans
         assert test_line.bbox == line.bbox
