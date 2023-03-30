@@ -171,7 +171,7 @@ class ReadingOrderProcessor(Processor):
         for section in sections:
             ### Within each section, do left-to-right, depth-first traversal of elements
             section_sorted_elements: List[LayoutElement] = []
-            layout_graph = LayoutGraph(self.logger, page_bound, section)
+            layout_graph = LayoutGraph(page_bound, section)
 
             backtrack: List[LayoutGraph.Node] = []
             used = set([0])

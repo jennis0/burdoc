@@ -5,7 +5,7 @@ from typing import List, Sequence, Tuple, Union
 
 import numpy as np
 
-from ..elements import Bbox, LayoutElement, LayoutElementGroup
+from ..elements import Bbox, LayoutElement
 
 class LayoutGraph(object):
     """LayoutGraph attempts to efficiently build a modified adjacency graph over the passed elements.
@@ -74,7 +74,7 @@ class LayoutGraph(object):
         raise IndexError()
 
 
-    def node_has_ancester(self, node_id: int, target_id: int) -> bool:
+    def node_has_ancestor(self, node_id: int, target_id: int) -> bool:
         """Check whether the target node is an 'ancestor' of the primary node.
         Here 'ancestor' means that there is a leftwards or upwards adjacency
         relations that get from the node to the target.
@@ -90,11 +90,11 @@ class LayoutGraph(object):
             return True
 
         anc = self.nodes[node_id]
-        if any(self.node_has_ancester(up_adj_node_and_distance[0], target_id) \
+        if any(self.node_has_ancestor(up_adj_node_and_distance[0], target_id) \
             for up_adj_node_and_distance in anc.up):
                 return True
         
-        if any(self.node_has_ancester(left_adj_node_and_distance[0], target_id) \
+        if any(self.node_has_ancestor(left_adj_node_and_distance[0], target_id) \
             for left_adj_node_and_distance in anc.left):
                 return True
         
@@ -174,14 +174,14 @@ class LayoutGraph(object):
 
         for node in self.nodes[1:]:
             if len(node.up) == 0:
-                node.up.append([self.root.id, node.element.bbox.y0])
+                node.up.append((self.root.id, node.element.bbox.y0))
                 self.root.down.append((node.id, node.element.bbox.y0))
 
             for down_node, down_node_distance in node.down:
-                self.nodes[down_node].up.append([node.id, down_node_distance])
+                self.nodes[down_node].up.append((node.id, down_node_distance))
             
             for right_node, right_node_distance in node.right:
-                self.nodes[right_node].left.append([node.id, right_node_distance])
+                self.nodes[right_node].left.append((node.id, right_node_distance))
 
         for node in self.nodes:
             node.up.sort(key=lambda n: n[1])
@@ -193,8 +193,14 @@ class LayoutGraph(object):
 
 
 
-    def __init__(self, logger: logging.Logger, pagebound: Bbox, elements: Sequence[LayoutElement]):
-        self.logger = logger.getChild('layoutgraph')
+    def __init__(self, pagebound: Bbox, elements: Sequence[LayoutElement]):
+        """Create a LayoutGraph from the passed elements.
+
+        Args:
+            pagebound (Bbox): Bounding box of the containing page or section
+            elements (Sequence[LayoutElement]): Sequence of elements to build the layout adjacency graph
+        """
+        
         self.pagebound = pagebound
         self.root = LayoutGraph.Node(0, LayoutElement(Bbox(0, -2, pagebound.x1, -1, pagebound.x1, pagebound.y1)))
         self.nodes = [self.root]
@@ -206,17 +212,17 @@ class LayoutGraph(object):
         self.__build_graph()
 
     def __str__(self):
-        text = '"'*30
+        text = '='*30 + '\n'
         for n in self.nodes:
-            text += "'"*30
+            text += "-"*30
             text += f"\n{n}"
             text += "\nU: " +',\n   '.join(['(' + str(self.nodes[n2[0]]) + ',' + str(round(n2[1], 1)) + ')' for n2 in n.up])
             text += "\nL: " +',\n   '.join(['(' + str(self.nodes[n2[0]]) + ',' + str(round(n2[1], 1)) + ')' for n2 in n.left])
             text += "\nR: " +',\n   '.join(['(' + str(self.nodes[n2[0]]) + ',' + str(round(n2[1], 1)) + ')' for n2 in n.right])
             text += "\nD: " +',\n   '.join(['(' + str(self.nodes[n2[0]]) + ',' + str(round(n2[1], 1)) + ')' for n2 in n.down])
-            text += "\n" + "'"*30
+            text += "\n"
 
-        text += '"'*30
+        text += '='*30
         return text
 
 

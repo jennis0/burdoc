@@ -171,7 +171,7 @@ class RulesTableProcessor(Processor):
 
     def _generate_table_candidates(self, page_bound: Bbox, blocks: List[TextBlock]) -> List[List[List[TextBlock]]]:
         
-        layout_graph = LayoutGraph(self.logger, page_bound, blocks)
+        layout_graph = LayoutGraph(page_bound, blocks)
 
         used_nodes = {node.id:False for node in layout_graph.nodes}
 

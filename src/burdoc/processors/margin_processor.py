@@ -46,9 +46,9 @@ class MarginProcessor(Processor):
         extracted_page_number: Optional[int] = None
 
         if other_elements:
-            layout_graph = LayoutGraph(self.logger, page_bound, text + other_elements)
+            layout_graph = LayoutGraph(page_bound, text + other_elements)
         else:
-            layout_graph = LayoutGraph(self.logger, page_bound, text)
+            layout_graph = LayoutGraph(page_bound, text)
             
         for node in layout_graph.nodes[1:]:
             t = node.element
