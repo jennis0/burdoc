@@ -1,10 +1,10 @@
 [build-system]
-requires=["setuptools"]
+requires=["setuptools", "setuptools_csv[toml]>=6.2"]
 build-backend="setuptools.build_meta"
 
 [project]
 name="burdoc"
-version="v0.1.0-alpha"
+dynamic=["version"]
 authors= [ {name="jennis0"} ]
 description="Advanced PDF parsing for python"
 readme="README.md"  
@@ -26,6 +26,8 @@ dependencies = [
     "transformers>=4.26",
     "timm>=0.6.13"
 ]
+
+[tool.setuptools_scm]
 
 [project.scripts]
 burdoc="burdoc.scripts.burdoc:run"

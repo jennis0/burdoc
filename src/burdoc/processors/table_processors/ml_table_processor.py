@@ -28,7 +28,7 @@ class MLTableProcessor(Processor):
         """List of possible ML table finding strategies
         
         Currently implemented:
-        * DETR: DETR Using Microsoft Table Transformers
+        * DETR: DETR Using Microsoft Table Transformers  gi
 
         """
         DETR = auto()
