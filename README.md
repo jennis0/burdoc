@@ -7,17 +7,18 @@
   <h1 align="center">Burdoc: Advanced PDF Parsing for Python</h1>
   <p align="center">
 A python library for extracting structured text, images, and tables from PDFs with context and reading order.
-  </p>
+  <br><br></p>
 </p>
 
 <div align="center">
 
-<a href="">![Build](https://img.shields.io/github/actions/workflow/status/jennis0/burdoc/python-package.yml)
 <a href="">![Downloads](https://img.shields.io/github/downloads/jennis0/Burdoc/total)</a> 
-<a href="">![Contributors](https://img.shields.io/github/contributors/jennis0/burdoc?color=dark-green)</a>
+<a href="">![Build](https://img.shields.io/github/actions/workflow/status/jennis0/burdoc/python-package.yml)
+<a href="">[![Documentation Status](https://readthedocs.org/projects/burdoc/badge/?version=latest)](https://burdoc.readthedocs.io/en/latest/?badge=latest)</a>
+<a href="">[![codecov](https://codecov.io/gh/jennis0/burdoc/branch/main/graph/badge.svg?token=7X7146BQ72)](https://codecov.io/gh/jennis0/burdoc)</a>
+
 <a href="">![Issues](https://img.shields.io/github/issues/jennis0/burdoc)</a>
 <a href="">![License](https://img.shields.io/github/license/jennis0/burdoc)</a>
-<a href="">[![codecov](https://codecov.io/gh/jennis0/burdoc/branch/main/graph/badge.svg?token=7X7146BQ72)](https://codecov.io/gh/jennis0/burdoc)</a>
 
 </div>
 
@@ -74,7 +75,7 @@ Excellent question! Between pdfminer, PyMuPDF, Tika, and many others there are a
 
 ## Quickstart
 
-More detailed information on running Burdoc can be found here - [Docs](https://jennis0.github.io/burdoc/burdoc.html)
+More detailed information on running Burdoc can be found here - [Docs](http://burdoc.readthedocs.io/)
 
 #### Prerequisites
 

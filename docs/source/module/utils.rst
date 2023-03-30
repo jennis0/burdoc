@@ -21,8 +21,10 @@ Output Comparison
 
 Image Manipulation
 ------------------
-.. automodule:: burdoc.utils.image_manip
+.. automodule::   burdoc.utils.image_manip
    :members:
+
+.. autofunction:: arg1
 
 Layout Graph
 ------------------
