@@ -6,6 +6,10 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
+from importlib.metadata import version
+release = version("burdoc")
+version = ".".join(release.split('.')[:2])
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
