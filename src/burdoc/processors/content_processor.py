@@ -20,9 +20,11 @@ class ContentProcessor(Processor):
     semantic processing. It generates lists, applies a basic text type classifier to find 
     headings, and generates a hierarchy of headings for the page.
 
-    Requires: ['elements']
-    Optional: None
-    Generators: ['elements', 'page_hierarchy']
+    **Requires:** ['elements']
+    
+    **Optional:** None
+    
+    **Generators:** ['elements', 'page_hierarchy']
     """
 
     name: str = "content"
@@ -145,10 +147,10 @@ class ContentProcessor(Processor):
             bbox=list_items[0][1][0].bbox, ordered=ordered, items=[])
         for list_item in list_items:
             label_match = self.list_regex.match(
-                list_item[1][0].items[0].get_text())
+                list_item[1][0].items[0].get_text().strip())
             if not label_match:
                 raise RuntimeError(
-                    "Regex failed to refind list label - this shouldn't be possible!")
+                    f"Regex failed to refind list label in {list_item[1][0].items[0].get_text().strip()} - this shouldn't be possible!")
             list_item[1][0].items[0].spans[0].text = list_item[1][0].items[0].spans[0].text[label_match.span()[
                 1]:].lstrip()
             textlist.append(TextListItem(
@@ -168,7 +170,8 @@ class ContentProcessor(Processor):
 
         for i, element in enumerate(elements):
             if isinstance(element, TextBlock):
-                list_match = self.list_regex.match(element.get_text()[:10].strip())
+                list_match = self.list_regex.match(
+                    element.get_text()[:10].strip())
                 processed_tb = self._process_text_block(element)
 
                 # Does the box start with something that looks like a list/bullet point
@@ -240,7 +243,7 @@ class ContentProcessor(Processor):
 
     def _build_page_hierarchy(self, page_number: int, elements: List[LayoutElement]) -> List[Any]:
 
-        def add_to_hierarchy(textblock: TextBlock, hierarchy: List[Dict[str, Any]], 
+        def add_to_hierarchy(textblock: TextBlock, hierarchy: List[Dict[str, Any]],
                              index: int, sub_index: Optional[int] = None):
             if textblock.type in [TextBlockType.PARAGRAPH, TextBlockType.EMPHASIS, TextBlockType.SMALL]:
                 return
@@ -327,4 +330,4 @@ class ContentProcessor(Processor):
             recursive_add(fig, element)
 
         fig.add_scatter(x=[None], y=[None], name="List",
-                        line={'width':3, 'color':colours[TextListItem]})
+                        line={'width': 3, 'color': colours[TextListItem]})
