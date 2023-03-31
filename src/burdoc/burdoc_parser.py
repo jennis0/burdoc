@@ -292,8 +292,7 @@ class BurdocParser():
         self.profile_info = perf_list
 
     def print_profile_info(self):
-        """Print performance profile for last run
-        """
+        """Print performance profile for last run"""
 
         print("=================================================================")
         print("                            Profile                              ")
@@ -316,8 +315,7 @@ class BurdocParser():
              pages: Optional[List[int]] = None,
              extract_images: bool = True,
              extract_page_images: bool = False,
-             extract_page_hierarchy: bool = True,
-             ) -> Any:
+             extract_page_hierarchy: bool = True) -> Any:
         """Read a PDF and output a structured response
 
         Args:
@@ -330,10 +328,11 @@ class BurdocParser():
             extract_page_hierarchy: Extract a list of headings and titles. Default is False.
 
         Raises:
-            FileNotFoundError: If the file cannot be found. 
+            FileNotFoundError: If the file cannot be found.
             EmptyFileError: If the file has zero length. Subclass of FileDataError and RuntimeError
             ValueError: If unknown file type is specified. Subclass of RuntimeError
-            FileDataError: If the document has an invalid structure for the given type. Subclass of RuntimeError
+            FileDataError: If the document has an invalid structure for the given type. Subclass of 
+                RuntimeError
 
         Returns:
             Dict[str, Any]: Structured content, has format
@@ -341,8 +340,8 @@ class BurdocParser():
                 'metadata' (Dict[str, Any]): Any metadata about the file itself
                 'content' (Dict[int, List[Any]]):  Ordered content organised per-page
                 'page_hierarchy (Dict[int, List[Any]]): Headers found in each page
-                'images', (Dict[int, List[PIL.Image.Image]], optional): Images extracted from each page.
-                    Only generated if extract_images is True
+                'images', (Dict[int, List[PIL.Image.Image]], optional): Images extracted from 
+                    each page. Only generated if extract_images is True
                 'page_images', (Dict[int, PIL.Image.Image], optional): Image rendered for each page.
                     Only generated if generate_page_images is True.
             }

@@ -58,6 +58,7 @@ class TextBlock(LayoutElementGroup):
         if not extras:
             extras = {}
         extras['type'] = self.type.name.lower()
+        extras['block_text'] = self.get_text()
         return super().to_json(**kwargs, extras=extras, include_bbox=include_bbox)
 
     def __str__(self) -> str:
