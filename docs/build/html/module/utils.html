@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Utils &mdash; Burdoc  documentation</title>
+  <title>Utils &mdash; Burdoc 0.1.2.dev5+gb420dda.d20230401 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -31,6 +31,9 @@
           <a href="../index.html" class="icon icon-home">
             Burdoc
           </a>
+              <div class="version">
+                0.1
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -52,13 +55,21 @@
 <li class="toctree-l4"><a class="reference internal" href="#burdoc.utils.compare.compare"><code class="docutils literal notranslate"><span class="pre">compare()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#module-burdoc.utils.image_manip">Image Manipulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-burdoc.utils.image_manip">Image Manipulation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.utils.image_manip.get_image_palette"><code class="docutils literal notranslate"><span class="pre">get_image_palette()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#module-burdoc.utils.layout_graph">Layout Graph</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#burdoc.utils.layout_graph.LayoutGraph"><code class="docutils literal notranslate"><span class="pre">LayoutGraph</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#module-burdoc.utils.logging">Logging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-burdoc.utils.logging">Logging</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.utils.logging.get_logger"><code class="docutils literal notranslate"><span class="pre">get_logger()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#module-burdoc.utils.render_pages">Render Pages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.utils.render_pages.add_rect_to_figure"><code class="docutils literal notranslate"><span class="pre">add_rect_to_figure()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#burdoc.utils.render_pages.add_text_to_figure"><code class="docutils literal notranslate"><span class="pre">add_text_to_figure()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#burdoc.utils.render_pages.render_pages"><code class="docutils literal notranslate"><span class="pre">render_pages()</span></code></a></li>
 </ul>
 </li>
@@ -97,7 +108,8 @@
 <h1>Utils<a class="headerlink" href="#utils" title="Permalink to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 </div>
-<span class="target" id="module-burdoc.utils"></span><nav class="contents local" id="contents">
+<span class="target" id="module-burdoc.utils"></span><p>Common functions and utilities used across the burdoc package</p>
+<nav class="contents local" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#module-burdoc.utils.compare" id="id1">Output Comparison</a></p></li>
 <li><p><a class="reference internal" href="#module-burdoc.utils.image_manip" id="id2">Image Manipulation</a></p></li>
@@ -108,28 +120,33 @@
 </nav>
 <section id="module-burdoc.utils.compare">
 <span id="output-comparison"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">Output Comparison</a><a class="headerlink" href="#module-burdoc.utils.compare" title="Permalink to this heading"></a></h2>
+<p>A comparison function for generating a smart diff from extracted content</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="burdoc.utils.compare.compare">
-<span class="sig-prename descclassname"><span class="pre">burdoc.utils.compare.</span></span><span class="sig-name descname"><span class="pre">compare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.utils.compare.compare" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">burdoc.utils.compare.</span></span><span class="sig-name descname"><span class="pre">compare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.utils.compare.compare" title="Permalink to this definition"></a></dt>
 <dd><p>Compares to JSON objects generated by burdoc and returns a list of changes.
 Unlike most dictionary comparison systems, this detects re-orderings as well as changes</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj1</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – A JSON output from Burdoc</p></li>
-<li><p><strong>obj2</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – A JSON output from Burdoc</p></li>
-<li><p><strong>ignore_paths</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Any paths to ignore changes. Use this to exclude unstable fields such as file paths</p></li>
+<li><p><strong>obj1</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – A JSON output from Burdoc.</p></li>
+<li><p><strong>obj2</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – A JSON output from Burdoc.</p></li>
+<li><p><strong>ignore_paths</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Any paths to ignore changes. Use this to exclude unstable fields such as file paths.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl>
-<dt>A list of changes in format:</dt><dd><dl class="simple">
-<dt>[</dt><dd><p>{‘path’:path to change in object, ‘type’:[change, addition, deletion, reorder], ‘old’:old value, ‘new’:new value, ‘value’:value of the object (only used for reorder)}</p>
-</dd>
-</dl>
-<p>]</p>
-</dd>
-</dl>
+<dd class="field-even"><p><p>A list of changes in format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;path&#39;</span><span class="p">:</span><span class="n">path</span> <span class="n">to</span> <span class="n">change</span> <span class="ow">in</span> <span class="nb">object</span><span class="p">,</span>
+        <span class="s1">&#39;type&#39;</span><span class="p">:[</span><span class="n">change</span><span class="p">,</span> <span class="n">addition</span><span class="p">,</span> <span class="n">deletion</span><span class="p">,</span> <span class="n">reorder</span><span class="p">],</span>
+        <span class="s1">&#39;old&#39;</span><span class="p">:</span><span class="n">old</span> <span class="n">value</span><span class="p">,</span>
+        <span class="s1">&#39;new&#39;</span><span class="p">:</span><span class="n">new</span> <span class="n">value</span><span class="p">,</span>
+        <span class="s1">&#39;value&#39;</span><span class="p">:</span><span class="n">value</span> <span class="n">of</span> <span class="n">the</span> <span class="nb">object</span> <span class="p">(</span><span class="n">only</span> <span class="n">used</span> <span class="k">for</span> <span class="n">reorder</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -141,9 +158,35 @@ Unlike most dictionary comparison systems, this detects re-orderings as well as 
 </section>
 <section id="module-burdoc.utils.image_manip">
 <span id="image-manipulation"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">Image Manipulation</a><a class="headerlink" href="#module-burdoc.utils.image_manip" title="Permalink to this heading"></a></h2>
+<p>Utility functions for manipulating/analysing images</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="burdoc.utils.image_manip.get_image_palette">
+<span class="sig-prename descclassname"><span class="pre">burdoc.utils.image_manip.</span></span><span class="sig-name descname"><span class="pre">get_image_palette</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_colours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_means</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.utils.image_manip.get_image_palette" title="Permalink to this definition"></a></dt>
+<dd><p>Get the top n most representative colours from an image</p>
+<p>This blurs the image to remove noise, then performans a K-means clustering over pixel values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>Image</em>) – A PIL Image</p></li>
+<li><p><strong>n_colours</strong> (<em>int</em>) – Number of colours to extract</p></li>
+<li><p><strong>n_means</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of means to use. Increasing this results in more accurate results</p></li>
+<li><p><strong>5.</strong> (<em>in busy images but less accurate in ones with only a small number</em><em> of </em><em>colours. Defaults to</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Triples of the colour extracted and the percent of pixels close to that colour.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[Tuple[List[float], Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-burdoc.utils.layout_graph">
 <span id="layout-graph"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">Layout Graph</a><a class="headerlink" href="#module-burdoc.utils.layout_graph" title="Permalink to this heading"></a></h2>
+<p>The LayoutGraph efficiently builds a modified adjacency graph of elements. Used by various parts of the
+processing pipeline.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="burdoc.utils.layout_graph.LayoutGraph">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.utils.layout_graph.</span></span><span class="sig-name descname"><span class="pre">LayoutGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pagebound</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="elements.html#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">elements</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="elements.html#burdoc.elements.element.LayoutElement" title="burdoc.elements.element.LayoutElement"><span class="pre">LayoutElement</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.utils.layout_graph.LayoutGraph" title="Permalink to this definition"></a></dt>
@@ -152,16 +195,17 @@ Unlike most dictionary comparison systems, this detects re-orderings as well as 
 edge-to-edge distance.
 Here adjacency means that no horizontal or vertical line drawn between opposing edges of the boxes intersects
 and other box.</p>
-<p><code class="docutils literal notranslate"><span class="pre">`</span>
-<span class="pre">[</span>&#160;&#160; <span class="pre">a</span>&#160;&#160; <span class="pre">]</span>&#160;&#160;&#160; <span class="pre">[</span>&#160;&#160; <span class="pre">b</span>&#160;&#160; <span class="pre">]</span>
-<span class="pre">[</span> <span class="pre">c</span> <span class="pre">]</span>
-<span class="pre">[</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">d</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">]</span>
-<span class="pre">`</span></code>
-Under this diagram the adjacency relationships are (a,right,b), (a,down,c), (c,down,d), and (b,down,d) but not (a,down,d).
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>   <span class="n">a</span>   <span class="p">]</span>    <span class="p">[</span>   <span class="n">b</span>   <span class="p">]</span>
+<span class="p">[</span> <span class="n">c</span> <span class="p">]</span>
+<span class="p">[</span>         <span class="n">d</span>          <span class="p">]</span>
+</pre></div>
+</div>
+<p>Under this diagram the adjacency relationships are (a,right,b), (a,down,c), (c,down,d), and
+(b,down,d) but not (a,down,d).
 Note that adjacency is symettric, so (a,right,b) imports (b,left,a) and so on.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="burdoc.utils.layout_graph.LayoutGraph.Node">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="elements.html#burdoc.elements.element.LayoutElement" title="burdoc.elements.element.LayoutElement"><span class="pre">LayoutElement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.utils.layout_graph.LayoutGraph.Node" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="elements.html#burdoc.elements.element.LayoutElement" title="burdoc.elements.element.LayoutElement"><span class="pre">LayoutElement</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.utils.layout_graph.LayoutGraph.Node" title="Permalink to this definition"></a></dt>
 <dd><p>Container for graph node, storing it’s adjacent nodes and the original element</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="burdoc.utils.layout_graph.LayoutGraph.Node.down">
@@ -190,12 +234,29 @@ Note that adjacency is symettric, so (a,right,b) imports (b,left,a) and so on.</
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="burdoc.utils.layout_graph.LayoutGraph.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pagebound</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="elements.html#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">elements</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="elements.html#burdoc.elements.element.LayoutElement" title="burdoc.elements.element.LayoutElement"><span class="pre">LayoutElement</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.utils.layout_graph.LayoutGraph.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Create a LayoutGraph from the passed elements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pagebound</strong> (<a class="reference internal" href="elements.html#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><em>Bbox</em></a>) – Bounding box of the containing page or section</p></li>
+<li><p><strong>elements</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="elements.html#burdoc.elements.element.LayoutElement" title="burdoc.elements.element.LayoutElement"><em>LayoutElement</em></a><em>]</em>) – Sequence of elements to build the layout adjacency graph</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="burdoc.utils.layout_graph.LayoutGraph.get_node">
 <span class="sig-name descname"><span class="pre">get_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_or_id_dist_pair</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#burdoc.utils.layout_graph.LayoutGraph.Node" title="burdoc.utils.layout_graph.LayoutGraph.Node"><span class="pre">Node</span></a></span></span><a class="headerlink" href="#burdoc.utils.layout_graph.LayoutGraph.get_node" title="Permalink to this definition"></a></dt>
 <dd><p>Retrieves a graph node from it’s Id, or an (Id, distance) tuple.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>id_or_id_dist_pair</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em><em>]</em>) – Node Id or the (Id, distance) tuple used for storing node adjacencies</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id_or_id_dist_pair</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em><em>]</em>) – Node Id or the (Id, distance) tuple</p></li>
+<li><p><strong>adjacencies</strong> (<em>used for storing node</em>) – </p></li>
+</ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>IndexError</strong> – Id does not exist in the graph</p>
@@ -236,13 +297,75 @@ relations that get from the node to the target.</p>
 </section>
 <section id="module-burdoc.utils.logging">
 <span id="logging"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">Logging</a><a class="headerlink" href="#module-burdoc.utils.logging" title="Permalink to this heading"></a></h2>
+<p>Utility function for retrieving a tt_logger that can manage across threads</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="burdoc.utils.logging.get_logger">
+<span class="sig-prename descclassname"><span class="pre">burdoc.utils.logging.</span></span><span class="sig-name descname"><span class="pre">get_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.burdoc.log'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.utils.logging.get_logger" title="Permalink to this definition"></a></dt>
+<dd><p>Retrieve a threadsafe logger.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of the logger</p></li>
+<li><p><strong>log_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Write path for the log file. Defaults to “.burdoc.log”.</p></li>
+<li><p><strong>log_level</strong> (<em>int</em><em>, </em><em>optional</em>) – Log level. Defaults to logging.INFO.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>_description_</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>_type_</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-burdoc.utils.render_pages">
 <span id="render-pages"></span><h2><a class="toc-backref" href="#contents" role="doc-backlink">Render Pages</a><a class="headerlink" href="#module-burdoc.utils.render_pages" title="Permalink to this heading"></a></h2>
+<p>Utility functions for drawing a rendered page image and overlaying extracted elements</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="burdoc.utils.render_pages.add_rect_to_figure">
+<span class="sig-prename descclassname"><span class="pre">burdoc.utils.render_pages.</span></span><span class="sig-name descname"><span class="pre">add_rect_to_figure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Figure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="elements.html#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">colour</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.utils.render_pages.add_rect_to_figure" title="Permalink to this definition"></a></dt>
+<dd><p>Add a rectangle to the passed figure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fig</strong> (<em>Figure</em>) – A plotly figure</p></li>
+<li><p><strong>bbox</strong> (<a class="reference internal" href="elements.html#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><em>Bbox</em></a>) – Bbox of rectangle to draw</p></li>
+<li><p><strong>colour</strong> (<em>str</em>) – Line colour</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="burdoc.utils.render_pages.add_text_to_figure">
+<span class="sig-prename descclassname"><span class="pre">burdoc.utils.render_pages.</span></span><span class="sig-name descname"><span class="pre">add_text_to_figure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Figure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="elements.html#burdoc.elements.bbox.Point" title="burdoc.elements.bbox.Point"><span class="pre">Point</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">colour</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.utils.render_pages.add_text_to_figure" title="Permalink to this definition"></a></dt>
+<dd><p>Add text to the passed figure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fig</strong> (<em>Figure</em>) – A plotly figure</p></li>
+<li><p><strong>point</strong> (<a class="reference internal" href="elements.html#burdoc.elements.bbox.Point" title="burdoc.elements.bbox.Point"><em>Point</em></a>) – Top left coordinates of the text</p></li>
+<li><p><strong>colour</strong> (<em>str</em>) – Text colour</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="burdoc.utils.render_pages.render_pages">
 <span class="sig-prename descclassname"><span class="pre">burdoc.utils.render_pages.</span></span><span class="sig-name descname"><span class="pre">render_pages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="processors/processor.html#burdoc.processors.processor.Processor" title="burdoc.processors.processor.Processor"><span class="pre">Processor</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pages</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.utils.render_pages.render_pages" title="Permalink to this definition"></a></dt>
-<dd><p>Render an image of the page to the screen, highlighting elements</p>
+<dd><p>Render an image of the page to the screen and apply the draw functions of all pass processors</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Extracted content</p></li>
+<li><p><strong>processors</strong> (<em>List</em><em>[</em><a class="reference internal" href="processors/processor.html#burdoc.processors.processor.Processor" title="burdoc.processors.processor.Processor"><em>Processor</em></a><em>]</em>) – Processors used to overlay extraction elements</p></li>
+<li><p><strong>pages</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Pages to draw. Will draw all if None. Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </section>

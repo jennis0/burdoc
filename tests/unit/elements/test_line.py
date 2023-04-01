@@ -4,8 +4,8 @@ from burdoc.elements.line import LineElement
 
 class TestLineElement():
     
-    def test_from_dict(self, line):
-        bbox_dict = (50., 75., 100., 150.)
+    def test_from_dict(self, bbox, line):
+        bbox_dict = (bbox.x0, bbox.y0, bbox.x1, bbox.y1)
         page_width=200.
         page_height=300.
         pymupdf_line = {
@@ -14,20 +14,25 @@ class TestLineElement():
             'bbox':bbox_dict,
             'spans':[
                 {
-                    "size":12,
+                    "size":12.,
                     "flags": 0,
                     "font": "Calibri-standard",
                     "color": 0,
-                    "origin": (50.0, 100.0),
+                    "origin": (bbox.x0, bbox.y0),
                     "text": "span text",
-                    "bbox": (50.0, 100.0, 100., 150.)
+                    "bbox": bbox_dict
                 }    
             ]
         }
         test_line = LineElement.from_dict(pymupdf_line, page_width, page_height)
+                
         test_line.element_id = line.element_id
-        assert test_line.spans[0].font == line.spans[0].font
-        assert test_line.spans == line.spans
+        
+        for s1, s2 in zip(test_line.spans, line.spans):
+            assert s1.font == s2.font
+            assert s1.text == s2.text
+            assert s1.bbox == s2.bbox
+            assert s1.title == s2.title
         assert test_line.bbox == line.bbox
         assert test_line.rotation == line.rotation
         assert test_line.title == line.title

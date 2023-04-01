@@ -24,8 +24,6 @@ Image Manipulation
 .. automodule::   burdoc.utils.image_manip
    :members:
 
-.. autofunction:: arg1
-
 Layout Graph
 ------------------
 .. automodule:: burdoc.utils.layout_graph

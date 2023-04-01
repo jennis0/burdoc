@@ -22,9 +22,11 @@ class PDFLoadProcessor(Processor):
     """Loads PDF from file and extracts essential information 
     with minor processing/cleaning applied
 
-    Requires: None
-    Generates: ['page_bounds', 'text_elements', 'image_elements', 
-        'drawing_elements', 'images', 'page_images']
+    ::
+        
+        Requires: None
+        Generates: ['page_bounds', 'text_elements', 'image_elements', 'drawing_elements', 'images', 'page_images']
+    
     """
 
     name: str = 'pdf-load'
@@ -81,19 +83,28 @@ class PDFLoadProcessor(Processor):
 
             if basefont not in font_statistics[family]:
                 font_statistics[family][basefont] = dict(
-                    family=family, basefont=basefont, counts={})
+                    family=family, basefont=basefont, counts={}, true_sizes={})
 
         for t in text:
             for s in t.spans:
-                try:
+                try:    
                     l = 1
                     size = s.font.size
                     if size not in font_statistics[s.font.family][s.font.name]['counts']:
                         font_statistics[s.font.family][s.font.name]['counts'][size] = l
+                        if t.rotation[0] == 1.0:
+                            font_statistics[s.font.family][s.font.name]['true_sizes'][size] = [s.bbox.height()]
+                        else:
+                            font_statistics[s.font.family][s.font.name]['true_sizes'][size] = [s.bbox.width()]
                         font_statistics[s.font.family]['_counts'][size] = l
                     else:
                         font_statistics[s.font.family]['_counts'][size] += l
                         font_statistics[s.font.family][s.font.name]['counts'][size] += l
+                        if t.rotation[0] == 1.0:
+                            font_statistics[s.font.family][s.font.name]['true_sizes'][size].append(s.bbox.height())
+                        else:
+                            font_statistics[s.font.family][s.font.name]['true_sizes'][size].append(s.bbox.width())
+                    font_statistics[s.font.family][s.font.name]['data'] = s.font.to_json()
                 except KeyError:
                     if s.font.family not in font_statistics:
                         font_statistics[s.font.family] = {
@@ -229,8 +240,7 @@ class PDFLoadProcessor(Processor):
                     continue
 
                 if t.bbox.y_overlap(b.bbox, 'second') > 0.6 and abs(t.bbox.x0 - b.bbox.x1) < 25:
-                    t.spans.insert(0, Span(t.spans[0].font, "\u2022"))
-                    t.spans.insert(1, Span(t.spans[0].font, " "))
+                    t.spans.insert(0, Span(b.bbox, font=t.spans[0].font, text="\u2022 "))
                     t.bbox = Bbox.merge([t.bbox, b.bbox])
                     b_used[i] = True
                     break

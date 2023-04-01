@@ -60,7 +60,7 @@ class Bbox:
             float
         """
         return (self.x1 - self.x0) * (self.y1 - self.y0)
-    
+
     def area_norm(self) -> float:
         """Returns total area of bbox as a percentage of the 
         page area.
@@ -83,12 +83,12 @@ class Bbox:
         """
         if norm:
             return Point(
-                (self.x0 + 0.5*(self.x1-self.x0)) / self.page_width, 
+                (self.x0 + 0.5*(self.x1-self.x0)) / self.page_width,
                 (self.y0 + 0.5*(self.y1-self.y0)) / self.page_height
             )
         else:
             return Point(
-                self.x0 + 0.5*(self.x1-self.x0), 
+                self.x0 + 0.5*(self.x1-self.x0),
                 self.y0 + 0.5*(self.y1-self.y0)
             )
 
@@ -98,7 +98,7 @@ class Bbox:
         Args:
             norm (bool, optional): Return page-normalised co-ordinates.
             Defaults to False.
-            
+
         Returns:
             float
         """
@@ -113,7 +113,7 @@ class Bbox:
         Args:
             norm (bool, optional): Return page-normalised co-ordinates.
             Defaults to False.
-            
+
         Returns:
             float
         """
@@ -145,12 +145,12 @@ class Bbox:
         Returns:
             Bbox
         """
-        return Bbox(*self.to_rect(), self.page_width, self.page_height) #type:ignore
+        return Bbox(*self.to_rect(), self.page_width, self.page_height)  # type:ignore
 
     def x_overlap(self, other_bbox: Bbox, normalisation: str = "") -> float:
         """Calculates the projected overlap between this Bbox and another in the x
         axis. Several normalisation options are provided:
-        
+
         "": No normalisation
         "first": Return as percent of calling bounding box width
         "second": Return as percent of passed bounding box width
@@ -165,15 +165,16 @@ class Bbox:
         Returns:
             float
         """
-        x_overlap = max(min(self.x1, other_bbox.x1) - max(self.x0, other_bbox.x0), 0)
+        x_overlap = max(min(self.x1, other_bbox.x1) -
+                        max(self.x0, other_bbox.x0), 0)
         if x_overlap < 0.01:
             return 0.
-        
+
         if normalisation == "":
             width = 1.
         if normalisation == "first":
             width = self.width()
-        elif normalisation ==  "second":
+        elif normalisation == "second":
             width = other_bbox.width()
         elif normalisation == 'min':
             width = min(self.width(), other_bbox.width())
@@ -188,7 +189,7 @@ class Bbox:
     def y_overlap(self, other_bbox: Bbox, normalisation: str = "") -> float:
         """Calculates the projected overlap between this Bbox and another in the y
         axis. Several normalisation options are provided:
-        
+
         "": No normalisation
         "first": Return as percent of calling bounding box height
         "second": Return as percent of passed bounding box height
@@ -203,10 +204,11 @@ class Bbox:
         Returns:
             float
         """
-        y_overlap = max(min(self.y1, other_bbox.y1) - max(self.y0, other_bbox.y0), 0)
+        y_overlap = max(min(self.y1, other_bbox.y1) -
+                        max(self.y0, other_bbox.y0), 0)
         if y_overlap < 0.01:
             return 0.
-        
+
         if normalisation == "":
             height = 1.
         if normalisation == "first":
@@ -222,13 +224,13 @@ class Bbox:
 
         if height < 1:
             return 1.
-        
+
         return y_overlap / height
 
     def overlap(self, other_bbox: Bbox, normalisation: str = "") -> float:
         """Calculates the overall overlap between this Bbox and another. 
         Several normalisation options are provided:
-        
+
         "": No normalisation
         "first": Return as percent of calling bounding box area
         "second": Return as percent of passed bounding box area
@@ -247,7 +249,7 @@ class Bbox:
             normalisation = 'first' if self.area() < other_bbox.area() else 'second'
         elif normalisation == 'max':
             normalisation = 'first' if self.area() > other_bbox.area() else 'second'
-        
+
         return self.x_overlap(other_bbox, normalisation) * \
             self.y_overlap(other_bbox, normalisation)
 
@@ -263,7 +265,7 @@ class Bbox:
             float
         """
         return other_bbox.center().x - self.center().x
-    
+
     def y_distance(self, other_bbox: Bbox) -> float:
         """Returns the distance between called and passed Bbox in the y direction.
         Note that this is calculated centre to centre. It returns negatively if passed Bbox is to the
@@ -307,8 +309,9 @@ class Bbox:
         """
         if len(bboxes) == 0:
             raise ValueError("At least one bbox required")
-        
-        bbox = Bbox(1000, 1000, 0, 0, bboxes[0].page_width, bboxes[0].page_height)
+
+        bbox = Bbox(1000, 1000, 0, 0,
+                    bboxes[0].page_width, bboxes[0].page_height)
         for bb in bboxes:
             bbox.x0 = min(bbox.x0, bb.x0)
             bbox.y0 = min(bbox.y0, bb.y0)
@@ -318,17 +321,19 @@ class Bbox:
 
     def to_json(self, include_page=False) -> Dict[str, float]:
         """Convert a Bbox to JSON format.
-        
+
         Example:
+
         ::
-            {
-                'x0':float, 
-                'y0':float, 
-                'x1':float, 
-                'y1':float,
-                'pw':float [optional], 
-                'ph':float [optional]
-            }
+
+                {
+                    'x0':float, 
+                    'y0':float, 
+                    'x1':float, 
+                    'y1':float,
+                    'pw':float [optional], 
+                    'ph':float [optional]
+                }
 
         Args:
             include_page (bool, optional): Include page width and height. 
@@ -338,10 +343,10 @@ class Bbox:
             Dict[str, float]
         """
         if not include_page:
-            return {'x0':self.x0, 'y0':self.y0, 'x1':self.x1, 'y1':self.y1}
+            return {'x0': self.x0, 'y0': self.y0, 'x1': self.x1, 'y1': self.y1}
         else:
-            return {'x0':self.x0, 'y0':self.y0, 'x1':self.x1, 'y1':self.y1, 
-                    'pw':self.page_width, 'ph':self.page_height}
+            return {'x0': self.x0, 'y0': self.y0, 'x1': self.x1, 'y1': self.y1,
+                    'pw': self.page_width, 'ph': self.page_height}
 
     def __repr__(self):
         return f'<Bbox x0={round(self.x0, 2)}, y0={round(self.y0, 2)} x1={round(self.x1, 2)}, y1={round(self.y1, 2)} w={round(self.page_width, 2)}, h={round(self.page_height, 2)}>'

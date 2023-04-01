@@ -18,11 +18,12 @@ class LayoutGraph():
     Here adjacency means that no horizontal or vertical line drawn between opposing edges of the boxes intersects
     and other box.
 
-    ```
-    [   a   ]    [   b   ]
-    [ c ]      
-    [         d          ]
-    ```
+    ::
+    
+            [   a   ]    [   b   ]
+            [ c ]      
+            [         d          ]
+
     Under this diagram the adjacency relationships are (a,right,b), (a,down,c), (c,down,d), and 
     (b,down,d) but not (a,down,d).  
     Note that adjacency is symettric, so (a,right,b) imports (b,left,a) and so on.

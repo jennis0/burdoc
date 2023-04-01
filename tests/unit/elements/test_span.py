@@ -1,55 +1,52 @@
 import pytest
 
+from burdoc.elements.bbox import Bbox
 from burdoc.elements.font import Font
 from burdoc.elements.span import Span
 
 
-@pytest.mark.parametrize('text', ['a test sentence'], ids=['text'])
-@pytest.mark.parametrize('size', [9, 9.9], ids=['int size', 'float size'])
-@pytest.mark.parametrize('fontname', ['Fontname'], ids=['font'])
-@pytest.mark.parametrize('colour', [0, 11311], ids=['black','colour'])
-@pytest.mark.parametrize('bold', [False, True], ids=['b','!b'])
-@pytest.mark.parametrize('italic', [False, True], ids=['i','!i'])
-@pytest.mark.parametrize('superscript', [False, True], ids=['s','!s'])
-def test_span_from_dict(text, size, fontname, colour, bold, italic, superscript):
+@pytest.fixture
+def font():
+    return Font('Fontname', 'Fontname', 14.0, 0, False, False, False, False)
+
+
+@pytest.mark.parametrize('text',
+                         ['a test sentence', 'another test sentence',
+                             'a unicode \u2022 sentence'],
+                         ids=['t1', 't2', 'unicode'])
+def test_span_from_dict(text, font):
     pymupdf_span = {
-        "size":size,
-        "flags": 16*bold + 2*italic + 1*superscript,
-        "font": fontname,
-        "color": colour,
+        "size": font.size,
+        "flags": 0,
+        "font": font.name,
+        "color": font.colour,
         "origin": (50.0, 100.0),
         "text": text,
-        "bbox": (50.0, 100.0, 100, 150)
+        "bbox": (50.0, 100.0, 100.0, 150.0)
     }
-    
-    burdoc_span = Span(Font(fontname, fontname, size, colour, bold, italic, superscript), text)
-    assert Span.from_dict(pymupdf_span) == burdoc_span
+    bbox = Bbox(50.0, 100.0, 100.0, 150.0, 200.0, 300.0)
+    burdoc_span = Span(bbox=bbox, font=font, text=text)
+    span_from_dict = Span.from_dict(pymupdf_span, 200.0, 300.0)
+    span_from_dict.element_id = burdoc_span.element_id
+    assert span_from_dict.bbox == burdoc_span.bbox
+    assert span_from_dict.font == burdoc_span.font
+    assert span_from_dict.title == burdoc_span.title
 
 
-@pytest.mark.parametrize('text', ['a test sentence'], ids=['text'])
-@pytest.mark.parametrize('size', [9, 9.9], ids=['int size', 'float size'])
-@pytest.mark.parametrize('fontname', ['Fontname'], ids=['font'])
-@pytest.mark.parametrize('colour', [0, 11311], ids=['black','colour'])
-@pytest.mark.parametrize('bold', [False, True], ids=['b','!b'])
-@pytest.mark.parametrize('italic', [False, True], ids=['i','!i'])
-@pytest.mark.parametrize('superscript', [False, True], ids=['s','!s'])
-def test_span_to_json(text, size, fontname, colour, bold, italic, superscript):
-    
-    burdoc_span = Span(Font(fontname, fontname, size, colour, bold, italic, superscript), text)
+@pytest.mark.parametrize('text',
+                         ['a test sentence', 'another test sentence',
+                             'a unicode \u2022 sentence'],
+                         ids=['t1', 't2', 'unicode'])
+def test_span_to_json(text, font):
+
+    bbox = Bbox(50.0, 100.0, 100.0, 150.0, 200.0, 300.0)
+
+    burdoc_span = Span(bbox=bbox, font=font, text=text)
+
     burdoc_span_json = {
-        'name':'span',
-        'text':text,
-        'font':{
-            'name':'font',
-            'font':fontname,
-            'family':fontname,
-            'size':size,
-            'colour':colour,
-            'bold':bold,
-            'italic':italic,
-            'superscript':superscript
-        }
+        'name': 'span',
+        'text': text,
+        'font': font.to_json()
     }
-    
+
     assert burdoc_span.to_json() == burdoc_span_json
-    

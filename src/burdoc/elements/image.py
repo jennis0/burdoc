@@ -8,15 +8,15 @@ from .element import LayoutElement
 class ImageType(Enum):
     """Enumeration of types of images Burdoc understands.
 
-    * INVISIBLE: Image isn't visible on page  
-    * BACKGROUND: Image is used as background for the whole page  
-    * SECTION: Image is used as a background for a page section or aside  
-    * INLINE: Image is part of the flow of text (currently unused)  
-    * DECORATIVE: Image is a decorative element in the page layout but h
-        as no semantic menaing  
-    * PRIMARY: Image is a 'hero' image on the page  
-    * GRADIENT: Image is a smooth gradient used as a background  
-    * LINE: Image is used to semantically separate page sections  
+    - INVISIBLE: Image isn't visible on page  
+    - BACKGROUND: Image is used as background for the whole page  
+    - SECTION: Image is used as a background for a page section or aside  
+    - INLINE: Image is part of the flow of text (currently unused)  
+    - DECORATIVE: Image is a decorative element in the page layout but 
+      has no semantic meaning  
+    - PRIMARY: Image is a 'hero' image on the page  
+    - GRADIENT: Image is a smooth gradient used as a background  
+    - LINE: Image is used to semantically separate page sections  
     """
     INVISIBLE = auto()  # images that aren't visible on page
     BACKGROUND = auto()  # used as the base page image
@@ -47,6 +47,7 @@ class ImageElement(LayoutElement):
             image_type (ImageType, optional): Purpose of the image. Default is UNKNOWN
             inline (bool, optional): Whether the image layout should be inline or additional. 
                 Generally set later in processing. Defaults to False.
+                
         """
         super().__init__(bbox, title="Image")
         self.original_bbox = original_bbox

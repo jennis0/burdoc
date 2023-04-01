@@ -1,42 +1,48 @@
 import unicodedata
-from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any, Dict, Optional, cast
 
+from .bbox import Bbox
+from .element import LayoutElement
 from .font import Font
 
 
-@dataclass
-class Span:
+class Span(LayoutElement):
     """Representation of a continuous run of text with the same
     font information.
     """
-    font: Font
-    text: str
+
+    def __init__(self, bbox: Bbox, text: str, font: Font):
+        super().__init__(bbox, "Span")
+        self.text = text
+        self.font = font
 
     @staticmethod
-    def from_dict(span_dict: Dict[str, Any]):
+    def from_dict(span_dict: Dict[str, Any], page_width: float, page_height: float):
         """Creates a Span from a PyMuPDF spac dictionary
 
         Args:
-            span_dict (Dict[str, Any])
+            span_dict (Dict[str, Any]): The PyMuPDF span dictionary
+            page_width (float): Used to normalise bbox
+            page_height (float): Used to normalise bbox
 
         Returns:
             Span
         """
-        font_family = span_dict['font'].split("-")[0].split("_")[0]
+
         return Span(
-            font=Font(span_dict['font'], font_family, round(span_dict['size'], 1), span_dict['color'],
-                      span_dict['flags'] & 16 == 16, span_dict['flags'] & 2 == 2, span_dict['flags'] & 1 == 1),
+            font=Font.from_dict(span_dict),
             text=unicodedata.normalize('NFKC', span_dict['text']),
+            bbox=Bbox(span_dict['bbox'][0], span_dict['bbox'][1], span_dict['bbox'][2],
+                      span_dict['bbox'][3], page_width, page_height),
         )
 
     def __repr__(self):
         return f"<Span '{self.text}' Font={self.font}>"
 
-    def to_json(self):
-        """Convert the Span into a JSON object
+    def to_json(self, extras: Optional[Dict[str, Any]] = None, include_bbox: bool = False, **kwargs):
+        if not extras:
+            extras = {}
 
-        Returns:
-            Dict[str, Any]: A JSON representation of the span.
-        """
-        return {'name': 'span', 'text': self.text, 'font': self.font.to_json()}
+        extras['text'] = self.text
+        extras['font'] = self.font.to_json()
+        return super().to_json(extras=extras, include_bbox=include_bbox, **kwargs)

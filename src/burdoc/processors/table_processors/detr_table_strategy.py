@@ -14,14 +14,9 @@ from .table_extractor_strategy import TableExtractorStrategy
 class DetrTableStrategy(TableExtractorStrategy):
     """Use Microsofts table-transformer to identify tables
 
-    * [microsoft/table-transformer-detection](https://huggingface.co/microsoft/table-transformer-detection) 
-    used for finding tables  
-    * [microsoft/table-transformer-structure-recognition](https://huggingface.co/microsoft/table-transformer-structure-recognition) 
-    used for
-    identifying table parts
+        - `microsoft/table-transformer-detection <https://huggingface.co/microsoft/table-transformer-detection>`_ used for finding tables
+        - `microsoft/table-transformer-structure-recognition <https://huggingface.co/microsoft/table-transformer-structure-recognition>`_ used for identifying table parts
 
-    Args:
-        TableExtractorStrategy (_type_): _description_
     """
 
     def __init__(self, log_level: int = logging.INFO):
@@ -57,11 +52,14 @@ class DetrTableStrategy(TableExtractorStrategy):
         If a GPU is used, pages are batched together to improve efficiency
 
         Returns:
-            {
-                page_index (int): [
-                    [(TableParts, Bbox) for a table] for each table
-                ]
-            }
+        ::
+        
+                {
+                    page_index (int): [
+                        [(TableParts, Bbox) for a table] for each table
+                    ]
+                }
+                
         """
 
         i = 0

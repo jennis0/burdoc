@@ -30,7 +30,7 @@ class LineElement(LayoutElement):
         """Create a LineElement from a PyMuPDF line dictionary
 
         Args:
-            l (Dict[str, Any]): The PyMuPDF dictionary
+            line_dict (Dict[str, Any]): The PyMuPDF dictionary
             page_width (float): Used to normalise bbox
             page_height (float): Used to normalise bbox
 
@@ -38,7 +38,7 @@ class LineElement(LayoutElement):
             LineElement
         """
         return LineElement(
-            spans=[Span.from_dict(s) for s in line_dict['spans']],
+            spans=[Span.from_dict(s, page_width, page_height) for s in line_dict['spans']],
             bbox=Bbox(line_dict['bbox'][0], line_dict['bbox'][1], line_dict['bbox'][2],
                       line_dict['bbox'][3], page_width, page_height),
             rotation=line_dict['dir']

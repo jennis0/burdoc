@@ -7,4 +7,5 @@ BurdocParser
     :backlinks: top
 
 .. automodule:: burdoc.burdoc_parser
+    
    :members:

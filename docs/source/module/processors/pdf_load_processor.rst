@@ -10,9 +10,14 @@ PDFLoadProcessor
 .. automodule:: burdoc.processors.pdf_load_processor
 
 
+PDFLoadProcessor
+----------------
+
 .. autoclass:: burdoc.processors.pdf_load_processor.pdf_load_processor.PDFLoadProcessor
    :members:
 
+PDF Content Handlers
+---------------------
 
 .. autoclass:: burdoc.processors.pdf_load_processor.drawing_handler.DrawingHandler
    :members:

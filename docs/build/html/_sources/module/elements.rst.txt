@@ -27,16 +27,19 @@ LayoutElementGroup
 .. autoclass:: burdoc.elements.element.LayoutElementGroup
    :members:
 
+
 Aside
 -----
 .. automodule:: burdoc.elements.aside
    :members:
+
 
 Bbox
 ----
 
 .. automodule:: burdoc.elements.bbox
    :members:
+
 
 DrawingElement
 --------------
@@ -49,6 +52,7 @@ Font
 ----
 .. automodule:: burdoc.elements.font
    :members:
+   
 
 ImageElement
 ------------
@@ -56,10 +60,12 @@ ImageElement
 .. automodule:: burdoc.elements.image
    :members:
 
+
 LineElement
 -----------
 .. automodule:: burdoc.elements.line
    :members:
+
 
 PageSection
 -----------
@@ -67,21 +73,25 @@ PageSection
 .. automodule:: burdoc.elements.section
    :members:
 
+
 Span
 ----
 .. automodule:: burdoc.elements.span
    :members:
+
 
 Table
 -----    
 .. automodule:: burdoc.elements.table
    :members:
 
+
 TextBlock
 ---------
 
 .. automodule:: burdoc.elements.textblock
    :members:
+   
 
 TextList
 --------

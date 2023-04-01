@@ -20,8 +20,12 @@ author = 'jennis0'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['myst_parser', 'sphinx.ext.napoleon', 'sphinx.ext.autodoc',
+extensions = ['sphinx.ext.napoleon', 'myst_parser', 'sphinx.ext.autodoc',
                  'enum_tools.autoenum']
+
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
+napoleon_include_init_with_doc = True
 
 templates_path = ['_templates']
 exclude_patterns = []

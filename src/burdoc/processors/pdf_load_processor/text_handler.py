@@ -72,9 +72,8 @@ class TextHandler():
                         continue
 
                     if test_line.bbox.y_overlap(line.bbox, 'second') > 0.5 and abs(line.bbox.x1 - test_line.bbox.x0) < 20:
+                        line.spans[0].text += " "
                         test_line.spans.insert(0, line.spans[0])
-                        test_line.spans.insert(
-                            1, Span(font=line.spans[0].font, text=" "))
                         test_line.bbox = Bbox.merge(
                             [line.bbox, test_line.bbox])
                         skip[i] = True

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Table Processors &mdash; Burdoc  documentation</title>
+  <title>Table Processors &mdash; Burdoc 0.1.2.dev5+gb420dda.d20230401 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -32,6 +32,9 @@
           <a href="../../index.html" class="icon icon-home">
             Burdoc
           </a>
+              <div class="version">
+                0.1
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -149,7 +152,9 @@ Generates: [‘tables’, ‘text_elements’]</p>
 <dl class="py class enum">
 <dt class="sig sig-object py" id="burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.Strategies">
 <em class="property"><span class="pre">enum</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Strategies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.Strategies" title="Permalink to this definition"></a></dt>
-<dd><p>An enumeration.</p>
+<dd><p>List of possible ML table finding strategies</p>
+<p>Currently implemented:
+* DETR: DETR Using Microsoft Table Transformers  gi</p>
 <p>Valid values are as follows:</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="burdoc.processors.table_processors.ml_table_processor.MLTableProcessor.Strategies.DETR">
@@ -187,30 +192,24 @@ Generates: [‘tables’, ‘text_elements’]</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="burdoc.processors.table_processors.detr_table_strategy.DetrTableStrategy">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">burdoc.processors.table_processors.detr_table_strategy.</span></span><span class="sig-name descname"><span class="pre">DetrTableStrategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#burdoc.processors.table_processors.detr_table_strategy.DetrTableStrategy" title="Permalink to this definition"></a></dt>
-<dd><p>Use Microsofts table-transformer to identify tables.</p>
+<dd><p>Use Microsofts table-transformer to identify tables</p>
 <ul class="simple">
-<li><p>[microsoft/table-transformer-detection](<a class="reference external" href="https://huggingface.co/microsoft/table-transformer-detection">https://huggingface.co/microsoft/table-transformer-detection</a>) used for finding tables</p></li>
-<li><p>[microsoft/table-transformer-structure-recognition](<a class="reference external" href="https://huggingface.co/microsoft/table-transformer-structure-recognition">https://huggingface.co/microsoft/table-transformer-structure-recognition</a>) used for identifying table parts</p></li>
+<li><p><a class="reference external" href="https://huggingface.co/microsoft/table-transformer-detection">microsoft/table-transformer-detection</a> used for finding tables</p></li>
+<li><p><a class="reference external" href="https://huggingface.co/microsoft/table-transformer-structure-recognition">microsoft/table-transformer-structure-recognition</a> used for identifying table parts</p></li>
 </ul>
 <dl class="py method">
 <dt class="sig sig-object py" id="burdoc.processors.table_processors.detr_table_strategy.DetrTableStrategy.extract_tables">
 <span class="sig-name descname"><span class="pre">extract_tables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page_numbers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Image</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../elements.html#burdoc.elements.table.TableParts" title="burdoc.elements.table.TableParts"><span class="pre">TableParts</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="../elements.html#burdoc.elements.bbox.Bbox" title="burdoc.elements.bbox.Bbox"><span class="pre">Bbox</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#burdoc.processors.table_processors.detr_table_strategy.DetrTableStrategy.extract_tables" title="Permalink to this definition"></a></dt>
 <dd><p>Identifies tables within a page image and for each table returns a list of table parts.
 If a GPU is used, pages are batched together to improve efficiency</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl>
-<dt>{</dt><dd><dl class="simple">
-<dt>page_index (int): [</dt><dd><p>[(TableParts, Bbox) for a table] for each table</p>
-</dd>
-</dl>
-<p>]</p>
-</dd>
-</dl>
-<p>}</p>
-</p>
-</dd>
-</dl>
+<p>Returns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="n">page_index</span> <span class="p">(</span><span class="nb">int</span><span class="p">):</span> <span class="p">[</span>
+        <span class="p">[(</span><span class="n">TableParts</span><span class="p">,</span> <span class="n">Bbox</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="n">table</span><span class="p">]</span> <span class="k">for</span> <span class="n">each</span> <span class="n">table</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">

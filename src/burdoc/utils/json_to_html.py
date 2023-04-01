@@ -1,6 +1,5 @@
 """Convert JSON output into HTML"""
 
-import os
 from typing import Any, Dict, List, Optional, Sequence
 
 
@@ -132,15 +131,30 @@ class JsonHtmlConverter():
             str: HTML
         """
         line_text = ""
-        for span in text['spans']:
-            style = f"color:#{span['font']['colour']}"
-            span_text = span['text']
-            if span['font']['bold']:
-                span_text = f"<b>{span_text}</b>"
-            if span['font']['italic']:
-                span_text = f"<i>{span_text}</i>"
+        
+        new = 'bd' in text['spans'][0]['font']
+        
+        if new:
+            for span in text['spans']:
+                style = f"color:#{span['font']['colour']}"
+                span_text = span['text']
+                if span['font']['bd']:
+                    span_text = f"<b>{span_text}</b>"
+                if span['font']['it']:
+                    span_text = f"<i>{span_text}</i>"
+            
+                line_text += f"<span style=\"{style}\">{span_text}</span>"
 
-            line_text += f"<span style=\"{style}\">{span_text}</span>"
+        else:
+            for span in text['spans']:
+                style = f"color:#{span['font']['colour']}"
+                span_text = span['text']
+                if span['font']['bold']:
+                    span_text = f"<b>{span_text}</b>"
+                if span['font']['italic']:
+                    span_text = f"<i>{span_text}</i>"
+
+                line_text += f"<span style=\"{style}\">{span_text}</span>"
         return line_text
 
     def _make_anchor_name(self, text: str) -> str:
@@ -170,7 +184,10 @@ class JsonHtmlConverter():
             text_type = 'p'
 
         if text_type in ['h1', 'h2', 'h3', 'h4', 'h5']:
-            id_text = f" id=\"{self.current_page}-{self._make_anchor_name(text['block_text'])}\""
+            try:
+                id_text = f" id=\"{self.current_page}-{self._make_anchor_name(text['block_text'])}\""
+            except:
+                id_text = ""
         else:
             id_text = ""
 
@@ -180,7 +197,7 @@ class JsonHtmlConverter():
 
     def _image_to_html(self, image: Dict[str, Any]) -> str:
         image_data = self.images[self.current_page][image['image']]
-        return f'<img src="data:image/bmp;base64, {image_data}">'
+        return f'<img src="data:image/webp;base64, {image_data}" style="max-width:45%; max-height:300pt">'
 
     def _item_to_html(self, item: Dict[str, Any]) -> str:
         """Routes an item to the correct HTML generator based on 'name' attribute
@@ -198,46 +215,7 @@ class JsonHtmlConverter():
         raise RuntimeError(
             f"Couldn't find HTML parser for item type \'{item['name']}\'")
 
-    def _metadata_to_html(self, metadata: Dict[str, Any], pages: List[int]) -> str:
-        """Creates a table showing metadata extracted from the document
 
-        Args:
-            metadata (Dict[str, Any]): _description_
-            pages (List[int]): _description_
-
-        Returns:
-            str: _description_
-        """
-
-        pages.sort()
-
-        text = "<div><h1>Metadata</h1><table><tbody>"
-        text += f"<tr><th>Title</th><td>{metadata['title']}</td></tr>"
-        text += f"<tr><th>Path</th><td>{os.path.abspath(metadata['path'])}</td></tr>"
-        text += f"<tr><th>Pages</th><td>{','.join(pages)}</td></tr>"
-        for key in metadata['pdf_metadata']:
-            text += f"<tr><th>PDF Metadata: {key}</th><td>{metadata['pdf_metadata'][key]}</td></tr>"
-        text += "</tbody></table></div>"
-
-        return text
-
-    def _create_toc(self, page_hierarchy: Dict[str, Any]) -> str:
-        """Creates a table of content with links for quickly jumping to the page
-
-        Args:
-            page_hierarchy (Dict[str, Any]): Page hierarchy to build the ToC from
-
-        Returns:
-            str: An HTML list
-        """
-        toc_text = "<div><h2 style='margin-bottom:1pt' id='-contents'>Contents</h2><ol style='margin-top:0pt'>"
-        for page in page_hierarchy:
-            toc_text += f"<li><a style=font-size:15pt href=#anchor-page-{page}>Page {page}</a></li><ol>"
-            for item in page_hierarchy[page]:
-                toc_text += f"<li><a style=font-size:{item['size']} href=#{page}-{self._make_anchor_name(item['text'])}>{item['text']}</a></li>"
-            toc_text += "</ol>"
-        toc_text += "</ol></div>"
-        return toc_text
 
     def _get_head(self, json_data):
         text = "<head>"
@@ -257,16 +235,48 @@ class JsonHtmlConverter():
         text += "</head>"
         return text
 
+    def convert_page(self, json_data: Dict[str, Any],
+            page_number: int,
+            insert_page_tags: bool = True,
+            insert_head: bool = True) -> str:
+        """Converts a single page from Burdoc JSON output into HTML.
+
+        Args:
+            json_data (Dict[str, Any]): The JSON output from Burdoc
+            page_number (int): Page number to extract
+            insert_page_tags (bool, optional): Whether to insert prominent page labels at
+                the start of each page. Defaults to True.
+            insert_head (bool, optional): Include a <head> tag with style information
+
+        Returns:
+            str: HTML representation of the page
+        """
+        
+        if insert_head:
+            full_content = self._get_head(json_data) + "<body>"
+        else:
+            full_content = ""
+        
+        if 'images' in json_data:
+            self.images = json_data['images']
+        self.current_page = page_number
+        content = "".join(self._item_to_html(i) for i in json_data['content'][page_number])
+        
+        if insert_page_tags:
+            full_content += f"<div><h1 id='anchor-page-{page_number}'>Page {page_number}</h1><hr><div style='max-width:1000px'>{content}</div></div>"
+        else:
+            full_content += f"<div id='anchor-page-{page_number}'><div style='max-width:600px'>{content}</div></div>"
+            
+        return full_content
+
+
     def convert(self, json_data: Dict[str, Any],
-                insert_metadata: bool = True,
                 insert_page_tags: bool = True,
                 insert_head: bool = True) -> str:
         """Converts Burdoc JSON output into HTML.
 
         Args:
             json_data (Dict[str, Any]): The JSON output from Burdoc
-            insert_metadata (bool, optional): Whether to add a table containing document
-                metadata to the start of the output. Defaults to True.
             insert_page_tags (bool, optional): Whether to insert prominent page labels at
                 the start of each page. Defaults to True.
             insert_head (bool, optional): Include a <head> tag with style information
@@ -283,26 +293,8 @@ class JsonHtmlConverter():
         else:
             full_content = ""
 
-        full_content += "<div>"
-        if insert_metadata:
-            full_content += self._metadata_to_html(
-                json_data['metadata'], list(json_data['content'].keys()))
-
-        if 'page_hierarchy' in json_data:
-            full_content += self._create_toc(json_data['page_hierarchy'])
-        else:
-            full_content += self._create_toc([{i: []
-                                             for i in json_data['content']}])
-
-        full_content += "<hr></div>"
         for page_number in json_data['content']:
-            content = json_data['content'][page_number]
-            self.current_page = page_number
-            content = "".join(self._item_to_html(i) for i in content)
-            if insert_page_tags:
-                full_content += f"<div><h1 id='anchor-page-{page_number}'>Page {page_number}</h1><hr><div style='max-width:1000px'>{content}</div></div>"
-            else:
-                full_content += f"<div id='anchor-page-{page_number}'><div style='max-width:600px'>{content}</div></div>"
+            self.convert_page(json_data, page_number, insert_page_tags, False)
             full_content += "<hr>"
         full_content += "</div>"
 

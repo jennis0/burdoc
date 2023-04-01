@@ -8,11 +8,11 @@ def bbox():
 
 @pytest.fixture
 def font():
-    return Font('Calibri-standard', 'Calibri', 12, 0, False, False, False)
+    return Font('Calibri-standard', 'Calibri', 12, 0, False, False, False, False)
 
 @pytest.fixture
-def span(font):
-    return Span(font=font, text="span text")
+def span(font, bbox):
+    return Span(bbox=bbox, font=font, text="span text")
 
 @pytest.fixture
 def line(bbox, span):
