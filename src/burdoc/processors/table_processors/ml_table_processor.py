@@ -1,6 +1,6 @@
 import logging
 from enum import Enum, auto
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, cast
 
 import numpy as np
 from plotly.graph_objects import Figure
@@ -69,6 +69,7 @@ class MLTableProcessor(Processor):
             # Create a list of table candidates for the page
             page_table_candidates: List[Table] = []
             for table_parts in list_of_table_parts:
+                
                 table_bbox = table_parts[0][1]
                 row_headers = [s for s in table_parts[1:]
                                if s[0] == TableParts.ROWHEADER]
@@ -77,10 +78,10 @@ class MLTableProcessor(Processor):
                                if s[0] == TableParts.COLUMNHEADER]
                 cols = [s for s in table_parts[1:]
                         if s[0] == TableParts.COLUMN]
-                # merges      = [s for s in table_parts[1:] if s[0] == TableParts.SPANNINGCELL]
+                merges = [s for s in table_parts[1:] if s[0] == TableParts.SPANNINGCELL]
 
-                all_rows = col_headers + rows
-                all_cols = row_headers + cols
+                all_rows = row_headers + rows
+                all_cols = col_headers + cols
 
                 if len(all_cols) < 2:
                     continue
@@ -92,7 +93,7 @@ class MLTableProcessor(Processor):
                 all_cols.sort(key=lambda r: r[1].x0)
 
                 page_table_candidates.append(
-                    Table(table_bbox, all_rows, all_cols))
+                    Table(table_bbox, all_rows, all_cols, merges))
 
             bad_lines = np.array([0 for _ in page_table_candidates])
             used_text = np.array([-1 for _ in data['text_elements'][page]])
@@ -191,21 +192,33 @@ class MLTableProcessor(Processor):
     def add_generated_items_to_fig(self, page_number: int, fig: Figure, data: Dict[str, Any]):
         colours = {
             "table": "Cyan",
-            "cell": "LightGrey",
             'row': "Grey",
-            "col": "LightGrey",
+            'row_header': 'DarkGrey',
+            "col": "Grey",
+            'col_header': 'DarkGrey',
             "merges": "Turquoise"
         }
 
         for table in data['tables'][page_number]:
+            table = cast(Table, table)
             add_rect_to_figure(fig, table.bbox, colours["table"])
 
-            for row_box in table.row_boxes:
-                add_rect_to_figure(fig, row_box[1], colours['row'])
-            for col_box in table.col_boxes:
-                add_rect_to_figure(fig, col_box[1], colours['col'])
+            for i,row_box in enumerate(table.row_boxes):
+                if i in table.col_headers:
+                    add_rect_to_figure(fig, row_box[1], colours['col_header'])
+                else:
+                    add_rect_to_figure(fig, row_box[1], colours['row'])
+            for i,col_box in enumerate(table.col_boxes):
+                if i in table.row_headers:
+                    add_rect_to_figure(fig, col_box[1], colours['row_header'])
+                else:
+                    add_rect_to_figure(fig, col_box[1], colours['col'])
             for merged_box in table.merges:
                 add_rect_to_figure(fig, merged_box[1], colours['merges'])
 
         fig.add_scatter(x=[None], y=[None], name="Table",
                         line=dict(width=3, color=colours["table"]))
+        fig.add_scatter(x=[None], y=[None], name="Table Row/Column",
+                        line=dict(width=3, color=colours["row"]))
+        fig.add_scatter(x=[None], y=[None], name="Table Header",
+                        line=dict(width=3, color=colours["row_header"]))

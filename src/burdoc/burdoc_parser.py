@@ -9,10 +9,10 @@ from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 import fitz
 
-from .processors import (AggregatorProcessor, ContentProcessor,
-                         JSONOutProcessor, LayoutProcessor, MarginProcessor,
-                         MLTableProcessor, PDFLoadProcessor, Processor,
-                         ReadingOrderProcessor, RulesTableProcessor)
+from .processors import (AggregatorProcessor, HeadingProcessor,
+                         JSONOutProcessor, LayoutProcessor, ListProcessor,
+                         MarginProcessor, MLTableProcessor, PDFLoadProcessor,
+                         Processor, ReadingOrderProcessor, RulesTableProcessor)
 from .utils.logging import get_logger
 from .utils.render_pages import render_pages
 
@@ -64,7 +64,7 @@ class BurdocParser():
         self.default_return_fields = ['metadata', 'content']
 
         self.processors: List[Tuple[Type[Processor], Dict, bool]] = [
-            (PDFLoadProcessor,  {'ignore_images': self.ignore_images}, False),
+            (PDFLoadProcessor,  {'ignore_images': self.ignore_images}, True),
         ]
 
         if not skip_ml_table_finding:
@@ -79,9 +79,11 @@ class BurdocParser():
                     LayoutProcessor,
                     RulesTableProcessor,
                     ReadingOrderProcessor,
-                    ContentProcessor,
+                    HeadingProcessor,
+                    ListProcessor,
                     JSONOutProcessor
                 ],
+                'render_default': True,
                 'additional_reqs': ['tables'] if not skip_ml_table_finding else []
             }, True, )
         )
@@ -371,6 +373,7 @@ class BurdocParser():
         self.performance['total'] = round(time.perf_counter() - start, 3)
 
         if self.show_pages:
+            print(renderers)
             render_pages(data, renderers)
 
         self._format_profile_info(data['performance'])  # type:ignore

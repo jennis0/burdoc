@@ -24,15 +24,16 @@ class Table(LayoutElement):
                  bbox: Bbox,
                  row_boxes: List[Tuple[TableParts, Bbox]],
                  col_boxes: List[Tuple[TableParts, Bbox]],
+                 merge_boxes: List[Tuple[TableParts, Bbox]]
                  ):
         """Creates a Table element
 
         Args:
             bbox (Bbox): Bounding box of the the table
             row_boxes (List[Tuple[TableParts, Bbox]]): Bounding box and descriptor of each row - 
-                use TableParts.COLUMNHEADER to indicate a row used as a column header
+                use TableParts.ROWHEADER to indicate a row used as a header
             col_boxes (List[Tuple[TableParts, Bbox]]): Bounding box and descriptor of each column - 
-                use TableParts.ROWHEADER to indicate a column used as a row header
+                use TableParts.COLUMNHEADER to indicate a column used as a header
         """
         super().__init__(bbox, title='Table')
         self.cells: List[List[List[LayoutElement]]] = \
@@ -40,10 +41,11 @@ class Table(LayoutElement):
              for _ in range(len(row_boxes))]
         self.row_boxes = row_boxes
         self.col_boxes = col_boxes
+        self.merges = merge_boxes
         self.row_headers = [i for i, s in enumerate(
-            col_boxes) if s[0] == TableParts.ROWHEADER]
+            col_boxes) if s[0] == TableParts.COLUMNHEADER]
         self.col_headers = [i for i, s in enumerate(
-            row_boxes) if s[0] == TableParts.COLUMNHEADER]
+            row_boxes) if s[0] == TableParts.ROWHEADER]
 
     def to_json(self, extras: Optional[Dict] = None, include_bbox: bool = False, **kwargs):
         if not extras:

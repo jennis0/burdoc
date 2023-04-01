@@ -55,7 +55,7 @@ class ReadingOrderProcessor(Processor):
         self.logger.debug("Ordering %d elements", len(elements))
         elements.sort(key=lambda e: e.bbox.y0*100 + e.bbox.x0)
         page_width = page_bound.width()
-        center = page_bound.center()
+        page_center = page_bound.center()
 
         columns: List[LayoutElementGroup] = []
         is_column_open: List[bool] = []
@@ -63,50 +63,51 @@ class ReadingOrderProcessor(Processor):
             used = False
             self.logger.debug(e)
 
-            e_centered = abs(e.bbox.center().x - center.x) < 10
-            e_full_page = e.bbox.width() / page_width > 0.6
+            element_is_centered = abs(e.bbox.center().x - page_center.x) < 10
+            element_is_full_page = e.bbox.width() / page_width > 0.6
 
             for i, c in enumerate(columns):
                 if not is_column_open[i]:
                     continue
 
-                c_full_page = c.bbox.width() / page_width > 0.6
-                l_aligned = (abs(c.bbox.x0 - e.bbox.x0) <
-                             2 and e.bbox.height() < 15)
-                c_centered = abs(c.bbox.center().x - center.x) < 10
+                col_is_full_age = c.bbox.width() / page_width > 0.6
+                col_is_centered = abs(c.bbox.center().x - page_center.x) < 10
 
-                dy = e.bbox.y0 - c.bbox.y1
-                dx_col = c.bbox.x_overlap(e.bbox, 'first')
-                dx_block = c.bbox.x_overlap(e.bbox, 'second')
+                col_and_element_left_aligned = (abs(c.bbox.x0 - e.bbox.x0) <
+                                                2 and e.bbox.height() < 15)
+
+                col_element_vertical_distance = e.bbox.y0 - c.bbox.y1
+                col_element_x_overlap = c.bbox.x_overlap(e.bbox, 'first')
+                element_col_x_overlap = c.bbox.x_overlap(e.bbox, 'second')
                 append = False
 
                 self.logger.debug(
                     "dy: %f, col: %f, block: %f, col_full_page: %f, el_full_page: %d, col_centered: %d, el_centered: %d",
-                    dy, dx_col, dx_block,
-                    c_full_page, e_full_page,
-                    c_centered, e_centered)
+                    col_element_vertical_distance, col_element_x_overlap, element_col_x_overlap,
+                    col_is_full_age, element_is_full_page,
+                    col_is_centered, element_is_centered)
 
                 stop = False
                 # If element starts above column end and the majority of the element overlaps
                 # with it then merge
-                if dy < 0:
-                    if dx_block > 0.8:
+                if col_element_vertical_distance < 0:
+                    if element_col_x_overlap > 0.8:
                         self.logger.debug(
                             "Appending as elements are overlapping")
                         append = True
 
                 # Break between column/full page elements
-                if not l_aligned and (
-                    (c_full_page and not e_full_page) or
-                        (e_full_page and not c_full_page)):
+                if not col_and_element_left_aligned and (
+                    (col_is_full_age and not element_is_full_page) or
+                        (element_is_full_page and not col_is_full_age)):
                     self.logger.debug(
                         "Won't merge as switch between column and full page")
                     stop = True
 
                 # Break between centered and non centered elements
-                if not l_aligned and (
-                    (c_centered and not e_centered)
-                        or (e_centered and not c_centered)
+                if not col_and_element_left_aligned and (
+                    (col_is_centered and not element_is_centered)
+                        or (element_is_centered and not col_is_centered)
                 ):
                     self.logger.debug(
                         "Wont merge as break between centered and non-centered")
@@ -115,12 +116,12 @@ class ReadingOrderProcessor(Processor):
                 # Merge if it's within ~2 lines and aligned
                 # Don't merge if column starts to the right of the element center or element is to right of column center
                 if not stop and not append and c.bbox.x0 < e.bbox.center().x and e.bbox.x0 < c.bbox.center().x:
-                    if abs(dy) < 30:
-                        if dx_col > (0.1 if not c_full_page else 0.5):
+                    if abs(col_element_vertical_distance) < 30:
+                        if col_element_x_overlap > (0.1 if not col_is_full_age else 0.5):
                             self.logger.debug("Appending as has x overlap")
                             append = True
-                    elif abs(dy) < 30:
-                        if dx_col > 0.6:
+                    elif abs(col_element_vertical_distance) < 30:
+                        if col_element_x_overlap > 0.6:
                             append = True
 
                 if append:
@@ -128,7 +129,7 @@ class ReadingOrderProcessor(Processor):
                     used = True
                     self.logger.debug("Appended")
                     break
-                elif dx_col > 0.1:
+                elif col_element_x_overlap > 0.1:
                     is_column_open[i] = False
                     self.logger.debug("Closing column")
 
@@ -160,6 +161,84 @@ class ReadingOrderProcessor(Processor):
 
         return columns
 
+    def _left_to_right_tree_sort(self, elements: Sequence[LayoutElement], page_bound: Bbox) -> List[LayoutElement]:
+        """Sort elements based on a left-to-right tree. Backtracking whenever a new line would x-intersect
+        a previous unused column.
+        
+        E.g.
+        ::
+        
+                [a] [b]
+                [c]
+                [  d  ]
+                [ e ] [ f ]
+                      [ g ]
+                  [  h  ]
+        
+        would sort as [a, c, b, d, e, f, g, h]. Uses the LayoutGraph adjancency to do this efficiently
+
+        Args:
+            elements (List[LayoutElement]): Elements to sort
+            page_bound (Bbox): bounding box of the page
+
+        Returns:
+            List[LayoutElement]: The same elements in new order
+        """
+
+        # Within each section, do left-to-right, depth-first traversal of elements
+        sorted_elements: List[LayoutElement] = []
+        layout_graph = LayoutGraph(page_bound, elements)
+
+        backtrack: List[LayoutGraph.Node] = []
+        used = set([0])
+        node: Optional[LayoutGraph.Node] = layout_graph.nodes[0]
+        while node:
+
+            # Can we go down
+            if len(node.down) > 0:
+                
+                # Are downward nodes already used
+                children = [layout_graph.get_node(
+                    n) for n in node.down if n[0] not in used]
+                
+                if len(children) > 0:
+                    # Sort left-to-right
+                    children.sort(key=lambda c: c.element.bbox.x0)
+
+                    # Are there unused nodes which interest with this one
+                    do_backtrack = any(
+                        layout_graph.get_node(u) in backtrack for u in children[0].up
+                    )
+
+                    # Nope - lets add the next element to the list and the
+                    # continue to push downwards
+                    if not do_backtrack:
+                        sorted_elements += children[0].element #type:ignore
+                        node = children[0]
+                        used.add(node.node_id)
+                        backtrack += reversed(children[1:])
+                        continue
+
+            # Apparently we need to backtrack - unwind current backtrack
+            # queue until we find the first unused node
+            if len(backtrack) > 0:
+                node = backtrack.pop()
+                while node.node_id in used and len(backtrack) > 0:
+                    node = backtrack.pop()
+                    if len(backtrack) == 0 and node.node_id in used:
+                        node = None
+                        break
+                if node and node.node_id not in used:
+                    sorted_elements += node.element  # type:ignore
+                    used.add(node.node_id)
+                    continue
+
+            # If we hit this point we've processed all nodes
+            break
+        
+        return sorted_elements
+
+
     def _order_groups_and_flatten(self, page_bound: Bbox, columns: Sequence[LayoutElementGroup]) -> List[LayoutElement]:
         """Take element groups and order across the full section
 
@@ -172,66 +251,11 @@ class ReadingOrderProcessor(Processor):
             List[LayoutElement]: All elements correctly ordered and flattened
         """
 
-        self.logger.debug("Ordering %d element groups", len(columns))
-        page_width = page_bound.width()
-        sections: List[List[LayoutElementGroup]] = []
-        current_section: List[LayoutElementGroup] = []
-        is_full = None
-        for element in columns:
-            c_is_full = element.bbox.width() / page_width > 0.5
-            if is_full is not None and c_is_full != is_full:
-                sections.append(current_section)
-                current_section = [element]
-            else:
-                current_section.append(element)
-            is_full = c_is_full
-        if len(current_section) > 0:
-            sections.append(current_section)
+        # self.logger.debug("Ordering %d element groups", len(columns))
+        # sections: List[List[LayoutElementGroup]] = [columns]
 
-        full_sorted_elements: List[LayoutElement] = []
-        for section in sections:
-            # Within each section, do left-to-right, depth-first traversal of elements
-            section_sorted_elements: List[LayoutElement] = []
-            layout_graph = LayoutGraph(page_bound, section)
+        return self._left_to_right_tree_sort(columns, page_bound)
 
-            backtrack: List[LayoutGraph.Node] = []
-            used = set([0])
-            node: Optional[LayoutGraph.Node] = layout_graph.nodes[0]
-            while node:
-                if len(node.down) > 0:
-                    children = [layout_graph.get_node(
-                        n) for n in node.down if n[0] not in used]
-                    if len(children) > 0:
-                        children.sort(key=lambda c: c.element.bbox.x0)
-
-                        do_backtrack = any(layout_graph.get_node(
-                            u) in backtrack for u in children[0].up)
-
-                        if not do_backtrack:
-                            # type:ignore
-                            section_sorted_elements += children[0].element
-                            node = children[0]
-                            used.add(node.node_id)
-                            backtrack += reversed(children[1:])
-                            continue
-
-                if len(backtrack) > 0:
-                    node = backtrack.pop()
-                    while node.node_id in used and len(backtrack) > 0:
-                        node = backtrack.pop()
-                        if len(backtrack) == 0 and node.node_id in used:
-                            node = None
-                            break
-                    if node:
-                        section_sorted_elements += node.element  # type:ignore
-                        used.add(node.node_id)
-                        continue
-
-                break
-
-            full_sorted_elements += section_sorted_elements
-
-        return full_sorted_elements
 
     def _flow_content(self, page_bound: Bbox, sections: List[PageSection], global_elements: List[ImageElement], tables: List[Table]) -> List[PageSection]:
         default_sections = [s for s in sections if s.default]
@@ -243,7 +267,7 @@ class ReadingOrderProcessor(Processor):
         used_global_elements = set()
 
         for o_section in other_sections:
-            self.logger.debug("Ordering section {section}", section=o_section)
+            self.logger.debug("Ordering section %s", o_section)
 
             in_line_elements = []
             out_of_line_elements = []
@@ -261,11 +285,11 @@ class ReadingOrderProcessor(Processor):
                         in_line_elements.append(element)
                     used_global_elements.add(i)
 
-            columns = self._elements_to_groups(
+            element_groups = self._elements_to_groups(
                 page_bound, o_section.items + in_line_elements)  # type:ignore
-            columns = self._order_groups_and_flatten(
-                page_bound, columns + out_of_line_elements)
-            o_section.items = columns
+            sorted_elements = self._order_groups_and_flatten(
+                page_bound, element_groups + out_of_line_elements)
+            o_section.items = sorted_elements
 
             # Insert into a default section - these will always cover the full page so there must
             # be a correct section to insert it into
@@ -310,12 +334,12 @@ class ReadingOrderProcessor(Processor):
                         in_line_elements.append(element)
                     used_global_elements.add(i)
 
-            columns = self._elements_to_groups(
+            element_groups = self._elements_to_groups(
                 page_bound, d_section.items + in_line_elements)  # type:ignore
-            columns = self._order_groups_and_flatten(
-                page_bound, columns + out_of_line_elements)
+            sorted_elements = self._order_groups_and_flatten(
+                page_bound, element_groups + out_of_line_elements)
             complete_sections.append(PageSection(
-                items=columns, bbox=d_section.bbox, default=True))
+                items=sorted_elements, bbox=d_section.bbox, default=True))
 
         # Merge images with sections
         for i, element in enumerate(global_elements):

@@ -43,7 +43,7 @@ def _diff_list(path: str, list1: List[Any], list2: List[Any]) -> List[Dict[str, 
 
     l1_hashes = {_hash(v): i for i, v in enumerate(list1)}
     l2_hashes = {_hash(v): j for j, v in enumerate(list2)}
-
+              
     for l1_hash in l1_hashes:
         l1_index = l1_hashes[l1_hash]
         if l1_hash not in l2_hashes:

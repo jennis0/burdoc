@@ -4,7 +4,7 @@ from typing import List
 
 import fitz
 
-from ...elements import Bbox, LineElement, Span
+from ...elements import Bbox, LineElement
 from ...utils.logging import get_logger
 
 
@@ -40,7 +40,7 @@ class TextHandler():
             if skip[i]:
                 continue
 
-            line_text = line.get_text().strip()
+            line_text = line.get_text().lstrip()
             if line_text == "":
                 skip[i] = True
                 continue

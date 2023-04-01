@@ -53,7 +53,8 @@ def add_text_to_figure(
     fig: Figure,
     point: Point,
     colour: str,
-    text: str
+    text: str,
+    text_size: float=20
 ):
     """Add text to the passed figure
 
@@ -63,7 +64,7 @@ def add_text_to_figure(
         colour (str): Text colour
     """
     fig.add_annotation({
-        'font': {'color': colour, 'size': 20},
+        'font': {'color': colour, 'size': text_size},
         'x': point.x,
         'y': point.y,
         'showarrow': False,

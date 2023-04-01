@@ -82,7 +82,7 @@ class RulesTableProcessor(Processor):
                     all_cols.sort(key=lambda r: r[1].x0)
 
                     section_table_candidates.append(
-                        Table(table_bbox, all_rows, all_cols))
+                        Table(table_bbox, all_rows, all_cols, []))
 
                 bad_lines = np.array([0 for _ in section_table_candidates])
                 used_text = np.array([-1 for _ in section.items])

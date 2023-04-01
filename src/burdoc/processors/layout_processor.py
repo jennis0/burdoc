@@ -1,5 +1,4 @@
 import logging
-import re
 from typing import Any, Dict, List, Tuple
 
 from plotly.graph_objects import Figure
@@ -12,6 +11,7 @@ from ..elements.line import LineElement
 from ..elements.section import PageSection
 from ..elements.textblock import TextBlock
 from ..utils.render_pages import add_rect_to_figure
+from ..utils.regexes import get_list_regex
 from .processor import Processor
 
 
@@ -35,6 +35,8 @@ class LayoutProcessor(Processor):
         self.block_halign_threshold = 1
         self.block_size_threshold = 2
         self.section_margin = 5
+        
+        self.list_regex = get_list_regex()
 
     def requirements(self) -> Tuple[List[str], List[str]]:
         return (["page_bounds", "image_elements", 'drawing_elements', 'text_elements'], [])
@@ -189,9 +191,7 @@ class LayoutProcessor(Processor):
         blocks: List[TextBlock] = []
         block_open_state: Dict[str, bool] = {}
         section.items.sort(key=lambda l: l.bbox.y0*1000 + l.bbox.x0)
-        list_regex = re.compile(
-            "(\u2022|\(?[a-z]\)\.?|\(?[0-9]+\)\.?|[0-9]+\.)(?:\s|$)", re.UNICODE)  # pylint: disable=W1401
-
+        
         for line in section.items:  # type:LineElement #type:ignore
             self.logger.debug("line: %s", line.get_text())
             self.logger.debug(line)
@@ -234,7 +234,7 @@ class LayoutProcessor(Processor):
                 # Only allow merging with the block if it is of comparable width and
                 # within the same distance as previous lines in this block
 
-                is_bullet = list_regex.match(
+                is_bullet = self.list_regex.match(
                     line.spans[0].text.lstrip()) is not None
                 line_overlap_with_block = line.bbox.x_overlap(
                     block.bbox, 'first')
