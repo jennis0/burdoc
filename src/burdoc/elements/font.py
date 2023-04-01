@@ -36,7 +36,9 @@ class Font:
         italic = (span_dict['flags'] & 2) > 0 or any(
             x in font_modifier for x in ['italic', 'it'])
         superscript = (span_dict['flags'] & 1) > 0
-        smallcaps = any(x in font_modifier for x in ['sc', 'smallcaps']) or font_family.endswith('SC')
+        smallcaps = any(x in font_modifier for x in ['sc', 'smallcaps', 'caps']) or \
+            any(font_family.endswith(x) for x in ['SC', 'SmallCaps']) or \
+                any(x in font_family for x in ['Caps'])
 
         return Font(span_dict['font'], font_family, round(span_dict['size'], 1), span_dict['color'],
                     bold, italic, superscript, smallcaps)

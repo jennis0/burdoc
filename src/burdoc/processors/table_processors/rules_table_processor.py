@@ -71,8 +71,8 @@ class RulesTableProcessor(Processor):
                             if s[0] == TableParts.COLUMN]
                     # merges      = [s for s in table_parts[1:] if s[0] == TableParts.SPANNINGCELL]
 
-                    all_rows = col_headers + rows
-                    all_cols = row_headers + cols
+                    all_rows = row_headers + rows
+                    all_cols = col_headers + cols
 
                     if len(all_cols) == 2:
                         if all_cols[0][1].width() / all_cols[1][1].width() > 0.9:
@@ -196,8 +196,8 @@ class RulesTableProcessor(Processor):
             # if used_nodes[b.id]:
             #     continue
 
-            # type:ignore
-            if len(node.element.items) == 0 or len(node.element.items[0].spans) == 0:
+            if len(node.element.items) == 0 or len(node.element.items[0].spans) == 0: # type:ignore
+
                 continue
 
             columns = [[node]]

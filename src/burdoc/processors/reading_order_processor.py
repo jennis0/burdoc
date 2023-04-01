@@ -251,10 +251,27 @@ class ReadingOrderProcessor(Processor):
             List[LayoutElement]: All elements correctly ordered and flattened
         """
 
-        # self.logger.debug("Ordering %d element groups", len(columns))
-        # sections: List[List[LayoutElementGroup]] = [columns]
+        self.logger.debug("Ordering %d element groups", len(columns))
+        page_width = page_bound.width()
+        sections: List[List[LayoutElementGroup]] = []
+        current_section: List[LayoutElementGroup] = []
+        is_full = None
+        for element in columns:
+            c_is_full = element.bbox.width() / page_width > 0.5
+            if is_full is not None and c_is_full != is_full:
+                sections.append(current_section)
+                current_section = [element]
+            else:
+                current_section.append(element)
+            is_full = c_is_full
+        if len(current_section) > 0:
+            sections.append(current_section)
+            
+        full_sorted_elements = []
+        for section in sections:
+            full_sorted_elements += self._left_to_right_tree_sort(section, page_bound)
 
-        return self._left_to_right_tree_sort(columns, page_bound)
+        return full_sorted_elements
 
 
     def _flow_content(self, page_bound: Bbox, sections: List[PageSection], global_elements: List[ImageElement], tables: List[Table]) -> List[PageSection]:

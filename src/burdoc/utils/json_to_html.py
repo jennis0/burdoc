@@ -132,29 +132,18 @@ class JsonHtmlConverter():
         """
         line_text = ""
         
-        new = 'bd' in text['spans'][0]['font']
+        for span in text['spans']:
+            style = f"color:#{span['font']['colour']}"
+            span_text = span['text']
+            if span['font']['sc']:
+                span_text = span_text.upper()
+            if span['font']['bd']:
+                span_text = f"<b>{span_text}</b>"
+            if span['font']['it']:
+                span_text = f"<i>{span_text}</i>"
         
-        if new:
-            for span in text['spans']:
-                style = f"color:#{span['font']['colour']}"
-                span_text = span['text']
-                if span['font']['bd']:
-                    span_text = f"<b>{span_text}</b>"
-                if span['font']['it']:
-                    span_text = f"<i>{span_text}</i>"
-            
-                line_text += f"<span style=\"{style}\">{span_text}</span>"
+            line_text += f"<span style=\"{style}\">{span_text}</span>"
 
-        else:
-            for span in text['spans']:
-                style = f"color:#{span['font']['colour']}"
-                span_text = span['text']
-                if span['font']['bold']:
-                    span_text = f"<b>{span_text}</b>"
-                if span['font']['italic']:
-                    span_text = f"<i>{span_text}</i>"
-
-                line_text += f"<span style=\"{style}\">{span_text}</span>"
         return line_text
 
     def _make_anchor_name(self, text: str) -> str:
