@@ -63,13 +63,13 @@ class BurdocParser():
         self.show_pages = show_pages
         self.default_return_fields = ['metadata', 'content']
 
-        self.processors: List[Tuple[Type[Processor], Dict, bool]] = [
-            (PDFLoadProcessor,  {'ignore_images': self.ignore_images}, True),
+        self.processors: List[Tuple[Type[Processor], Dict, bool, Optional[Processor]]] = [
+            (PDFLoadProcessor,  {'ignore_images': self.ignore_images}, True, None),
         ]
 
         if not skip_ml_table_finding:
             self.processors.append(
-                (MLTableProcessor, {}, False)
+                (MLTableProcessor, {}, False, None)
             )
 
         self.processors.append(
@@ -85,8 +85,13 @@ class BurdocParser():
                 ],
                 'render_default': True,
                 'additional_reqs': ['tables'] if not skip_ml_table_finding else []
-            }, True, )
+            }, True, None)
         )
+
+        for i, p in enumerate(self.processors):
+            if p[0].expensive and (max_threads == 1 or not p[0].threadable):
+                self.processors[i] = (*self.processors[i][:3], self.processors[i][0](**self.processors[i][1]))
+                self.processors[i][-1].initialise()
 
         self.performance['initialise'] = round(time.perf_counter() - start, 3)
 
@@ -99,6 +104,8 @@ class BurdocParser():
                 thread for execution. Typically:
                 {
                     'processor' Type[Processor]: Type of processor to instatiate
+                    'processor_instance' (Processor, optional): An optional instantiated version of the
+                        processor that can be passed in single threaded contexts
                     'processor_args' Dict[str, Any]: Any arguments that should be passed to the processor
                     'data': Dict[str, Any],
                 }
@@ -107,12 +114,16 @@ class BurdocParser():
             Dict[str, Any]: Any fields created or modified by the processors
         """
 
-        processor_args = arg_dict['processor_args']
-        processor = arg_dict['processor'](**processor_args)
-
         # Run expensive initialisation
         start = time.perf_counter()
-        processor.initialise()
+
+        if 'processor_instance' in arg_dict:
+            processor = arg_dict['processor_instance']
+        else:
+            processor_args = arg_dict['processor_args']
+            processor = arg_dict['processor'](**processor_args)
+            processor.initialise()
+
         arg_dict['data']['performance'][processor.name]['initialise'] = [
             round(time.perf_counter() - start, 3)]
         # Run procesing
@@ -189,7 +200,8 @@ class BurdocParser():
         return original_data
 
     def _run_processor(self, processor: Type[Processor], processor_args: Dict[str, Any],
-                       pages: List[int], primary_data: Dict[str, Any]):
+                       pages: List[int], primary_data: Dict[str, Any],
+                       processor_instance: Optional[Processor] = None):
         """Execute a processor on a set of arguments, reading data from, and writing results to,
         the primary data object. 
 
@@ -229,11 +241,11 @@ class BurdocParser():
             self.logger.debug("Page slices=%s", str(page_slices))
 
             # Instantiate processor to get requirements data
-            proc = processor(**processor_args, log_level=self.log_level)
+            processor_instance = processor(**processor_args, log_level=self.log_level)
 
             # Slice data into shards
             data_slices = self._slice_data(
-                primary_data, page_slices, proc.requirements(), processor.name)
+                primary_data, page_slices, processor_instance.requirements(), processor.name)
 
             # Create runtime argument for each thread
             thread_args = [{
@@ -254,16 +266,20 @@ class BurdocParser():
 
             # Merge results back into primary data object
             self._merge_data(primary_data, sliced_results,
-                             proc.generates(), processor.name)
+                             processor_instance.generates(), processor.name)
 
         else:
             # Much simpler single threaded execution
             primary_data['slice'] = pages
-            primary_data = BurdocParser._process_slice({
-                'processor': processor,
+            slice_args = {
                 'processor_args': processor_args | {'log_level': self.log_level},
                 'data': primary_data
-            })
+            }
+            if processor_instance:
+                slice_args['processor_instance'] = processor_instance
+            else:
+                slice_args['processor'] = processor
+            primary_data = BurdocParser._process_slice(slice_args)
 
         primary_data['performance'][processor.name]['total'] = round(
             time.perf_counter() - start, 3)
@@ -364,8 +380,8 @@ class BurdocParser():
                 'performance': {'burdoc': self.performance}}
         renderers = []
 
-        for processor, processor_args, render_processor in self.processors:
-            self._run_processor(processor, processor_args, pages, data)
+        for processor, processor_args, render_processor, proc_instance in self.processors:
+            self._run_processor(processor, processor_args, pages, data, proc_instance)
             if render_processor:
                 renderers.append(
                     processor(**processor_args, log_level=self.log_level))

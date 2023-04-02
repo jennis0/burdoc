@@ -16,6 +16,7 @@ class Processor(abc.ABC):
 
     name: str = "processor"
     threadable = True
+    expensive = False
 
     def __init__(self, name: str, log_level: int = logging.INFO, max_threads: Optional[int] = None):
         self.name = name

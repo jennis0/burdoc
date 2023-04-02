@@ -22,6 +22,7 @@ class MLTableProcessor(Processor):
     """
 
     threadable: bool = False
+    expensive: bool = True
     name: str = "ml-tables"
 
     class Strategies (Enum):
