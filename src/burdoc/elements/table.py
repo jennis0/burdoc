@@ -31,9 +31,9 @@ class Table(LayoutElement):
         Args:
             bbox (Bbox): Bounding box of the the table
             row_boxes (List[Tuple[TableParts, Bbox]]): Bounding box and descriptor of each row - 
-                use TableParts.ROWHEADER to indicate a row used as a header
+                use TableParts.COLUMNHEADER to indicate a row used as a header
             col_boxes (List[Tuple[TableParts, Bbox]]): Bounding box and descriptor of each column - 
-                use TableParts.COLUMNHEADER to indicate a column used as a header
+                use TableParts.ROWHEADER to indicate a column used as a header
         """
         super().__init__(bbox, title='Table')
         self.cells: List[List[List[LayoutElement]]] = \
@@ -42,10 +42,10 @@ class Table(LayoutElement):
         self.row_boxes = row_boxes
         self.col_boxes = col_boxes
         self.merges = merge_boxes
-        self.row_headers = [i for i, s in enumerate(
-            col_boxes) if s[0] == TableParts.COLUMNHEADER]
         self.col_headers = [i for i, s in enumerate(
-            row_boxes) if s[0] == TableParts.ROWHEADER]
+            col_boxes) if s[0] == TableParts.ROWHEADER]
+        self.row_headers = [i for i, s in enumerate(
+            row_boxes) if s[0] == TableParts.COLUMNHEADER]
 
     def to_json(self, extras: Optional[Dict] = None, include_bbox: bool = False, **kwargs):
         if not extras:

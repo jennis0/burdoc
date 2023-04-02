@@ -53,13 +53,13 @@ class DetrTableStrategy(TableExtractorStrategy):
 
         Returns:
         ::
-        
+
                 {
                     page_index (int): [
                         [(TableParts, Bbox) for a table] for each table
                     ]
                 }
-                
+
         """
 
         i = 0
@@ -171,8 +171,8 @@ class DetrTableStrategy(TableExtractorStrategy):
 
     def _prepare_table(self, results, corrections, page_width, page_height) \
             -> List[Tuple[TableParts, Bbox, float]]:
-        """Conver the results from the DETR extraction into a list of table parts and
-        bounding boxes
+        """Convert the results from the DETR extraction into a list of table parts and
+        bounding boxes.
 
         Raises:
             RuntimeError: Something went wrong in the processing
@@ -181,22 +181,41 @@ class DetrTableStrategy(TableExtractorStrategy):
             List[Tuple[TableParts, Bbox, float]]: Table part, containing Bbox, and score.
                 The first entry should always be for the full table bbox.
         """
-        parts = []
-        bbox_offset_x = 3
-        bbox_offset_y = 3
+        cols: List[Tuple[TableParts, Bbox]] = []
+        rows: List[Tuple[TableParts, Bbox]] = []
+        merges: List[Tuple[TableParts, Bbox]] = []
         for label, score, bbox in zip(results['labels'].tolist(),
                                       results['scores'].tolist(),
                                       results['boxes'].tolist()
                                       ):
-            corrected_bb = [bbox[0]+corrections[0]-bbox_offset_x, bbox[1]+corrections[1]-bbox_offset_y,
-                            bbox[2]+corrections[0]+bbox_offset_x, bbox[3]+corrections[1]+bbox_offset_y]
+            corrected_bb = [bbox[0]+corrections[0], bbox[1]+corrections[1],
+                            bbox[2]+corrections[0], bbox[3]+corrections[1]]
             part_type = TableParts(label)
             if part_type == TableParts.TABLE:
                 table = (TableParts(label), Bbox(*corrected_bb,
                          page_width, page_height), score)  # type:ignore
             else:
-                parts.append((TableParts(label), Bbox(
-                    *corrected_bb, page_width, page_height), score))  # type:ignore
+                if part_type in [TableParts.COLUMN, TableParts.ROWHEADER]:
+                    cols.append((TableParts(label), Bbox(
+                        *corrected_bb, page_width, page_height), score))  # type:ignore
+                if part_type in [TableParts.ROW, TableParts.COLUMNHEADER]:
+                    rows.append((TableParts(label), Bbox(
+                        *corrected_bb, page_width, page_height), score))  # type:ignore
+                if part_type == TableParts.SPANNINGCELL:
+                    merges.append((TableParts(label), Bbox(
+                        *corrected_bb, page_width, page_height), score))  # type:ignore
+
+
+        # Ensure the rows/columns span the full table
+        cols.sort(key=lambda x: x[1].x0)
+        for i, col in enumerate(cols[:-1]):
+            col[1].x1 = cols[i+1][1].x0-1
+
+        rows.sort(key=lambda x: x[1].y0)
+        for i, row in enumerate(rows[:-1]):
+            row[1].y1 = rows[i+1][1].y0-1
+
+        parts = cols + rows + merges
 
         if not table:
             raise RuntimeError("Unexpectedly lost table bbox")

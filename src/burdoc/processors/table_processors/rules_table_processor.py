@@ -6,6 +6,7 @@ from plotly.graph_objects import Figure
 
 from ...elements import Bbox, Table, TableParts, TextBlock
 from ...utils.layout_graph import LayoutGraph
+from ...utils.render_pages import add_rect_to_figure
 from ..processor import Processor
 
 
@@ -153,29 +154,36 @@ class RulesTableProcessor(Processor):
     def add_generated_items_to_fig(self, page_number: int, fig: Figure, data: Dict[str, Any]):
         colours = {
             "table": "Cyan",
-            "cell": "LightGrey",
             'row': "Grey",
-            "col": "LightGrey",
+            'row_header': 'DarkGrey',
+            "col": "Grey",
+            'col_header': 'DarkGrey',
             "merges": "Turquoise"
         }
 
-        def add_rect(fig, bbox, colour):
-            fig.add_shape(
-                type='rect', xref='x', yref='y', opacity=0.6,
-                x0=bbox.x0, y0=bbox.y0, x1=bbox.x1, y1=bbox.y1,
-                line=dict(color=colour, width=3)
-            )
+        for table in data['tables'][page_number]:
+            table = cast(Table, table)
+            add_rect_to_figure(fig, table.bbox, colours["table"])
 
-        for t in data['tables'][page_number]:
-            add_rect(fig, t.bbox, colours["table"])
-
-            for row_box in t.row_boxes:
-                add_rect(fig, row_box[1], colours['row'])
-            for col_box in t.col_boxes:
-                add_rect(fig, col_box[1], colours['col'])
+            for i, row_box in enumerate(table.row_boxes):
+                if i in table.col_headers:
+                    add_rect_to_figure(fig, row_box[1], colours['col_header'])
+                else:
+                    add_rect_to_figure(fig, row_box[1], colours['row'])
+            for i, col_box in enumerate(table.col_boxes):
+                if i in table.row_headers:
+                    add_rect_to_figure(fig, col_box[1], colours['row_header'])
+                else:
+                    add_rect_to_figure(fig, col_box[1], colours['col'])
+            for merged_box in table.merges:
+                add_rect_to_figure(fig, merged_box[1], colours['merges'])
 
         fig.add_scatter(x=[None], y=[None], name="Table",
-                        line={'width':3, 'color':colours["table"]})
+                        line=dict(width=3, color=colours["table"]))
+        fig.add_scatter(x=[None], y=[None], name="Table Row/Column",
+                        line=dict(width=3, color=colours["row"]))
+        fig.add_scatter(x=[None], y=[None], name="Table Header",
+                        line=dict(width=3, color=colours["row_header"]))
 
     def _generate_table_candidates(self, page_bound: Bbox, blocks: List[TextBlock]) -> List[List[List[TextBlock]]]:
 
@@ -196,7 +204,7 @@ class RulesTableProcessor(Processor):
             # if used_nodes[b.id]:
             #     continue
 
-            if len(node.element.items) == 0 or len(node.element.items[0].spans) == 0: # type:ignore
+            if len(node.element.items) == 0 or len(node.element.items[0].spans) == 0:  # type:ignore
 
                 continue
 
@@ -233,8 +241,8 @@ class RulesTableProcessor(Processor):
 
                 # If the column splits in two we are at the end of the table
                 if len(candidate.down) > 1:
-                    if abs(layout_graph.get_node(candidate.down[0]).element.bbox.y0 - \
-                        layout_graph.get_node(candidate.down[1]).element.bbox.y0) < 0.5:
+                    if abs(layout_graph.get_node(candidate.down[0]).element.bbox.y0 -
+                           layout_graph.get_node(candidate.down[1]).element.bbox.y0) < 0.5:
                         break
 
                 candidate = layout_graph.get_node(candidate.down[0])

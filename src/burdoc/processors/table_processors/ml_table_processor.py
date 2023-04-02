@@ -73,10 +73,10 @@ class MLTableProcessor(Processor):
                 
                 table_bbox = table_parts[0][1]
                 row_headers = [s for s in table_parts[1:]
-                               if s[0] == TableParts.ROWHEADER]
+                               if s[0] == TableParts.COLUMNHEADER]
                 rows = [s for s in table_parts[1:] if s[0] == TableParts.ROW]
                 col_headers = [s for s in table_parts[1:]
-                               if s[0] == TableParts.COLUMNHEADER]
+                               if s[0] == TableParts.ROWHEADER]
                 cols = [s for s in table_parts[1:]
                         if s[0] == TableParts.COLUMN]
                 merges = [s for s in table_parts[1:] if s[0] == TableParts.SPANNINGCELL]

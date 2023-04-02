@@ -4,22 +4,25 @@ from copy import deepcopy
 
 import pytest
 
+@pytest.fixture
+def burdoc_parser():
+    return BurdocParser()
+
 class TestBurdocParser():
         
-    def test_init(self):
-        _ = BurdocParser()
+    def test_init(self, burdoc_parser):
+        assert isinstance(burdoc_parser, BurdocParser)
     
-    def test_init_with_ml_tables(self):
-        parser = BurdocParser(skip_ml_table_finding=False)
-        assert parser.processors[1][0] == burdoc.processors.table_processors.MLTableProcessor
+    def test_init_with_ml_tables(self, burdoc_parser):
+        assert burdoc_parser.processors[1][0] == burdoc.processors.table_processors.MLTableProcessor
         
     def test_init_no_ml_tables(self):
-        parser = BurdocParser(skip_ml_table_finding=True)
-        assert parser.processors[1][0].name != burdoc.processors.table_processors.MLTableProcessor
+        burdoc_parser = BurdocParser(skip_ml_table_finding=True)
+        assert burdoc_parser.processors[1][0].name != burdoc.processors.table_processors.MLTableProcessor
         
     def test_init_no_images(self):
-        parser = BurdocParser(ignore_images=True)
-        assert parser.processors[0][0](**parser.processors[0][1]).ignore_images == True
+        burdoc_parser = BurdocParser(ignore_images=True)
+        assert burdoc_parser.processors[0][0](**burdoc_parser.processors[0][1]).ignore_images == True
         
     @pytest.mark.parametrize('slices', [
         [[0],[1],[2],[3]],
@@ -29,7 +32,7 @@ class TestBurdocParser():
     @pytest.mark.parametrize('requirements', [
         [['a'],[]], [['a','b','c'],[]], [['a'],['d']], [['a'], ['b']]
     ], ids=['one', 'all', 'opt-missing', 'opt-present'])
-    def test_slice_data(self, slices, requirements):
+    def test_slice_data(self, burdoc_parser, slices, requirements):
         data = {
             'metadata': {},
             'a': {0:[], 1:[], 2:[], 3:[]},
@@ -38,8 +41,7 @@ class TestBurdocParser():
             'performance': {'test':{}}
         }
         
-        parser = BurdocParser()
-        sliced_data = parser._slice_data(data, slices, requirements, 'test')
+        sliced_data = burdoc_parser._slice_data(data, slices, requirements, 'test')
 
         for data_slice, slice in zip(sliced_data, slices):
             assert data_slice['slice'] == slice
@@ -59,7 +61,7 @@ class TestBurdocParser():
     @pytest.mark.parametrize('requirements', [
         [['a'],[]], [['a','b','c'],[]], [['a'],['d']], [['a'], ['b']]
     ], ids=['one', 'all', 'opt-missing', 'opt-present'])  
-    def test_merge_data(self, slices, requirements):
+    def test_merge_data(self, burdoc_parser, slices, requirements):
         data = {
             'metadata': {},
             'a': {0:[], 1:[], 2:[], 3:[]},
@@ -68,8 +70,7 @@ class TestBurdocParser():
             'performance': {'test':{}}
         }
         
-        parser = BurdocParser()
-        sliced_data = parser._slice_data(data, slices, requirements, 'test')
+        sliced_data = burdoc_parser._slice_data(data, slices, requirements, 'test')
         
         for i,s in enumerate(sliced_data):
             #Copy the dictionary - simulates getting new data back from thread
@@ -82,7 +83,7 @@ class TestBurdocParser():
             #Add performance metric
             s['performance']['test']['measure'] = [0]*len(s['slice'])
         
-        merged_data = parser._merge_data(data, sliced_data, ['d'], 'test')
+        merged_data = burdoc_parser._merge_data(data, sliced_data, ['d'], 'test')
                 
         assert merged_data == {
             'metadata': {},

@@ -216,8 +216,6 @@ class HeadingProcessor(Processor):
             if textblock.type in [TextBlockType.PARAGRAPH, TextBlockType.EMPHASIS, TextBlockType.SMALL]:
                 return
             
-            print("adding", textblock)
-
             size = textblock.items[0].spans[0].font.size
             hierarchy.append(
                 {'page': page_number, 'index': [
@@ -228,12 +226,8 @@ class HeadingProcessor(Processor):
         hierarchy: List[Dict[str, Any]] = []
         for i, element in enumerate(elements):
             
-            print(element)
-
             if isinstance(element, Aside) or isinstance(element, PageSection):
-                print("is aside")
                 for j, sub_e in enumerate(element.items):
-                    print("sub", sub_e)
                     if not isinstance(sub_e, TextBlock):
                         continue
                     add_to_hierarchy(sub_e, hierarchy, i, j)  # type:ignore
