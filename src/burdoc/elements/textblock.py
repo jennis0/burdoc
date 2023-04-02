@@ -16,6 +16,7 @@ class TextBlockType(Enum):
     H3 = auto()
     H4 = auto()
     H5 = auto()
+    H6 = auto()
     EMPHASIS = auto()
 
 

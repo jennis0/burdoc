@@ -79,7 +79,7 @@ class TextHandler():
                         skip[i] = True
                         break
                 continue
-
+            
             # Merge large paragraph starting characters
             if len(line_text) == 1 and line.spans[0].font.size > 15:
                 for j, test_line in enumerate(lines):

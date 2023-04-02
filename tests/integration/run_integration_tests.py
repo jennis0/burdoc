@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import time
+import datetime
 from typing import Any, Dict, List, Optional
 
 from burdoc import BurdocParser
@@ -171,6 +172,7 @@ def run_parser(source_dir: str, out_dir: str, gold_dir: str, do_update: bool,
                     json_gold, json_out, ignore_paths=['metadata.path'])
                 print(
                     f"Found {len(test_data['files'][filetitle]['changes'])} changes")
+                test_data['files'][filetitle]['time'] = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")
 
         if out_dir:
 
@@ -213,6 +215,8 @@ def print_results(report_data: Dict[str, Any]):
         print(
             f"Added={len(adds)}  \tRemoved={len(dels)}\tReordered={len(reorders)}\tChanged={len(changes)}")
         print("----------------------------------------------------------------------------------------------------------")
+    
+    print(f"Total Time: {report_data['processing_time']}")
     print("==========================================================================================================")
 
 
@@ -243,18 +247,30 @@ def run():
     if len(args.include) > 0 and len(args.exclude) > 0:
         raise RuntimeError("Cannot specify both include and exclude lists")
 
+    start = time.perf_counter()
     report_data = run_parser(inputs, outputs, gold, args.update,
                              args.exclude.split(",") if args.exclude else [],
                              args.include.split(",") if args.include else []
                              )
+    report_data['processing_time'] = round(time.perf_counter() - start, 3)
+    report_data['timestamp'] = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")
+
+    print_results(report_data)
+
+    if args.include or args.exclude and os.path.exists(report):
+        with open(report, 'r', encoding='utf-8') as f_report:
+            old_report = json.load(f_report)
+            for file in report_data['files']:
+                old_report['files'][file] = report_data['files'][file]
+            
+            report_data = old_report
     
     with open(report, 'w', encoding='utf-8') as f_report:
         json.dump(report_data, f_report)
 
-    print_results(report_data)
 
-    for _,r in report_data['files'].items():
-        if len(r['changes']) > 0:
+    for _, report_item in report_data['files'].items():
+        if len(report_item['changes']) > 0:
             print("Tests Failed. Found changes to validation data.")
             sys.exit(1)
 

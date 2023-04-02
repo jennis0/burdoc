@@ -2,6 +2,7 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
+from scipy.stats import mode
 from plotly.graph_objects import Figure
 
 from ..elements.aside import Aside
@@ -28,7 +29,8 @@ class HeadingProcessor(Processor):
     name: str = "content"
 
     def __init__(self, log_level: int = logging.INFO):
-        self.para_size: Dict[str, List[Tuple[float, TextBlockType]]] = {}
+        self.default_font = ""
+        self.default_font_size = 10.
 
         super().__init__(HeadingProcessor.name, log_level=log_level)
 
@@ -43,80 +45,155 @@ class HeadingProcessor(Processor):
         total_lines = 0
         default_font = None
         default_font_count = 0
+        max_size = 0
+
+        def str_to_scaled_int(s):
+            return int(round(float(s), 1)*10)
 
         for font_family in font_statistics:
             f_counts = font_statistics[font_family]['_counts']
             if len(f_counts) > 0:
+                font_max_size = max(f_counts.keys())
+                max_size = max(str_to_scaled_int(font_max_size), max_size)
                 counts[font_family] = np.zeros(
-                    shape=(int(max(f_counts.keys())+1)))
+                    shape=(str_to_scaled_int(font_max_size)+1)
+                )
                 for size in f_counts:
-                    counts[font_family][int(size)] += f_counts[size]
+                    counts[font_family][str_to_scaled_int(size)] += f_counts[size]
                     total_lines += f_counts[size]
                 if counts[font_family].sum() > default_font_count:
                     default_font = font_family
                     default_font_count = counts[font_family].sum()
 
-        self.para_size = {}
-        for font_family, family_count in counts.items():
-            if family_count.sum() / total_lines > 0.2:
-                para_size = int(family_count.argmax()) + 1
-                self.para_size[font_family] = [
-                    (para_size - 2, TextBlockType.SMALL),
-                    (para_size + 0.5, TextBlockType.PARAGRAPH),
-                    (para_size + 2, TextBlockType.H5),
-                    (para_size + 4, TextBlockType.H4),
-                    (para_size + 6, TextBlockType.H3),
-                    (para_size + 10, TextBlockType.H2)
-                ]
+        self.default_font = default_font
 
-        for font_family in counts:
-            if font_family not in self.para_size:
-                self.para_size[font_family] = self.para_size[default_font]
+        font_count_array = np.zeros(shape=(max_size+1))
+        for font_count in counts.values():
+            font_count_array[:font_count.shape[0]] += font_count
 
-        if default_font:
-            self.para_size['default'] = self.para_size[default_font]
+        sorted_indices = list(reversed(font_count_array.argsort(axis=0)))
+        self.default_font_size = sorted_indices[0]/10.
 
-    def _get_text_class(self, block: TextBlock):
-        font_size = block.items[0].spans[-1].font.size
-        font_fam = block.items[0].spans[-1].font.family
+    def _is_heading(self, factors: Dict[str, Any]) -> bool:
 
-        if len(block.items) > 3:
-            return TextBlockType.PARAGRAPH
+        word_count = factors['word_count']
+        line_count = factors['line_count']
+        
+        if factors['matched_next_font']:
+            word_count += factors['next_len']
+            line_count += factors['next_lines']
+        
+        if factors['matched_last_font']:
+            word_count += factors['last_len']
+            line_count += factors['last_lines']
 
-        subtype = TextBlockType.H1
-        if font_fam not in self.para_size:
-            font_fam = 'default'
-        for max_font_size, textblock_type in self.para_size[font_fam]:
-            if font_size < max_font_size:
-                subtype = textblock_type
-                break
+        if factors['word_count'] > 20:
+            return False
+        if factors['line_count'] > 3:
+            return False
+        if factors['all_italics'] and not factors['all_bold'] and \
+            (factors['size'] < self.default_font_size + 1 or word_count > 7):
+            return False
 
-        if subtype == TextBlockType.PARAGRAPH:
-            all_italic = True
-            for i in block.items:
-                if not all(s.font.italic for s in i.spans):
-                    all_italic = False
-                    break
-            if all_italic:
+        para_header = factors['dist_to_last'] > min(5, factors['dist_to_next'] + 1)
+        if para_header:
+            if factors['all_caps']:
+                return True
+
+            if factors['all_bold'] and abs(factors['line_align']) > 5 and \
+                    abs(factors['dist_to_next']) < 4:
+                return True
+
+        if max(factors['sizes']) > self.default_font_size + 2.:
+            return True
+        
+        if factors['size'] > self.default_font_size + 0.5 and factors['all_bold'] or factors['all_caps']:
+            return True
+
+        return False
+
+    def _predict_heading_type(self, factors: Dict[str, Any]):
+        size = mode(factors['sizes'], axis=0, keepdims=False)[0]
+
+        if size < self.default_font_size + 0.5:
+            return TextBlockType.H6
+        for i, t in zip(range(1, 5), [TextBlockType.H5, TextBlockType.H4, TextBlockType.H3, TextBlockType.H2]):
+            if size < self.default_font_size*(1.05+0.2*i):
+                return t
+
+        return TextBlockType.H1
+
+    def _classify_block(self, element: TextBlock,
+                        last_element: Optional[LayoutElement],
+                        next_element: Optional[LayoutElement]) -> TextBlockType:
+
+        heading_factors: Dict[str, Any] = {}
+        heading_factors['word_count'] = len(element.get_text().split())
+        heading_factors['line_count'] = len(element.items)
+        heading_factors['all_caps'] = element.get_text().isupper()
+        heading_factors['all_bold'] = all(s.font.bold for line in element.items for s in line.spans)
+        heading_factors['all_italics'] = all(s.font.italic for line in element.items for s in line.spans)
+        heading_factors['dist_to_last'] = element.bbox.y0 - last_element.bbox.y1 if last_element else 50.
+        heading_factors['dist_to_next'] = next_element.bbox.y0 - element.bbox.y1 if next_element else 50.
+        heading_factors['line_align'] = next_element.bbox.x1 - element.bbox.x1 if next_element else 0.
+        heading_factors['sizes'] = [s.font.size for line in element.items for s in line.spans]
+        heading_factors['size'] = mode(heading_factors['sizes'], axis=None, keepdims=False)[0]
+        
+        if isinstance(next_element, TextBlock):
+            heading_factors['matched_next_font'] = next_element.items[0].spans[0].font == \
+                                                element.items[-1].spans[0].font
+            heading_factors['next_len'] = len(next_element.get_text().split())
+            heading_factors['next_lines'] = len(next_element.items)
+        else:
+            heading_factors['matched_next_font'] = False
+            heading_factors['next_len'] = 0
+            heading_factors['next_lines'] = 0
+            
+        if isinstance(last_element, TextBlock):
+            heading_factors['matched_last_font'] = last_element.items[0].spans[0].font == \
+                                                element.items[-1].spans[0].font
+            heading_factors['last_len'] = len(last_element.get_text().split())
+            heading_factors['last_lines'] = len(last_element.items)
+        else:
+            heading_factors['matched_last_font'] = False
+            heading_factors['last_len'] = 0
+            heading_factors['last_lines'] = 0
+            
+        heading_factors['font'] = element.items[0].spans[0].font.family
+
+        is_heading = self._is_heading(heading_factors)
+        if is_heading:
+            return self._predict_heading_type(heading_factors)
+
+        size = heading_factors['size']
+        if size > self.default_font_size - 1.5:
+            if heading_factors['all_italics']:
                 return TextBlockType.EMPHASIS
+            else:
+                return TextBlockType.PARAGRAPH
 
-        return subtype
-
-    def _process_text_block(self, block: TextBlock) -> TextBlock:
-        block.type = self._get_text_class(block)
-        return block
+        return TextBlockType.SMALL
 
     def _assign_headings(self, elements: List[LayoutElement]) -> List[LayoutElement]:
         proc_elements: List[LayoutElement] = []
 
-        for element in elements:
+        for i, element in enumerate(elements):
+            if i > 0:
+                last_element = elements[i-1]
+            else:
+                last_element = None
+
+            if i < len(elements) - 1:
+                next_element = elements[i+1]
+            else:
+                next_element = None
+
             if isinstance(element, TextBlock):
-                element.type = self._get_text_class(element)
+                element.type = self._classify_block(element, last_element, next_element)
                 proc_elements.append(element)
                 continue
 
             if isinstance(element, PageSection):
-                print(element)
                 if element.default or not (element.backing_drawing or element.backing_image):
                     proc_elements += self._assign_headings(element.items)
                 else:
@@ -124,7 +201,10 @@ class HeadingProcessor(Processor):
                         Aside(element.bbox, self._assign_headings(element.items))
                     )
                 continue
-                    
+
+            if isinstance(element, Aside):
+                element.items = self._assign_headings(element.items)
+
             proc_elements.append(element)
 
         return proc_elements
@@ -135,20 +215,26 @@ class HeadingProcessor(Processor):
                              index: int, sub_index: Optional[int] = None):
             if textblock.type in [TextBlockType.PARAGRAPH, TextBlockType.EMPHASIS, TextBlockType.SMALL]:
                 return
+            
+            print("adding", textblock)
 
             size = textblock.items[0].spans[0].font.size
             hierarchy.append(
                 {'page': page_number, 'index': [
-                    index, sub_index], 'text': textblock.get_text(), 'size': size, 
-                 'assigned_heading':textblock.type.name.lower()}
+                    index, sub_index], 'text': textblock.get_text(), 'size': size,
+                 'assigned_heading': textblock.type.name.lower()}
             )
 
         hierarchy: List[Dict[str, Any]] = []
         for i, element in enumerate(elements):
+            
+            print(element)
 
-            if isinstance(element, Aside):
+            if isinstance(element, Aside) or isinstance(element, PageSection):
+                print("is aside")
                 for j, sub_e in enumerate(element.items):
-                    if not isinstance(element, TextBlock):
+                    print("sub", sub_e)
+                    if not isinstance(sub_e, TextBlock):
                         continue
                     add_to_hierarchy(sub_e, hierarchy, i, j)  # type:ignore
                 continue
@@ -163,7 +249,7 @@ class HeadingProcessor(Processor):
     def _process_page(self, elements: List[LayoutElement]) -> List[LayoutElement]:
         elements = self._assign_headings(elements)
         return elements
-    
+
     def _process(self, data: Any) -> Any:
         self._fit_font_predictor(data['metadata']['font_statistics'])
         data['page_hierarchy'] = {}

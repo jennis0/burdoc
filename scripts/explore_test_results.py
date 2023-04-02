@@ -177,14 +177,23 @@ def get_toc_list(page_hierarchy: Dict[str, Any]) -> str:
     Returns:
         str: An HTML list
     """
-    toc_text = "<div><h2 style='margin-bottom:1pt' id='-contents'>Contents</h2><ol style='margin-top:0pt'>"
-    for page in page_hierarchy:
-        toc_text += f"<li><a style=font-size:15pt href=#anchor-page-{page}>Page {page}</a></li><ol>"
-        for item in page_hierarchy[page]:
-            toc_text += f"<li><a style=font-size:{item['size']} href=#{page}-{make_anchor_name(item['text'])}>{item['text']}</a></li>"
-        toc_text += "</ol>"
-    toc_text += "</ol></div>"
-    return get_collapsible(toc_text, 'Contents')
+    doc, tag, text, line = Doc().ttl()
+
+    with tag('div'):
+        line('h2', 'Contents', style='margin-bottom:1pt;', id='-contents')
+        with tag('ol', style='margin-top:0pt'):
+            for page in page_hierarchy:
+                with tag('li'):
+                    with tag('a', style='font-size:12pt', href=f'#anchor-page-{page}'):
+                        text(f'Page {page}')
+                    
+                for item in page_hierarchy[page]:
+                    with tag('li'):
+                        with tag('a', href=f"#{page}-{make_anchor_name(item['text'])}"):
+                            text(f"{item['assigned_heading']} :: {item['text']}")
+
+
+    return get_collapsible(doc.getvalue(), 'Contents')
 
 
 def get_embed(json_data: Dict[str, Any]):
@@ -401,10 +410,6 @@ def create_directory_view(in_path: str, path_stem: str, links: Dict[str, str],
     files = [[os.path.join(path_stem, f), f] for f in os.listdir(in_path) if f.endswith(
         ".html") or os.path.isdir(os.path.join(in_path, f))]
 
-    print(in_path, path_stem)
-    if len(files) < 10:
-        print(files)
-
     for file in files:
         if '.' in file[0]:
             file[0] = ".".join(file[0].split('.')[:-1])
@@ -471,11 +476,9 @@ def create_directory_view(in_path: str, path_stem: str, links: Dict[str, str],
 
         else:
 
-            print("dir", "i:", in_path, "s:", path_stem, "n:", name)
             dirname = os.path.dirname(name)
             if dirname != "":
                 name = dirname
-            print("dir", "i:", in_path, "s:", path_stem, "n:", name)
 
             if name == path_stem:
                 continue
@@ -554,23 +557,21 @@ def parse_path(converter: JsonHtmlConverter,
         with open(gold_target_path, 'r', encoding='utf-8') as f:
             gold_data = json.load(f)
         
-        try:    
-            links['File'] = "file://" + os.path.abspath(target_path)
+        links['File'] = "file://" + os.path.abspath(target_path)
 
-            html_pages = {page_number: converter.convert_page(data, page_number, False, False)
-                        for page_number in data['content'].keys()}
-            gold_pages = {page_number: converter.convert_page(gold_data, page_number, False, False)
-                        for page_number in data['content'].keys()}
-        
-            html = create_embedded_view(converter, links, html_pages, gold_pages,
-                                        report['files'][".".join(path.split(".")[:-1])], data)
+        html_pages = {page_number: converter.convert_page(data, page_number, False, False)
+                    for page_number in data['content'].keys()}
+        gold_pages = {page_number: converter.convert_page(gold_data, page_number, False, False)
+                    for page_number in data['content'].keys()}
+    
+        html = create_embedded_view(converter, links, html_pages, gold_pages,
+                                    report['files'][".".join(path.split(".")[:-1])], data)
 
-            del links['File']
+        del links['File']
 
-            with open(target_out_path, 'w', encoding='utf-8') as f:
-                f.write(html)
-        except:
-            pass
+        with open(target_out_path, 'w', encoding='utf-8') as f:
+            f.write(html)
+
 
 
 def run():
