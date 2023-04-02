@@ -87,12 +87,7 @@ class BurdocParser():
                 'additional_reqs': ['tables'] if not skip_ml_table_finding else []
             }, True, None)
         )
-
-        for i, p in enumerate(self.processors):
-            if p[0].expensive and (max_threads == 1 or not p[0].threadable):
-                self.processors[i] = (*self.processors[i][:3], self.processors[i][0](**self.processors[i][1]))
-                self.processors[i][-1].initialise()
-
+        
         self.performance['initialise'] = round(time.perf_counter() - start, 3)
 
     @staticmethod
@@ -369,6 +364,14 @@ class BurdocParser():
             raise FileNotFoundError(path)
 
         start = time.perf_counter()
+        
+        
+        for i, p in enumerate(self.processors):
+            if p[0].expensive and (self.max_threads == 1 or not p[0].threadable) and not p[3]:
+                self.processors[i] = (*self.processors[i][:3], self.processors[i][0](**self.processors[i][1]))
+                self.processors[i][-1].initialise()
+        
+        
         pdf = fitz.open(path)
         if not pages:
             pages = list(range(pdf.page_count))
