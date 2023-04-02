@@ -26,19 +26,29 @@ class ImageHandler(object):
 
     def _get_image(self, xref: str) -> Optional[Image.Image]:
         image = self.pdf.extract_image(xref)
+        
+        if image:
+            for key in image:
+                if key == "image":
+                    continue
+                print(key, image[key])
+        
         self.logger.debug("Loading image %d", xref)
         if image:
             self.logger.debug("Image %d: found", xref)
             # pix = fitz.Pixmap(image['image'])
             pil_image = Image.open(io.BytesIO(image['image']))
 
-            # CMYK is generally inverted. PIL doesn't natively support CMYK inversion so do it ourselves.
+            # CMYK is generally inverted when stored in JPEGs. 
+            # PIL doesn't natively support CMYK inversion so do it ourselves.
             if 'colorspace' in image and image['cs-name'] == 'DeviceCMYK':
-                image_data = np.frombuffer(pil_image.tobytes(), dtype='B')
-                inverse_data = np.full(image_data.shape, 255, dtype='B')
-                inverse_data -= image_data
-                pil_image = Image.frombytes(
-                    pil_image.mode, pil_image.size, inverse_data.tobytes())
+                image_filter = self.pdf.xref_get_key(xref, 'Filter')
+                if image_filter[1] == '/DCTDecode':
+                    image_data = np.frombuffer(pil_image.tobytes(), dtype='B')
+                    inverse_data = np.full(image_data.shape, 255, dtype='B')
+                    inverse_data -= image_data
+                    pil_image = Image.frombytes(
+                        pil_image.mode, pil_image.size, inverse_data.tobytes())
 
             # #Load SMASK as alpha channel
             if 'smask' in image and image['smask'] > 0:
@@ -222,11 +232,15 @@ class ImageHandler(object):
         images: List[str] = []
 
         for page_image in page_images:
+            print(page_image)
             image = self._get_image(page_image['xref'])
 
             if image:
+                
                 orig_bbox = Bbox(
                     *page_image['bbox'], bound[2], bound[3])  # type:ignore
+
+                print(orig_bbox)
 
                 image, crop_bbox = self._crop_to_visible(
                     orig_bbox, image, page_bbox)
