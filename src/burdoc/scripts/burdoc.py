@@ -91,7 +91,7 @@ def run():
 
         if not args.out_file:
             if ".pdf" in args.in_file:
-                out_file = args.file.replace(".pdf", ".json")
+                out_file = args.in_file.replace(".pdf", ".json")
             else:
                 out_file = str(args.in_file) + ".json"
         else:
@@ -101,4 +101,4 @@ def run():
         with open(out_file, 'w', encoding='utf-8') as file_handle:
             json.dump(out, file_handle)
     else:
-        raise FileNotFoundError(args.file)
+        raise FileNotFoundError(args.in_file)
