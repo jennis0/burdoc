@@ -35,7 +35,6 @@ def get_head(title):
     text += "table tbody tr:first-of-type {border-top: 2px solid #c4c4c4;}"
     text += "h1, h2, h3, h4, h5, p, a {font-family: arial;}"
     text += "li {padding: 4px 3px}"
-    text += ".column {float: left; width: 40%; padding:5pt}"
     text += ".collapsible {background-color: #5a5a5a; color: white; cursor: pointer; padding:10px; width:100%;"
     text += "border:none; text-align:left; outline:none; font-size:12pt; margin-bottom:5pt}"
     text += ".active .collabsible:hover {background-color:#1a1a1a}"
@@ -352,54 +351,54 @@ def get_change_view(changes: List[Dict[str, Any]]):
 
 
 def create_embedded_view(
-    converter: JsonHtmlConverter,
     links: Dict[str, str],
     html_pages: Dict[str, Any],
     gold_pages: Dict[str, Any],
     report: Dict[str, Any],
     json_data: Dict[str, Any]
 ) -> str:
-    doc, tag, text, line = Doc().ttl()
+    doc, tag, _, line = Doc().ttl()
 
     doc.asis(get_head(json_data['metadata']['title']))
     with tag('body'):
-        with tag('div', klass='column',
-                 style='width:50%, overflow-y:scroll, height:100%, padding:20pt'):
-            line('h2', 'Metadata')
-            doc.asis(get_metadata_table(
-                json_data['metadata'], list(json_data['content'].keys())))
-            doc.asis(get_font_table(json_data['metadata']['font_statistics']))
-            doc.asis(get_toc_list(json_data['page_hierarchy']))
-            doc.asis(get_images(json_data))
-            doc.stag("hr")
+        with tag('div', style='height:98%; padding:0pt; margin:0pt'):
+            with tag('div',
+                    style='width:50%; overflow-y:scroll; height:100%; padding:20pt; float: left'):
+                line('h2', 'Metadata')
+                doc.asis(get_metadata_table(
+                    json_data['metadata'], list(json_data['content'].keys())))
+                doc.asis(get_font_table(json_data['metadata']['font_statistics']))
+                doc.asis(get_toc_list(json_data['page_hierarchy']))
+                doc.asis(get_images(json_data))
+                doc.stag("hr")
 
-            for page in html_pages:
+                for page in html_pages:
 
-                page_changes = [c for c in report['changes']
-                                if f'content.{page}' in c['path']]
-                if len(page_changes) > 0:
-                    col = '#ff5050'
-                else:
-                    col = 'lightblue'
-
-                line(
-                    'button', f"Page {page}", klass='collapsible', style=f'background-color:{col};')
-                with tag('div', klass='content'):
+                    page_changes = [c for c in report['changes']
+                                    if f'content.{page}' in c['path']]
                     if len(page_changes) > 0:
-                        doc.asis(get_collapsible(get_change_view(page_changes),
-                                                 'Changes', background="#909090"))
-                    doc.asis(get_collapsible(
-                        html_pages[page], f'New Page {page}', background=col))
-                    doc.asis(get_collapsible(
-                        gold_pages[page], f'Gold Page {page}', background="gold"))
-                    
+                        col = '#ff5050'
+                    else:
+                        col = 'lightblue'
 
-        with tag('div', klass='column', style='margin:0, padding:0; width:45%'):
-            links['Contents'] = '#-contents'
-            doc.asis(create_top_links(links))
-            del links['Contents']
-            with tag('div'):
-                doc.asis(get_embed(json_data))
+                    line(
+                        'button', f"Page {page}", klass='collapsible', style=f'background-color:{col};')
+                    with tag('div', klass='content'):
+                        if len(page_changes) > 0:
+                            doc.asis(get_collapsible(get_change_view(page_changes),
+                                                    'Changes', background="#909090"))
+                        doc.asis(get_collapsible(
+                            html_pages[page], f'New Page {page}', background=col))
+                        doc.asis(get_collapsible(
+                            gold_pages[page], f'Gold Page {page}', background="gold"))
+                        
+
+            with tag('div', style='margin:0, padding:0; height:100%; width:45%; float:left'):
+                links['Contents'] = '#-contents'
+                doc.asis(create_top_links(links))
+                del links['Contents']
+                with tag('div'):
+                    doc.asis(get_embed(json_data))
 
         doc.asis(get_scripts())
     return doc.getvalue()
@@ -440,7 +439,7 @@ def create_directory_view(in_path: str, path_stem: str, links: Dict[str, str],
 
             result = report['files'][name]
 
-            total_changes = len(result['changes'])
+            total_changes = len([c for c in result['changes'] if c['path'].startswith("content.")])
 
             adds = len([c for c in result['changes']
                        if c['type'] == 'addition'])
@@ -564,7 +563,7 @@ def parse_path(converter: JsonHtmlConverter,
         gold_pages = {page_number: converter.convert_page(gold_data, page_number, False, False)
                     for page_number in data['content'].keys()}
     
-        html = create_embedded_view(converter, links, html_pages, gold_pages,
+        html = create_embedded_view(links, html_pages, gold_pages,
                                     report['files'][".".join(path.split(".")[:-1])], data)
 
         del links['File']

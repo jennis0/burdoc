@@ -24,7 +24,8 @@ dependencies = [
     "pandas>=1.5",
     "torchvision>=0.14",
     "transformers>=4.26",
-    "timm>=0.6.13"
+    "timm>=0.6.13",
+    "roman>=4.0"
 ]
 
 [tool.setuptools_scm]
