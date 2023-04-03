@@ -80,7 +80,7 @@ class DrawingHandler():
             if d['type'] == 'f' and d['fill_opacity'] > 0.9 and len(d['items']) > 2:
                 width = d['rect'][2] - d['rect'][0]
                 height = d['rect'][3] - d['rect'][1]
-                if abs(width/height - 1) < 0.1 and width < 5:
+                if abs(width/height - 1) < 0.1 and width < 12:
                     drawing = DrawingElement(bbox=Bbox(*d['rect'], bound[2], bound[3]),  # type:ignore
                                              drawing_type=DrawingType.BULLET, opacity=d['fill_opacity']
                                              )

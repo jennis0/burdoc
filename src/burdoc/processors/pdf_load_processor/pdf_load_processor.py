@@ -1,15 +1,15 @@
 import logging
 import os
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import fitz
 import numpy as np
 from PIL import Image
 from plotly.graph_objects import Figure
 
-from ...elements import (Bbox, DrawingElement, DrawingType, ImageType,
-                         LineElement, Span)
+from ...elements import (Bbox, DrawingElement, DrawingType, ImageElement,
+                         ImageType, LineElement, Span, Font)
 from ...utils.image_manip import get_image_palette
 from ...utils.render_pages import add_rect_to_figure
 from ..processor import Processor
@@ -23,10 +23,10 @@ class PDFLoadProcessor(Processor):
     with minor processing/cleaning applied
 
     ::
-        
+
         Requires: None
         Generates: ['page_bounds', 'text_elements', 'image_elements', 'drawing_elements', 'images', 'page_images']
-    
+
     """
 
     name: str = 'pdf-load'
@@ -53,93 +53,70 @@ class PDFLoadProcessor(Processor):
         return ['page_bounds', 'text_elements', 'image_elements',
                 'page_images', 'drawing_elements', 'images']
 
-    def _read_pdf(self, path: str):
-        self.logger.debug('Loading %s', path)
-        try:
-            pdf = fitz.open(path)
-        except RuntimeError as error:
-            self.logger.exception("Failed to open %s", path, exc_info=error)
-            pdf = None
-
-        return pdf
-
-    def get_page_image(self, page: fitz.Page) -> Image:
+    def get_page_image(self, page: fitz.Page) -> Image.Image:
         pix = page.get_pixmap()
         return Image.frombytes('RGB', [pix.width, pix.height], pix.samples)
 
-    def update_font_statistics(self, font_statistics: Dict[str, Any], fonts: List[Any], text: List[LineElement]):
-        for f in fonts:
-            if "+" in f[3]:
-                basefont = f[3].split("+")[1]
-            else:
-                basefont = f[3]
-
-            family = basefont.split("-")[0].split("_")[0]
-            if family == '':
-                family = 'Unnamed'
-                basefont = f'Unnamed-T{f[2][-1]}'
+    def _update_font_statistics(self, font_statistics: Dict[str, Any], fonts: List[Any], text: List[LineElement]):
+        
+        for font in fonts:
+            family, basefont = Font.split_font_name(font[3], font[2])
+            
             if family not in font_statistics:
                 font_statistics[family] = {'_counts': {}}
 
             if basefont not in font_statistics[family]:
-                font_statistics[family][basefont] = dict(
-                    family=family, basefont=basefont, counts={}, true_sizes={})
+                font_statistics[family][basefont] = {'family': family,
+                                                     'basefont': basefont,
+                                                     'counts': {},
+                                                     'true_sizes': {}}
 
-        for t in text:
-            for s in t.spans:
-                try:    
-                    l = 1
-                    size = s.font.size
-                    if size not in font_statistics[s.font.family][s.font.name]['counts']:
-                        font_statistics[s.font.family][s.font.name]['counts'][size] = l
-                        if t.rotation[0] == 1.0:
-                            font_statistics[s.font.family][s.font.name]['true_sizes'][size] = [s.bbox.height()]
-                        else:
-                            font_statistics[s.font.family][s.font.name]['true_sizes'][size] = [s.bbox.width()]
-                        font_statistics[s.font.family]['_counts'][size] = l
-                    else:
-                        font_statistics[s.font.family]['_counts'][size] += l
-                        font_statistics[s.font.family][s.font.name]['counts'][size] += l
-                        if t.rotation[0] == 1.0:
-                            font_statistics[s.font.family][s.font.name]['true_sizes'][size].append(s.bbox.height())
-                        else:
-                            font_statistics[s.font.family][s.font.name]['true_sizes'][size].append(s.bbox.width())
-                    font_statistics[s.font.family][s.font.name]['data'] = s.font.to_json()
-                except KeyError:
-                    if s.font.family not in font_statistics:
-                        font_statistics[s.font.family] = {
-                            '_counts': {s.font.size: 1}}
-                    if s.font.name not in font_statistics[s.font.family]:
-                        font_statistics[s.font.family][s.font.name] = dict(
-                            family=s.font.family, basefont=s.font.name, counts={s.font.size: 1})
+        for line in text:
+            for span in line.spans:
+                
+                weight = len(span.text)
+                size = span.font.size
+                
+                if span.font.family not in font_statistics:
+                    font_statistics[span.font.family] = {
+                        '_counts': {}
+                    }
+                    fs_fam = font_statistics[span.font.family]
+                else:
+                    fs_fam = font_statistics[span.font.family]
+                                    
+                if size not in fs_fam['_counts']:
+                    fs_fam['_counts'][size] = 0
+                
+                fs_fam['_counts'][size] += weight
+                    
+                if span.font.name not in fs_fam:
+                    fs_fam[span.font.name] = {
+                            'family': span.font.family,
+                            'basefont': span.font.name,
+                            'counts': {},
+                            'true_sizes': {}
+                        }
+                    fs_name = fs_fam[span.font.name]
+                else:
+                    fs_name = fs_fam[span.font.name]
 
-    def _process(self, data: Dict[str, Any]):
+                
+                if size not in fs_name['counts']:
+                    fs_name['counts'][size] = weight
+                    fs_name['true_sizes'][size] = []
+                else:
+                    fs_name['counts'][size] += weight
+                    
+                if line.rotation[0] == 1.0:
+                    fs_name['true_sizes'][size].append(span.bbox.height())
+                else:
+                    fs_name['true_sizes'][size].append(span.bbox.width())
+                
+                font_statistics[span.font.family][span.font.name]['data'] = span.font.to_json()
 
-        performance_tracker: Dict[str, List[float]] = {
-            'read_pdf': [],
-            'load_page': [],
-            'page_image_generation': [],
-            'image_handler': [],
-            'drawing_handler': [],
-            'text_handler': []
-        }
 
-        path = data['metadata']['path']
-        pages = data['slice']
-        self.logger.debug("Loading path %s", path)
-        self.logger.debug("Loading pages %s", pages)
-
-        start = time.perf_counter()
-        pdf = self._read_pdf(path)
-        if not pdf:
-            self.logger.error("Failed to load PDF from %s", path)
-            return
-        performance_tracker['read_pdf'].append(time.perf_counter() - start)
-
-        text_handler = TextHandler(pdf, self.log_level)
-        image_handler = ImageHandler(pdf, self.log_level)
-        drawing_handler = DrawingHandler(pdf, self.log_level)
-
+    def _add_metadata_and_fields(self, data: Dict[str, Any], path: str, pdf: fitz.Document) -> Dict[str, Any]:
         metadata: Dict[str, Any] = {
             'title': os.path.basename(path),
             'pdf_metadata': pdf.metadata,
@@ -157,6 +134,89 @@ class PDFLoadProcessor(Processor):
         }
         data['metadata'] |= metadata
         data |= new_fields
+        return data
+
+    def _get_drawings(self,
+                      drawing_handler: DrawingHandler,
+                      page: fitz.Page,
+                      page_colour: Any,
+                      performance_tracker: Dict[str, List[float]]) -> Dict[DrawingType, List[DrawingElement]]:
+        start = time.perf_counter()
+        result = drawing_handler.get_page_drawings(page, page_colour)
+        performance_tracker['drawing_handler'].append(time.perf_counter() - start)
+        return result
+
+    def _get_text(self,
+                  text_handler: TextHandler,
+                  page: fitz.Page,
+                  performance_tracker: Dict[str, List[float]]) -> List[LineElement]:
+        start = time.perf_counter()
+        result = text_handler.get_page_text(page)
+        performance_tracker['text_handler'].append(time.perf_counter() - start)
+        return result
+
+    def _get_images(self,
+                    image_handler: ImageHandler,
+                    page: fitz.Page,
+                    page_colour,
+                    page_image: Image.Image,
+                    performance_tracker
+                    ) -> Tuple[Dict[ImageType, List[ImageElement]], List[Image.Image]]:
+
+        if not self.ignore_images:
+            start = time.perf_counter()
+            image_elements, images = image_handler.get_image_elements(
+                page, page_image, page_colour
+            )
+            performance_tracker['image_handler'].append(
+                time.perf_counter() - start)
+        else:
+            image_elements = []
+            images = []
+
+        return image_elements, images
+
+    def _read_pdf(self,
+                  path: str,
+                  performance_tracker: Dict[str, List[float]]) -> Optional[fitz.Document]:
+        start = time.perf_counter()
+
+        self.logger.debug('Loading %s', path)
+
+        try:
+            pdf = fitz.open(path)
+        except RuntimeError as error:
+            self.logger.exception("Failed to open %s", path, exc_info=error)
+            pdf = None
+
+        performance_tracker['read_pdf'].append(time.perf_counter() - start)
+        return pdf
+
+    def _process(self, data: Dict[str, Any]):
+
+        performance_tracker: Dict[str, List[float]] = {
+            'read_pdf': [],
+            'load_page': [],
+            'page_image_generation': [],
+            'image_handler': [],
+            'drawing_handler': [],
+            'text_handler': []
+        }
+
+        path = data['metadata']['path']
+        pages = data['slice']
+        self.logger.debug("Loading path %s", path)
+        self.logger.debug("Loading pages %s", pages)
+
+        pdf = self._read_pdf(path, performance_tracker)
+        if not pdf:
+            return None
+
+        text_handler = TextHandler(pdf, self.log_level)
+        image_handler = ImageHandler(pdf, self.log_level)
+        drawing_handler = DrawingHandler(pdf, self.log_level)
+
+        self._add_metadata_and_fields(data, path, pdf)
 
         page_count = pdf.page_count
 
@@ -185,38 +245,23 @@ class PDFLoadProcessor(Processor):
             page_colour = np.array(get_image_palette(
                 data['page_images'][page_number], n_colours=1)[0][0])
 
-            # Sometimes choose to ignore images if not needed
-            if not self.ignore_images:
-                start = time.perf_counter()
-                image_elements, images = image_handler.get_image_elements(
-                    page, data['page_images'][page_number], page_colour
-                )
-                performance_tracker['image_handler'].append(
-                    time.perf_counter() - start)
-            else:
-                image_elements = []
-                images = []
+            image_elements, images = self._get_images(image_handler, page,
+                                                      page_colour, data['page_images'][page_number],
+                                                      performance_tracker)
 
             data['image_elements'][int(page_number)] = image_elements
             data['images'][int(page_number)] = images
 
-            start = time.perf_counter()
-            data['drawing_elements'][page_number] = drawing_handler.get_page_drawings(
-                page, page_colour)
-            performance_tracker['drawing_handler'].append(
-                time.perf_counter() - start)
+            data['drawing_elements'][page_number] = self._get_drawings(drawing_handler, page,
+                                                                       page_colour, performance_tracker)
 
-            start = time.perf_counter()
-            data['text_elements'][page_number] = text_handler.get_page_text(
-                page)
-            performance_tracker['image_handler'].append(
-                time.perf_counter() - start)
+            data['text_elements'][page_number] = self._get_text(text_handler, page, performance_tracker)
 
             if DrawingType.BULLET in data['drawing_elements'][page_number]:
                 self.merge_bullets_into_text(
                     data['drawing_elements'][page_number][DrawingType.BULLET], data['text_elements'][page_number])
-            self.update_font_statistics(data['metadata']['font_statistics'], page.get_fonts(
-            ), data['text_elements'][page_number])
+            
+            self._update_font_statistics(data['metadata']['font_statistics'], page.get_fonts(), data['text_elements'][page_number])
 
         pdf.close()
 

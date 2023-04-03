@@ -21,6 +21,7 @@ class TextHandler():
         self.compare_window = 4
         self.bullet_merge_distance = 20
 
+
     def _are_duplicates(self, line1: LineElement, line2: LineElement) -> int:
         """Compares two line elements and evaluates if they are duplicates.
 
@@ -41,7 +42,7 @@ class TextHandler():
         """
         text1 = line1.get_text().strip()
         text2 = line2.get_text().strip()
-
+    
         if len(text1) > len(text2):
             shorter = text2
             longer = text1
@@ -56,6 +57,7 @@ class TextHandler():
 
         return 0
 
+
     def _remove_dubious_spaces(self, line: LineElement):
         """MuPDF will sometimes add additional spaces in heading text with decorative fonts.
         Try to identify this and remove
@@ -69,7 +71,10 @@ class TextHandler():
 
         if self.dubious_space_regex.match(line.get_text()):
             for span in line.spans:
+                span.text = span.text.replace("  ", "^_^_")
                 span.text = span.text.replace(" ", "")
+                span.text = span.text.replace("^_^_", " ")
+
 
     def _try_merge_separated_bullets(self, line1: LineElement, line2: LineElement) -> bool:
         """Tests whether the first line (which should already have been determined to be a bullet point)
@@ -85,11 +90,8 @@ class TextHandler():
         has_y_overlap = line1.bbox.y_overlap(line2.bbox, 'first') > 0.5
         close_in_x = (line2.bbox.x0 - line1.bbox.x1) < self.bullet_merge_distance and \
             (line2.bbox.x0 - line1.bbox.x1) > -5
-            
-        # print(line1.get_text(), line2.get_text())
-        # print(has_y_overlap, close_in_x)
 
-        if has_y_overlap and close_in_x:
+        if has_y_overlap and close_in_x and line2.get_text() != line1.get_text():
             line1.spans[0].text += "\t"
             new_spans = [line1.spans[0],
                          Span(bbox=Bbox(line1.bbox.x1, line1.bbox.y0,
@@ -103,6 +105,26 @@ class TextHandler():
 
             return True
         return False
+
+    def _try_merge_large_first_letters(self, line1: LineElement, line2: LineElement) -> bool:
+        """Tests whether the first line is a large, decorative single letter. Uses the fact that
+        (good) PDFs usually leave the true first letter in the line before to aid screenreaders.
+
+        Args:
+            line1 (LineElement): A potential first letter
+            line2 (LineElement): A potential sentence to merge
+
+        Returns:
+            bool: True if 1st line was merged with 2nd
+        """
+
+        if line2.bbox.y_overlap(line1.bbox, 'first') > 0.8 and abs(line1.bbox.x1 - line2.bbox.x0) < 25:
+            if line1.get_text().strip() == line2.get_text()[0]:
+                line2.spans[0].text = line2.spans[0].text[1:]
+            line2.spans.insert(0, line1.spans[0])
+            line2.bbox = Bbox.merge(
+                [line1.bbox, line2.bbox])
+            return True
 
     def _filter_and_clean_lines(self, lines: List[LineElement]) -> List[LineElement]:
         """Apply basic filtering over all lines in a page. Currently:
@@ -120,9 +142,10 @@ class TextHandler():
             return lines
 
         skip = [False for _ in range(len(lines))]
-        lines.sort(key=lambda l: round(l.bbox.y0/10, 0)*1000 + l.bbox.x0)
+        lines.sort(key=lambda l: round(l.bbox.y0, 0)*1000 + l.bbox.x0)
 
         for i, line in enumerate(lines):
+                        
             if skip[i]:
                 continue
 
@@ -137,19 +160,12 @@ class TextHandler():
             near_line_offset = max(0, i-self.compare_window)
             near_lines = lines[near_line_offset:i+self.compare_window]
 
-            # print("--------------------------")
-            # print(i, line.get_text())
-            # print("..........................")
-            # for j,nl in enumerate(near_lines):
-            #     print(j+near_line_offset, nl)
-            # print("--------------------------")
-
             # Filter line duplicates
             for j, test_line in enumerate(near_lines):
-                true_j = j+near_line_offset
+                true_j = j + near_line_offset
                 if i == true_j or skip[true_j]:
                     continue
-
+                
                 if test_line.bbox.y0 > line.bbox.y0 + 3:
                     break
 
@@ -162,15 +178,14 @@ class TextHandler():
 
             # Merge separated bullet points
             list_match = self.list_regex.match(line_text)
-            # print("is list", list_match, len(line_text), list_match.end() == len(line_text) if list_match else "")
             if list_match and list_match.end() == len(line_text):
                 for j, test_line in enumerate(near_lines):
                     true_j = j + near_line_offset
                     if i == true_j or skip[true_j]:
                         continue
 
-                    # if test_line.bbox.y0 > line.bbox.y1:
-                    #     break
+                    if test_line.bbox.y0 > line.bbox.y1:
+                        break
 
                     did_merge = self._try_merge_separated_bullets(line, test_line)
                     if did_merge:
@@ -185,20 +200,16 @@ class TextHandler():
                     if i == true_j or skip[true_j]:
                         continue
 
-                    if test_line.bbox.y_overlap(line.bbox, 'first') > 0.8 and abs(line.bbox.x1 - test_line.bbox.x0) < 25:
-                        if line_text == test_line.get_text()[0]:
-                            test_line.spans[0].text = test_line.spans[0].text[1:]
-                        test_line.spans.insert(0, line.spans[0])
-                        test_line.bbox = Bbox.merge(
-                            [line.bbox, test_line.bbox])
+                    did_merge = self._try_merge_large_first_letters(line, test_line)
+                    if did_merge:
                         skip[i] = True
                         break
-                continue
 
         lines = [line for i, line in enumerate(lines) if not skip[i]]
 
         return lines
 
+    
     def get_page_text(self, page: fitz.Page) -> List[LineElement]:
         """Returns cleaned, standardised set of LineElements from a PDF page.
         Currently applies:
@@ -236,6 +247,7 @@ class TextHandler():
                 block_lines.append(
                     LineElement.from_dict(line, bound[2], bound[3])
                 )
+
             lines += block_lines
 
         lines = self._filter_and_clean_lines(lines)

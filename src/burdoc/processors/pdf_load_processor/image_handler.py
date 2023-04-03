@@ -4,9 +4,6 @@ import io
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-
 import fitz
 import numpy as np
 from PIL import Image
@@ -17,7 +14,7 @@ from ...utils.image_manip import get_image_palette
 from ...utils.logging import get_logger
 
 
-class ImageHandler(object):
+class ImageHandler():
 
     def __init__(self, pdf: fitz.Document, log_level: int = logging.INFO):
         self.cache: Dict[str, Any] = {}
@@ -59,6 +56,17 @@ class ImageHandler(object):
         return None
 
     def _classify_image(self, image_element: ImageElement, image: Image.Image, page_colour: np.ndarray, page_bbox: Bbox) -> ImageType:
+        """Apply basic classification to the image to try and determine it's role.
+
+        Args:
+            image_element (ImageElement): The LayoutElement of the image
+            image (Image.Image): The image itself
+            page_colour (np.ndarray): Background colour of the page
+            page_bbox (Bbox): Bounding box of the page
+
+        Returns:
+            ImageType: The estimated image type
+        """
 
         # If cover is too small, we can't see it
         x_coverage = round(
@@ -66,20 +74,17 @@ class ImageHandler(object):
         y_coverage = round(
             image_element.bbox.y_overlap(page_bbox, 'second'), 3)
         page_coverage = x_coverage * y_coverage
+                
         if page_coverage <= 0.001:
             return ImageType.INVISIBLE
 
         # If thin in one dimension, treat as line rather than image
         if ((x_coverage < 0.05 and y_coverage > 0.1) or (x_coverage > 0.1 and y_coverage < 0.05)):
-            if (image_element.bbox.y1 / page_bbox.y1) > 0.1 and (image_element.bbox.y0 / page_bbox.y1) < 0.9:
+            if image_element.bbox.y1_norm() > 0.1 and image_element.bbox.y0_norm() < 0.9:
                 return ImageType.LINE
             else:
                 return ImageType.DECORATIVE
-
-        # If it's too small in any particular dimension it can't be a meaningful image
-        if x_coverage < 0.05 or y_coverage < 0.05 or page_coverage < 0.05:
-            return ImageType.DECORATIVE
-
+            
         # Now we've covered basic size-based cases, handle more complex image processing
         reduced_image = image.crop([image.size[0]*0.33, image.size[1]*0.33,
                                     image.size[0]*0.66, image.size[1]*0.66])
@@ -106,6 +111,11 @@ class ImageHandler(object):
 
         image_element.properties['primary_colour'] = np.array(
             get_image_palette(image, 1)[0][0])
+        
+        if 'A'  in image.getbands():
+            image_element.properties['alpha'] = np.mean(image.getchannel('A'))
+        else:
+            image_element.properties['alpha'] = 255.
 
         colour_offset = image_element.properties['primary_colour'] - page_colour
         image_element.properties['colour_offset'] = np.sqrt(
@@ -113,37 +123,46 @@ class ImageHandler(object):
 
         self.logger.debug("Image properties : %s",
                           str(image_element.properties))
+        
 
         # If complexity is low it could be either a full page background or a section
-        if x_variance + y_variance < 200:
+        if x_variance + y_variance < 200 and image_element.properties['alpha'] > 100:
             if page_coverage > 0.9:
                 return ImageType.BACKGROUND
 
             if page_coverage > 0.1 and image_element.properties['colour_offset'] > 15:
                 return ImageType.SECTION
 
-            return ImageType.DECORATIVE
-
         if (x_variance < 50 and y_variance > 1000) or (x_variance > 1000 and y_variance < 50):
             return ImageType.GRADIENT
 
         is_on_page_edge = image_element.bbox.x1_norm() < 0.08 or image_element.bbox.x0_norm() > 0.92 or \
             image_element.bbox.y1_norm() < 0.08 or image_element.bbox.y0_norm() > 0.92
-            
+                        
         if (page_coverage < 0.05 or x_coverage < 0.15 or y_coverage < 0.15) and is_on_page_edge:
             return ImageType.DECORATIVE
 
         return ImageType.PRIMARY
 
     def _crop_to_visible(self, orig_bbox: Bbox, image: Image.Image, page_bound: Bbox) -> Tuple[Image.Image, Bbox]:
-        '''Crop an image to only the visible pixels while preserving scaling transformations from the original PDF'''
+        """Crops an image to only the pixels that are visible on the page, while preserving scaling transformations
+        from the original PDF
+
+        Args:
+            orig_bbox (Bbox): Full Bounding box of the image
+            image (Image.Image): The Image itself
+            page_bound (Bbox): Bounding box of the page
+
+        Returns:
+            Tuple[Image.Image, Bbox]: Cropped image and it's new Bbox
+        """
         new_bbox = image.getbbox()
 
         if not new_bbox:
             return (image, orig_bbox)
-
-        scale_factor_x = (orig_bbox.x1 - orig_bbox.x0) / image.size[0]
-        scale_factor_y = (orig_bbox.y1 - orig_bbox.y0) / image.size[1]
+        
+        scale_factor_x = orig_bbox.width() / image.size[0]
+        scale_factor_y = orig_bbox.height() / image.size[1]
 
         new_x0 = max(orig_bbox.x0 + new_bbox[0]*scale_factor_x, 0)
         new_y0 = max(orig_bbox.y0 + new_bbox[1]*scale_factor_y, 0)
@@ -244,6 +263,7 @@ class ImageHandler(object):
 
                 image_element.type = self._classify_image(
                     image_element, image, page_colour, page_bbox)
+                                
                 image_elements[image_element.type].append(image_element)
 
                 image_as_bytes = io.BytesIO()

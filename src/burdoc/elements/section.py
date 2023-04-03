@@ -2,6 +2,8 @@ from typing import Any, Dict, List, Optional
 
 from .bbox import Bbox
 from .element import LayoutElement, LayoutElementGroup
+from .drawing import DrawingElement
+from .image import ImageElement
 
 
 class PageSection(LayoutElementGroup):
@@ -10,7 +12,7 @@ class PageSection(LayoutElementGroup):
     """
 
     def __init__(self, bbox: Optional[Bbox] = None, items: Optional[List[LayoutElement]] = None, default: bool = False,
-                 backing_drawing: Optional[Any] = None, backing_image: Optional[Any] = None, inline: bool = False):
+                 backing_drawing: Optional[DrawingElement] = None, backing_image: Optional[ImageElement] = None, inline: bool = False):
         """Create a PageSection. One of bbox or items must be provided
 
         Args:

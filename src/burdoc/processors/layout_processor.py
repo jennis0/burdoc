@@ -176,14 +176,21 @@ class LayoutProcessor(Processor):
             sections[0].items += text
 
         # Filter out sections with no lines
-        sections = [s for s in sections if len(s.items) > 0 or s.default]
-
-        self.logger.debug("Found %d section in page", len(sections))
-        for i, section in enumerate(sections):
+        keep_sections = []
+        for section in sections:
+            if len(section.items) == 0 and not section.default:
+                if section.backing_image:
+                    section.backing_image.type = ImageType.PRIMARY
+                    images[ImageType.PRIMARY].append(section.backing_image)
+            else:
+                keep_sections.append(section)
+        
+        self.logger.debug("Found %d section in page", len(keep_sections))
+        for i, section in enumerate(keep_sections):
             self.logger.debug("Section %d - %s - %d items",
                               i+1, section.bbox, len(section.items))
-
-        return sections
+            
+        return keep_sections
 
     def _create_blocks(self, section: PageSection) -> List[TextBlock]:
         '''Group all of the items within a section into blocks'''

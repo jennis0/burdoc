@@ -83,7 +83,7 @@ def get_font_table(font_data):
                                     line('td', '?')
                                     line('td', '?')
                                 
-                                if 'true_sizes' in font:
+                                if 'true_sizes' in font and size in font['true_sizes']:
                                     vals = font['true_sizes'][size]
                                     line('td', f"Mean={round(np.mean(vals), 1)} | Min={round(np.min(vals), 1)}"+\
                                         f" | Max={round(np.max(vals), 1)} | Var={round(np.var(vals), 1)}")

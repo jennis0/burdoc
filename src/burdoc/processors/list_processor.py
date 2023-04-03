@@ -8,7 +8,7 @@ from plotly.graph_objects import Figure
 from ..elements.aside import Aside
 from ..elements.element import LayoutElement
 from ..elements.section import PageSection
-from ..elements.textblock import TextBlock
+from ..elements.textblock import TextBlock, TextBlockType
 from ..elements.textlist import TextList, TextListItem
 from ..utils.regexes import get_list_regex
 from ..utils.render_pages import add_rect_to_figure, add_text_to_figure
@@ -117,8 +117,12 @@ class ListProcessor(Processor):
 
         for i, element in enumerate(elements):
             if isinstance(element, TextBlock):
-                list_match = self.list_regex.match(
-                    element.get_text()[:10].strip())
+                                
+                list_match = self.list_regex.match(element.get_text()[:10].strip())
+                
+                if element.type not in [TextBlockType.PARAGRAPH, TextBlockType.SMALL, TextBlockType.EMPHASIS]:
+                    list_match = False
+                    in_list = False
 
                 # Does the box start with something that looks like a list/bullet point
                 if not in_list and list_match:

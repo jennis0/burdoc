@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 
 @dataclass
 class Font:
@@ -15,6 +15,33 @@ class Font:
     smallcaps: bool
 
     @staticmethod
+    def split_font_name(fontname: str, type: str="") -> Tuple[str, str]:
+        """Splits a font into family and base name (family-variation). Optional type argument
+        only used when an unnamed font is found.
+        
+        Consistently handles font subsetting and variations.
+
+        Args:
+            fontname (str): Full name of a font
+            type (str, optional): Font type. Defaults to "".
+
+        Returns:
+            Tuple[str, str]: (font family, font basename)
+        """
+        if "+" in fontname:
+            fontname = fontname.split("+")[1]
+                        
+        family = fontname.split("-")[0].split("_")[0]
+        if family == "":
+            family = "Unnamed"
+            if type != "":
+                fontname = f"Unnamed-T{type[-1]}"
+            else:
+                fontname = "Unnamed-T?"
+                
+        return (family, fontname)
+
+    @staticmethod
     def from_dict(span_dict: Dict[str, Any]):
         """Creates Font object from a PyMuPDF span
 
@@ -23,7 +50,9 @@ class Font:
         Args:
             font_doct (Dict[str, Any]): _description_
         """
-        fontparts = span_dict['font'].split('-')
+        
+        family, fontname = Font.split_font_name(span_dict['font'])
+        fontparts = fontname.split('-')
         font_family = fontparts[0]
         
         if len(fontparts) > 1:
@@ -39,8 +68,8 @@ class Font:
         smallcaps = any(x in font_modifier for x in ['sc', 'smallcaps', 'caps']) or \
             any(font_family.endswith(x) for x in ['SC', 'SmallCaps']) or \
                 any(x in font_family for x in ['Caps'])
-
-        return Font(span_dict['font'], font_family, round(span_dict['size'], 1), span_dict['color'],
+                
+        return Font(fontname, font_family, round(span_dict['size'], 1), span_dict['color'],
                     bold, italic, superscript, smallcaps)
 
     def __repr__(self):

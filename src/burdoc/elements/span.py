@@ -36,8 +36,12 @@ class Span(LayoutElement):
                       span_dict['bbox'][3], page_width, page_height),
         )
 
-    def __repr__(self):
-        return f"<Span '{self.text}' Font={self.font}>"
+    def _str_rep(self, extras=None) -> str:
+        if extras is None:
+            extras = {}
+        extras['text'] = self.text
+        extras['font'] = self.font
+        return super()._str_rep(extras)
 
     def to_json(self, extras: Optional[Dict[str, Any]] = None, include_bbox: bool = False, **kwargs):
         if not extras:
