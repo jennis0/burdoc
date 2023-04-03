@@ -1,0 +1,279 @@
+[2023-04-01 00:58:45] [root:220 DEBUG] _________________New log started__________________
+[2023-04-01 00:58:45] [root:221 DEBUG] Log config file: C:\Users\jenni\OneDrive\Documents\Code\burdoc\env\lib\site-packages\logger_tt\log_config.json
+[2023-04-01 00:58:45] [root:161 DEBUG] Logging server started!
+[2023-04-01 00:58:46] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 00:58:47] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 00:58:48] [root:38 ERROR] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\jenni\OneDrive\Documents\Code\burdoc\burdoc\tests\integration\run_integration_tests.py", line 263, in <module>
+    run()
+
+  File "C:\Users\jenni\OneDrive\Documents\Code\burdoc\burdoc\tests\integration\run_integration_tests.py", line 246, in run
+    report_data = run_parser(inputs, outputs, gold, args.update,
+                             args.exclude.split(",") if args.exclude else [],
+                             args.include.split(",") if args.include else []
+                             )
+     |-> (outer) run_parser = <function run_parser at 0x0000014A0F6AEAF0>
+     |-> inputs = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs'
+     |-> outputs = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\outputs'
+     |-> gold = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold'
+     |-> args.update = False
+     |-> args.exclude.split = '!!! Not Exists'
+     |-> args.exclude = []
+     |-> args.include.split = '!!! Not Exists'
+     |-> args.include = []
+     => argparser = ArgumentParser(prog='run_integration_tests.py', usage=None, description=None, formatter_class=<class 'argparse.HelpFormatter'>, conflict_handler='error', add_help=True)
+     => args = Namespace(test_dir='C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data', update=False, exclude=[], include=[])
+     => data_dir = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data'
+     => report = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\report.json'
+
+  File "C:\Users\jenni\OneDrive\Documents\Code\burdoc\burdoc\tests\integration\run_integration_tests.py", line 156, in run_parser
+    test_data['files'][-1]['processing_time'] = round(
+        time.perf_counter() - start, 3)
+     |-> test_data = {'in_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs', 'out_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\outputs', 'gold_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold', 'files': {'column_switch': {'filename': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\column_switch.pdf', 'filetitle': 'column_switch', 'changes': {}}}}
+     |-> (outer) time.perf_counter = <built-in function perf_counter>
+     |-> start = 3.6352058
+     => source_dir = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs'
+     => out_dir = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\outputs'
+     => gold_dir = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold'
+     => do_update = False
+     => exclude = []
+     => include = []
+     => burdoc = <burdoc.burdoc_parser.BurdocParser object at 0x0000014A0F69E3D0>
+     => filetitle = 'column_switch'
+     => filename = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\column_switch.pdf'
+     => json_out = {'metadata': {'path': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\column_switch.pdf', 'title': 'column_switch.pdf', 'pdf_metadata': {'format': 'PDF 1.7', 'title': '', 'author': 'Joe Ennis', 'subject': '', 'keywords': '', 'creator': 'Microsoft® Word for Microsoft 365', 'producer': 'Microsoft® Word for Microsoft 365', 'creationDate': "D:20230325084930+00'00'", 'modDate': "D:20230325084930+00'00'", 'trapped': '', 'encryption': None}, 'font_statistics': {'TimesNewRomanPSMT': {'_counts': {20.0: 1, 12.0: 68}, 'TimesNewRomanPSMT': {'family': 'TimesNewRomanPSMT', 'basefont': 'TimesNewRomanPSMT', 'counts': {20.0: 1, 12.0: 68}}}, 'Calibri': {'_counts': {11.0: 1}, 'Calibri': {'family': 'Calibri', 'basefont': 'Calibri', 'counts': {11.0: 1}}}}, 'toc': []}, 'content': {0: [{'type': 'h2', 'block_text': 'A Test Document ', 'items': [{'spans': [{'name': 'span', 'text': 'A Test Document ', 'font': {'name': 'font', 'font': 'TimesNewRo... (23433 characters more)
+     => gold_files = {'column_switch': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold\\column_switch.json', 'complex_doc': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold\\complex_doc.json', 'complex_doc_2': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold\\complex_doc_2.json', 'lists': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold\\lists.json', 'tables': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold\\tables.json', 'two_columns': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold\\two_columns.json', 'two_paragraphs': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold\\two_paragraphs.json'}
+     => in_files = {'column_switch': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\column_switch.pdf', 'complex_doc': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\complex_doc.pdf', 'complex_doc_2': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\complex_doc_2.pdf', 'lists': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\lists.pdf', 'tables': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\tables.pdf', 'two_columns': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\two_columns.pdf', 'two_paragraphs': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\two_paragraphs.pdf'}
+KeyError: -1
+
+[2023-04-01 00:59:10] [root:220 DEBUG] _________________New log started__________________
+[2023-04-01 00:59:10] [root:221 DEBUG] Log config file: C:\Users\jenni\OneDrive\Documents\Code\burdoc\env\lib\site-packages\logger_tt\log_config.json
+[2023-04-01 00:59:10] [root:161 DEBUG] Logging server started!
+[2023-04-01 00:59:12] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 00:59:12] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 00:59:14] [root:38 ERROR] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\jenni\OneDrive\Documents\Code\burdoc\burdoc\tests\integration\run_integration_tests.py", line 263, in <module>
+    run()
+
+  File "C:\Users\jenni\OneDrive\Documents\Code\burdoc\burdoc\tests\integration\run_integration_tests.py", line 246, in run
+    report_data = run_parser(inputs, outputs, gold, args.update,
+                             args.exclude.split(",") if args.exclude else [],
+                             args.include.split(",") if args.include else []
+                             )
+     |-> (outer) run_parser = <function run_parser at 0x000002C646F99C10>
+     |-> inputs = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs'
+     |-> outputs = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\outputs'
+     |-> gold = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold'
+     |-> args.update = False
+     |-> args.exclude.split = '!!! Not Exists'
+     |-> args.exclude = []
+     |-> args.include.split = '!!! Not Exists'
+     |-> args.include = []
+     => argparser = ArgumentParser(prog='run_integration_tests.py', usage=None, description=None, formatter_class=<class 'argparse.HelpFormatter'>, conflict_handler='error', add_help=True)
+     => args = Namespace(test_dir='C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data', update=False, exclude=[], include=[])
+     => data_dir = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data'
+     => report = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\report.json'
+
+  File "C:\Users\jenni\OneDrive\Documents\Code\burdoc\burdoc\tests\integration\run_integration_tests.py", line 156, in run_parser
+    test_data['files'][filename]['processing_time'] = round(
+        time.perf_counter() - start, 3)
+     |-> test_data = {'in_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs', 'out_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\outputs', 'gold_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold', 'files': {'column_switch': {'filename': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\column_switch.pdf', 'filetitle': 'column_switch', 'changes': {}}}}
+     |-> filename = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\column_switch.pdf'
+     |-> (outer) time.perf_counter = <built-in function perf_counter>
+     |-> start = 3.5958589
+     => source_dir = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs'
+     => out_dir = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\outputs'
+     => gold_dir = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold'
+     => do_update = False
+     => exclude = []
+     => include = []
+     => burdoc = <burdoc.burdoc_parser.BurdocParser object at 0x000002C646F8CBE0>
+     => filetitle = 'column_switch'
+     => json_out = {'metadata': {'path': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\column_switch.pdf', 'title': 'column_switch.pdf', 'pdf_metadata': {'format': 'PDF 1.7', 'title': '', 'author': 'Joe Ennis', 'subject': '', 'keywords': '', 'creator': 'Microsoft® Word for Microsoft 365', 'producer': 'Microsoft® Word for Microsoft 365', 'creationDate': "D:20230325084930+00'00'", 'modDate': "D:20230325084930+00'00'", 'trapped': '', 'encryption': None}, 'font_statistics': {'TimesNewRomanPSMT': {'_counts': {20.0: 1, 12.0: 68}, 'TimesNewRomanPSMT': {'family': 'TimesNewRomanPSMT', 'basefont': 'TimesNewRomanPSMT', 'counts': {20.0: 1, 12.0: 68}}}, 'Calibri': {'_counts': {11.0: 1}, 'Calibri': {'family': 'Calibri', 'basefont': 'Calibri', 'counts': {11.0: 1}}}}, 'toc': []}, 'content': {0: [{'type': 'h2', 'block_text': 'A Test Document ', 'items': [{'spans': [{'name': 'span', 'text': 'A Test Document ', 'font': {'name': 'font', 'font': 'TimesNewRo... (23433 characters more)
+     => gold_files = {'column_switch': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold\\column_switch.json', 'complex_doc': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold\\complex_doc.json', 'complex_doc_2': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold\\complex_doc_2.json', 'lists': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold\\lists.json', 'tables': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold\\tables.json', 'two_columns': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold\\two_columns.json', 'two_paragraphs': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold\\two_paragraphs.json'}
+     => in_files = {'column_switch': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\column_switch.pdf', 'complex_doc': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\complex_doc.pdf', 'complex_doc_2': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\complex_doc_2.pdf', 'lists': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\lists.pdf', 'tables': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\tables.pdf', 'two_columns': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\two_columns.pdf', 'two_paragraphs': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\two_paragraphs.pdf'}
+KeyError: 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\column_switch.pdf'
+
+[2023-04-01 01:00:09] [root:220 DEBUG] _________________New log started__________________
+[2023-04-01 01:00:09] [root:221 DEBUG] Log config file: C:\Users\jenni\OneDrive\Documents\Code\burdoc\env\lib\site-packages\logger_tt\log_config.json
+[2023-04-01 01:00:09] [root:161 DEBUG] Logging server started!
+[2023-04-01 01:00:11] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:11] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:13] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:14] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:15] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:16] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:18] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:18] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:20] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:21] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:22] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:23] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:24] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:25] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:26] [root:38 ERROR] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\jenni\OneDrive\Documents\Code\burdoc\burdoc\tests\integration\run_integration_tests.py", line 263, in <module>
+    run()
+     |-> run = <function run at 0x000001D5A4458D30>
+     => __name__ = '__main__'
+     => __doc__ = None
+     => __package__ = None
+     => __loader__ = <_frozen_importlib_external.SourceFileLoader object at 0x000001D5B70CA100>
+     => __spec__ = None
+     => __annotations__ = {}
+     => __builtins__ = <module 'builtins' (built-in)>
+     => __file__ = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\run_integration_tests.py'
+     => __cached__ = None
+     => argparse = <module 'argparse' from 'C:\\Python39\\lib\\argparse.py'>
+     => json = <module 'json' from 'C:\\Python39\\lib\\json\\__init__.py'>
+     => os = <module 'os' from 'C:\\Python39\\lib\\os.py'>
+     => re = <module 're' from 'C:\\Python39\\lib\\re.py'>
+     => sys = <module 'sys' (built-in)>
+     => time = <module 'time' (built-in)>
+     => Any = typing.Any
+     => Dict = typing.Dict
+     => List = typing.List
+     => Optional = typing.Optional
+     => BurdocParser = <class 'burdoc.burdoc_parser.BurdocParser'>
+     => compare = <function compare at 0x000001D5A4458AF0>
+     => get_data_dir = <function get_data_dir at 0x000001D5B9638CA0>
+     => build_file_list = <function build_file_list at 0x000001D5A4458B80>
+     => run_parser = <function run_parser at 0x000001D5A4458C10>
+     => print_results = <function print_results at 0x000001D5A4458CA0>
+
+  File "C:\Users\jenni\OneDrive\Documents\Code\burdoc\burdoc\tests\integration\run_integration_tests.py", line 250, in run
+    if args.report:
+     |-> args.report = '!!! Not Exists'
+     => argparser = ArgumentParser(prog='run_integration_tests.py', usage=None, description=None, formatter_class=<class 'argparse.HelpFormatter'>, conflict_handler='error', add_help=True)
+     => args = Namespace(test_dir='C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data', update=False, exclude=[], include=[])
+     => data_dir = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data'
+     => inputs = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs'
+     => outputs = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\outputs'
+     => gold = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold'
+     => report = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\report.json'
+     => report_data = {'in_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs', 'out_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\outputs', 'gold_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold', 'files': {'column_switch': {'filename': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\column_switch.pdf', 'filetitle': 'column_switch', 'changes': [{'path': 'content.0', 'type': 'deletion', 'old': {'type': 'h2', 'items': [{'spans': [{'name': 'span', 'text': 'A Test Document ', 'font': {'name': 'font', 'font': 'TimesNewRomanPSMT', 'family': 'TimesNewRomanPSMT', 'size': 20.0, 'colour': 0, 'bold': False, 'italic': False, 'superscript': False}}], 'name': 'line'}], 'name': 'textblock'}}, {'path': 'content.0', 'type': 'deletion', 'old': {'type': 'paragraph', 'items': [{'spans': [{'name': 'span', 'text':... (245765 characters more)
+AttributeError: 'Namespace' object has no attribute 'report'
+
+[2023-04-01 01:00:52] [root:220 DEBUG] _________________New log started__________________
+[2023-04-01 01:00:52] [root:221 DEBUG] Log config file: C:\Users\jenni\OneDrive\Documents\Code\burdoc\env\lib\site-packages\logger_tt\log_config.json
+[2023-04-01 01:00:52] [root:161 DEBUG] Logging server started!
+[2023-04-01 01:00:54] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:54] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:56] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:57] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:58] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:00:59] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:01:01] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:01:02] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:01:03] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:01:04] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:01:05] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:01:06] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:01:08] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:01:08] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:01:10] [root:38 ERROR] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\jenni\OneDrive\Documents\Code\burdoc\burdoc\tests\integration\run_integration_tests.py", line 263, in <module>
+    run()
+
+  File "C:\Users\jenni\OneDrive\Documents\Code\burdoc\burdoc\tests\integration\run_integration_tests.py", line 254, in run
+    print_results(report_data)
+     |-> (outer) print_results = <function print_results at 0x0000019187B79CA0>
+     |-> report_data = {'in_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs', 'out_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\outputs', 'gold_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold', 'files': {'column_switch': {'filename': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\column_switch.pdf', 'filetitle': 'column_switch', 'changes': [{'path': 'content.0', 'type': 'deletion', 'old': {'type': 'h2', 'items': [{'spans': [{'name': 'span', 'text': 'A Test Document ', 'font': {'name': 'font', 'font': 'TimesNewRomanPSMT', 'family': 'TimesNewRomanPSMT', 'size': 20.0, 'colour': 0, 'bold': False, 'italic': False, 'superscript': False}}], 'name': 'line'}], 'name': 'textblock'}}, {'path': 'content.0', 'type': 'deletion', 'old': {'type': 'paragraph', 'items': [{'spans': [{'name': 'span', 'text'... (245765 characters more)
+     => argparser = ArgumentParser(prog='run_integration_tests.py', usage=None, description=None, formatter_class=<class 'argparse.HelpFormatter'>, conflict_handler='error', add_help=True)
+     => args = Namespace(test_dir='C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data', update=False, exclude=[], include=[])
+     => data_dir = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data'
+     => inputs = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs'
+     => outputs = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\outputs'
+     => gold = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold'
+     => report = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\report.json'
+     => f_report = <_io.TextIOWrapper name='C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\report.json' mode='w' encoding='utf-8'>
+
+  File "C:\Users\jenni\OneDrive\Documents\Code\burdoc\burdoc\tests\integration\run_integration_tests.py", line 206, in print_results
+    adds = [c for c in result['changes'] if c['type'] == 'addition']
+     |-> result = 'column_switch'
+     => report_data = {'in_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs', 'out_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\outputs', 'gold_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold', 'files': {'column_switch': {'filename': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\column_switch.pdf', 'filetitle': 'column_switch', 'changes': [{'path': 'content.0', 'type': 'deletion', 'old': {'type': 'h2', 'items': [{'spans': [{'name': 'span', 'text': 'A Test Document ', 'font': {'name': 'font', 'font': 'TimesNewRomanPSMT', 'family': 'TimesNewRomanPSMT', 'size': 20.0, 'colour': 0, 'bold': False, 'italic': False, 'superscript': False}}], 'name': 'line'}], 'name': 'textblock'}}, {'path': 'content.0', 'type': 'deletion', 'old': {'type': 'paragraph', 'items': [{'spans': [{'name': 'span', 'text':... (245764 characters more)
+TypeError: string indices must be integers
+
+[2023-04-01 01:02:52] [root:220 DEBUG] _________________New log started__________________
+[2023-04-01 01:02:52] [root:221 DEBUG] Log config file: C:\Users\jenni\OneDrive\Documents\Code\burdoc\env\lib\site-packages\logger_tt\log_config.json
+[2023-04-01 01:02:52] [root:161 DEBUG] Logging server started!
+[2023-04-01 01:02:53] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:02:54] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:02:56] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:02:57] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:02:58] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:02:59] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:00] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:01] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:02] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:03] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:05] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:06] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:07] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:08] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:09] [root:38 ERROR] Uncaught exception:
+Traceback (most recent call last):
+  File "C:\Users\jenni\OneDrive\Documents\Code\burdoc\burdoc\tests\integration\run_integration_tests.py", line 263, in <module>
+    run()
+     |-> run = <function run at 0x0000024DC3B08D30>
+     => __name__ = '__main__'
+     => __doc__ = None
+     => __package__ = None
+     => __loader__ = <_frozen_importlib_external.SourceFileLoader object at 0x0000024DD6D4A100>
+     => __spec__ = None
+     => __annotations__ = {}
+     => __builtins__ = <module 'builtins' (built-in)>
+     => __file__ = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\run_integration_tests.py'
+     => __cached__ = None
+     => argparse = <module 'argparse' from 'C:\\Python39\\lib\\argparse.py'>
+     => json = <module 'json' from 'C:\\Python39\\lib\\json\\__init__.py'>
+     => os = <module 'os' from 'C:\\Python39\\lib\\os.py'>
+     => re = <module 're' from 'C:\\Python39\\lib\\re.py'>
+     => sys = <module 'sys' (built-in)>
+     => time = <module 'time' (built-in)>
+     => Any = typing.Any
+     => Dict = typing.Dict
+     => List = typing.List
+     => Optional = typing.Optional
+     => BurdocParser = <class 'burdoc.burdoc_parser.BurdocParser'>
+     => compare = <function compare at 0x0000024DC3B08AF0>
+     => get_data_dir = <function get_data_dir at 0x0000024DD8F68CA0>
+     => build_file_list = <function build_file_list at 0x0000024DC3B08B80>
+     => run_parser = <function run_parser at 0x0000024DC3B08C10>
+     => print_results = <function print_results at 0x0000024DC3B08CA0>
+
+  File "C:\Users\jenni\OneDrive\Documents\Code\burdoc\burdoc\tests\integration\run_integration_tests.py", line 257, in run
+    if len(r['changes']) > 0:
+     |-> r = 'column_switch'
+     => argparser = ArgumentParser(prog='run_integration_tests.py', usage=None, description=None, formatter_class=<class 'argparse.HelpFormatter'>, conflict_handler='error', add_help=True)
+     => args = Namespace(test_dir='C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data', update=False, exclude=[], include=[])
+     => data_dir = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data'
+     => inputs = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs'
+     => outputs = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\outputs'
+     => gold = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold'
+     => report = 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\report.json'
+     => report_data = {'in_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs', 'out_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\outputs', 'gold_dir': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\gold', 'files': {'column_switch': {'filename': 'C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\inputs\\column_switch.pdf', 'filetitle': 'column_switch', 'changes': [{'path': 'content.0', 'type': 'deletion', 'old': {'type': 'h2', 'items': [{'spans': [{'name': 'span', 'text': 'A Test Document ', 'font': {'name': 'font', 'font': 'TimesNewRomanPSMT', 'family': 'TimesNewRomanPSMT', 'size': 20.0, 'colour': 0, 'bold': False, 'italic': False, 'superscript': False}}], 'name': 'line'}], 'name': 'textblock'}}, {'path': 'content.0', 'type': 'deletion', 'old': {'type': 'paragraph', 'items': [{'spans': [{'name': 'span', 'text':... (245765 characters more)
+     => f_report = <_io.TextIOWrapper name='C:\\Users\\jenni\\OneDrive\\Documents\\Code\\burdoc\\burdoc\\tests\\integration\\data\\report.json' mode='w' encoding='utf-8'>
+TypeError: string indices must be integers
+
+[2023-04-01 01:03:38] [root:220 DEBUG] _________________New log started__________________
+[2023-04-01 01:03:38] [root:221 DEBUG] Log config file: C:\Users\jenni\OneDrive\Documents\Code\burdoc\env\lib\site-packages\logger_tt\log_config.json
+[2023-04-01 01:03:38] [root:161 DEBUG] Logging server started!
+[2023-04-01 01:03:40] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:40] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:42] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:43] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:44] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:45] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:47] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:47] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:49] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:50] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:51] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:52] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:53] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)
+[2023-04-01 01:03:54] [timm.models.helpers:247 INFO] Loading pretrained weights from url (https://download.pytorch.org/models/resnet18-5c106cde.pth)

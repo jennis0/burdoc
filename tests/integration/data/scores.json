@@ -1,0 +1,98 @@
+{
+    "all_text_types_3": [
+        4,
+        "split_paragraphs"
+    ],
+    "blockquote": [
+        4,
+        "false_heading"
+    ],
+    "blockquote_columns": [
+        5,
+        ""
+    ],
+    "column_switch": [
+        5,
+        ""
+    ],
+    "columns_with_headers": [
+        4,
+        "split_paragraphs"
+    ],
+    "complex_doc": [
+        5,
+        ""
+    ],
+    "complex_doc_2": [
+        5,
+        ""
+    ],
+    "complex_fonts": [
+        5,
+        ""
+    ],
+    "drawing_bullets": [
+        3,
+        "missed_bullets"
+    ],
+    "duplicate_text": [
+        2,
+        "missed_duplicates"
+    ],
+    "end_image": [
+        2,
+        "missed_image, missed_links"
+    ],
+    "image_above_text": [
+        2,
+        "missed_image, missed_links"
+    ],
+    "inline_images": [
+        2,
+        "missed_image, missed_links"
+    ],
+    "inline_simple_tables": [
+        2,
+        "missed_tables"
+    ],
+    "lists": [
+        5,
+        ""
+    ],
+    "nested_lists": [
+        3,
+        "missed_nested_list"
+    ],
+    "nested_lists_columns": [
+        3,
+        "missed_nested_list"
+    ],
+    "out_of_line_image": [
+        2,
+        "missed_tables"
+    ],
+    "tables": [
+        2,
+        "wrong_tables"
+    ],
+    "three_columns": [
+        5,
+        ""
+    ],
+    "three_columns_landscape": [
+        5,
+        ""
+    ],
+    "two_columns": [
+        5,
+        ""
+    ],
+    "two_paragraphs": [
+        5,
+        ""
+    ],
+    "wrapped_images": [
+        5,
+        ""
+    ]
+}

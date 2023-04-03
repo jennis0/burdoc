@@ -27,12 +27,6 @@ class ImageHandler(object):
     def _get_image(self, xref: str) -> Optional[Image.Image]:
         image = self.pdf.extract_image(xref)
         
-        if image:
-            for key in image:
-                if key == "image":
-                    continue
-                print(key, image[key])
-        
         self.logger.debug("Loading image %d", xref)
         if image:
             self.logger.debug("Image %d: found", xref)
@@ -232,15 +226,12 @@ class ImageHandler(object):
         images: List[str] = []
 
         for page_image in page_images:
-            print(page_image)
             image = self._get_image(page_image['xref'])
 
             if image:
                 
                 orig_bbox = Bbox(
                     *page_image['bbox'], bound[2], bound[3])  # type:ignore
-
-                print(orig_bbox)
 
                 image, crop_bbox = self._crop_to_visible(
                     orig_bbox, image, page_bbox)

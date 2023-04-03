@@ -394,7 +394,7 @@ def create_embedded_view(
                         gold_pages[page], f'Gold Page {page}', background="gold"))
                     
 
-        with tag('div', klass='column', style='margin:0, padding:0'):
+        with tag('div', klass='column', style='margin:0, padding:0; width:45%'):
             links['Contents'] = '#-contents'
             doc.asis(create_top_links(links))
             del links['Contents']
@@ -617,6 +617,8 @@ def run():
     if write_scores:
         with open(scores_path, 'w', encoding='utf-8') as f:
             json.dump(scores, f)
+            
+    print(f"Written index to {os.path.abspath(os.path.join(out_dir, 'index.html'))}")
 
 
 if __name__ == "__main__":

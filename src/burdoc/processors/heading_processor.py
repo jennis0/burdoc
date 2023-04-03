@@ -75,6 +75,9 @@ class HeadingProcessor(Processor):
         self.default_font_size = sorted_indices[0]/10.
 
     def _is_heading(self, factors: Dict[str, Any]) -> bool:
+        
+        if len(factors['text']) == 0:
+            return False
 
         word_count = factors['word_count']
         line_count = factors['line_count']
@@ -89,11 +92,13 @@ class HeadingProcessor(Processor):
 
         if factors['word_count'] > 20:
             return False
-        if factors['line_count'] > 3:
+        if factors['line_count'] > 3 and factors['word_count'] > 10: #Allow for very narrow columns
             return False
         if factors['all_italics'] and not factors['all_bold'] and \
             (factors['size'] < self.default_font_size + 1 or word_count > 7):
             return False
+
+
 
         para_header = factors['dist_to_last'] > min(5, factors['dist_to_next'] + 1)
         if para_header:
@@ -102,6 +107,12 @@ class HeadingProcessor(Processor):
 
             if factors['all_bold'] and abs(factors['line_align']) > 5 and \
                     abs(factors['dist_to_next']) < 4:
+                return True
+            
+            if factors['all_bold'] and factors['size'] > self.default_font_size + 0.5:
+                return True
+            
+            if factors['all_bold'] and factors['dist_to_next'] > 10:
                 return True
 
         if max(factors['sizes']) > self.default_font_size + 2.:
@@ -128,6 +139,7 @@ class HeadingProcessor(Processor):
                         next_element: Optional[LayoutElement]) -> TextBlockType:
 
         heading_factors: Dict[str, Any] = {}
+        heading_factors['text'] = element.get_text().strip()
         heading_factors['word_count'] = len(element.get_text().split())
         heading_factors['line_count'] = len(element.items)
         heading_factors['all_caps'] = element.get_text().isupper()
