@@ -19,12 +19,14 @@ def _diff_value(path: str, value1: Any, value2: Any) -> List[Dict[str, Any]]:
 
 def _diff_dict(path: str, dict1: Dict[str, Any], dict2: Dict[str, Any]) -> List[Dict[str, Any]]:
     changes = []
+    
+    if path != "":
+        root_path = f"{path}."
+    else:
+        root_path = ""
+        
     for k in dict1:
-        if path != "":
-            k_path = f"{path}.{k}"
-        else:
-            k_path = k
-
+        k_path = root_path + k
         if k not in dict2:
             changes.append(
                 {'path': k_path, 'type': 'deletion', 'old': dict1[k]})
@@ -32,6 +34,7 @@ def _diff_dict(path: str, dict1: Dict[str, Any], dict2: Dict[str, Any]) -> List[
             changes += _do_diff(k_path, dict1[k], dict2[k])
 
     for k in dict2:
+        k_path = root_path + k
         if k not in dict1:
             changes.append(
                 {'path': k_path, 'type': 'addition', 'new': dict2[k]})

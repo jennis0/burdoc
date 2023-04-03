@@ -1,5 +1,6 @@
 import logging
 import re
+import roman
 from typing import Any, Dict, List, Tuple, Union
 
 from plotly.graph_objects import Figure
@@ -54,13 +55,24 @@ class ListProcessor(Processor):
         next_is_num = str.isnumeric(next_index)
         if last_is_num != next_is_num:
             return False
-
+        
         if last_is_num:
-            if int(next_index) - int(last_index) == 1:
-                return True
-        else:
-            if ord(next_index) - ord(last_index) == 1:
-                return True
+            return int(next_index) - int(last_index) == 1
+
+        #Try to handle roman numerals
+        if 'i' in last_index.lower() or 'i' in next_index.lower():
+            try:
+                last_as_roman = roman.fromRoman(last_index.upper())
+                next_as_roman = roman.fromRoman(next_index.upper())
+                return next_as_roman - last_as_roman == 1
+            except roman.InvalidRomanNumeralError:
+                pass
+                
+            if len(last_index) > 1 or len(next_index) > 1:
+                return False
+            
+        if ord(next_index) - ord(last_index) == 1:
+            return True
 
         return False
 

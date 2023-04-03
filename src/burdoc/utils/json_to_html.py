@@ -54,8 +54,9 @@ class JsonHtmlConverter():
         skip_rows = set()
         if 'col_header_index' in table and len(table['col_header_index']) > 0 and table['col_header_index'][0] == 0:
             header = "<theader>"
-            header += "".join(
-                [f"<th>{self._cell_to_html(cell)}</th>" for cell in table['cells'][0]])
+            if len(table['cells']) > 0:
+                header += "".join(
+                    [f"<th>{self._cell_to_html(cell)}</th>" for cell in table['cells'][0]])
             header += "</theader>"
             text += header
             skip_rows.add(0)
