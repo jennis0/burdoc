@@ -36,20 +36,20 @@
         "missed_bullets"
     ],
     "duplicate_text": [
-        2,
-        "missed_duplicates"
+        5,
+        ""
     ],
     "end_image": [
-        2,
-        "missed_image, missed_links"
+        4,
+        "wrong_order, missed_links"
     ],
     "image_above_text": [
-        2,
-        "missed_image, missed_links"
+        5,
+        "missed_links"
     ],
     "inline_images": [
-        2,
-        "missed_image, missed_links"
+        5,
+        "missed_links"
     ],
     "inline_simple_tables": [
         2,
