@@ -26,29 +26,7 @@ class ImageHandler():
         if xref == 0:
             return None
         
-        # print(xref)
         image = self.pdf.extract_image(xref)
-        # print("Source")
-        # obj = self.pdf.xref_object(xref, 0, 1)
-        # print(obj)
-        # keys = self.pdf.xref_get_keys(xref)
-        # for k in keys:
-        #     print(k, self.pdf.xref_get_key(xref, k))
-        #     if k == 'ColorSpace':
-        #         val = self.pdf.xref_get_key(xref, k)
-        #         print(val)
-        #         xr = val[1].split()[0]
-        #         if str.isnumeric(xr):
-        #             xr = int(xr)
-        #             print("\t", self.pdf.xref_object(xr))
-                    
-        #     if k == 'Metadata':
-        #         val = self.pdf.xref_get_key(xref, k)
-        #         print(val)
-        #         xr = val[1].split()[0]
-        #         if str.isnumeric(xr):
-        #             xr = int(xr)
-        #             print("\t", self.pdf.xref_object(xr))
         
         self.logger.debug("Loading image %d", xref)
         if image:
@@ -170,9 +148,6 @@ class ImageHandler():
         self.logger.debug("Image properties : %s",
                           str(image_element.properties))
         
-        print(image_element)
-        print(image_element.properties)
-
         # If complexity is low it could be either a full page background or a section
         if x_variance + y_variance < 200 and image_element.properties['alpha'] > 100 and \
             not (image_element.properties['colour_distance'] > 50 and palette[1][1] > 0.2):
@@ -312,9 +287,6 @@ class ImageHandler():
 
                 image_element.type = self._classify_image(
                     image_element, image, page_colour, page_bbox)
-
-                print(image_element)
-                print()
                 
                 image_elements[image_element.type].append(image_element)
 
@@ -332,8 +304,6 @@ class ImageHandler():
 
         # if ImageType.PRIMARY in image_elements:
         #     image_elements[ImageType.PRIMARY] = self.merge_images(image_elements[ImageType.PRIMARY], images)
-        
-        print("\n")
 
         for image_type in image_elements:
             self.logger.debug("Found %d %s images", len(

@@ -221,7 +221,6 @@ class PDFLoadProcessor(Processor):
         page_count = pdf.page_count
 
         for page_number in pages:
-            print(f"Page={page_number}")
             page_number = int(page_number)
             if page_number >= page_count:
                 self.logger.warning(

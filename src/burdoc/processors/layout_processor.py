@@ -179,7 +179,7 @@ class LayoutProcessor(Processor):
                 
         keep_sections = []
         for section in sections:
-            if section.backing_image and section.backing_image.bbox.overlap(page_bound, 'first') > 0.9:
+            if section.backing_image and section.backing_image.bbox.overlap(page_bound, 'second') > 0.9:
                 is_page_image = True
             else:
                 is_page_image = False
