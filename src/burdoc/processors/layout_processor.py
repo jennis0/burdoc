@@ -158,15 +158,15 @@ class LayoutProcessor(Processor):
             )
 
         # Assgn lines to sections
-        sections.sort(key=lambda s: s.bbox.y0*1000 + s.bbox.x0)
+        #sections.sort(key=lambda s: s.bbox.y0*1000 + s.bbox.x0)
         if len(sections) > 1:
             for line in text:  # type:LineElement
                 written = False
                 if not any(len(sp.text.strip()) > 0 for sp in line.spans):
                     continue
 
-                for i, section in enumerate(sections[1:]):
-                    if section.bbox.overlap(line.bbox, 'second') > 0.97:
+                for i, section in enumerate(reversed(sections[1:])):
+                    if section.bbox.overlap(line.bbox, 'second') > 0.93:
                         section.append(line, update_bbox=False)
                         written = True
                         break
@@ -174,17 +174,22 @@ class LayoutProcessor(Processor):
                     sections[0].append(line, update_bbox=False)
         else:
             sections[0].items += text
-
+            
         # Filter out sections with no lines
+                
         keep_sections = []
         for section in sections:
-            if len(section.items) == 0 and not section.default:
+            if section.backing_image and section.backing_image.bbox.overlap(page_bound, 'first') > 0.9:
+                is_page_image = True
+            else:
+                is_page_image = False
+            if len(section.items) == 0 and not section.default and not is_page_image:
                 if section.backing_image:
                     section.backing_image.type = ImageType.PRIMARY
                     images[ImageType.PRIMARY].append(section.backing_image)
             else:
                 keep_sections.append(section)
-        
+                        
         self.logger.debug("Found %d section in page", len(keep_sections))
         for i, section in enumerate(keep_sections):
             self.logger.debug("Section %d - %s - %d items",

@@ -22,7 +22,33 @@ class ImageHandler():
         self.pdf = pdf
 
     def _get_image(self, xref: str) -> Optional[Image.Image]:
+        
+        if xref == 0:
+            return None
+        
+        # print(xref)
         image = self.pdf.extract_image(xref)
+        # print("Source")
+        # obj = self.pdf.xref_object(xref, 0, 1)
+        # print(obj)
+        # keys = self.pdf.xref_get_keys(xref)
+        # for k in keys:
+        #     print(k, self.pdf.xref_get_key(xref, k))
+        #     if k == 'ColorSpace':
+        #         val = self.pdf.xref_get_key(xref, k)
+        #         print(val)
+        #         xr = val[1].split()[0]
+        #         if str.isnumeric(xr):
+        #             xr = int(xr)
+        #             print("\t", self.pdf.xref_object(xr))
+                    
+        #     if k == 'Metadata':
+        #         val = self.pdf.xref_get_key(xref, k)
+        #         print(val)
+        #         xr = val[1].split()[0]
+        #         if str.isnumeric(xr):
+        #             xr = int(xr)
+        #             print("\t", self.pdf.xref_object(xr))
         
         self.logger.debug("Loading image %d", xref)
         if image:
@@ -75,7 +101,7 @@ class ImageHandler():
             image_element.bbox.y_overlap(page_bbox, 'second'), 3)
         page_coverage = x_coverage * y_coverage
                 
-        if page_coverage <= 0.001:
+        if page_coverage <= 0.0001:
             return ImageType.INVISIBLE
 
         # If thin in one dimension, treat as line rather than image
@@ -109,8 +135,29 @@ class ImageHandler():
             'x': x_coverage, 'y': y_coverage, 'page': page_coverage}
         image_element.properties['extrema'] = max_extrema
 
+        palette = get_image_palette(image, 5, n_means=5)
+
+        image_element.properties['palette'] = palette
+
         image_element.properties['primary_colour'] = np.array(
-            get_image_palette(image, 1)[0][0])
+            palette[0][0])
+        
+        #Calculate distance between primary and other colours. Useful indicator of a monochrome image that
+        #can't be used for section backing
+        dist = 0
+        for i in range(1, len(palette)):
+            
+            #Ignore anything that doesn't make up enough of the image
+            if palette[i][1] < 0.16:
+                break
+            arr = np.array(palette[i][0])
+            
+            #Ignore anything too close to black - can be lines/shadow
+            if arr.mean() < 10:
+                continue
+            
+            dist = max(dist, np.linalg.norm(np.array(palette[0][0]) - np.array(arr)).sum())
+        image_element.properties['colour_distance'] = dist
         
         if 'A'  in image.getbands():
             image_element.properties['alpha'] = np.mean(image.getchannel('A'))
@@ -118,22 +165,24 @@ class ImageHandler():
             image_element.properties['alpha'] = 255.
 
         colour_offset = image_element.properties['primary_colour'] - page_colour
-        image_element.properties['colour_offset'] = np.sqrt(
-            np.sum(colour_offset*colour_offset))
+        image_element.properties['colour_offset'] = np.linalg.norm(colour_offset).sum()
 
         self.logger.debug("Image properties : %s",
                           str(image_element.properties))
         
+        print(image_element)
+        print(image_element.properties)
 
         # If complexity is low it could be either a full page background or a section
-        if x_variance + y_variance < 200 and image_element.properties['alpha'] > 100:
+        if x_variance + y_variance < 200 and image_element.properties['alpha'] > 100 and \
+            not (image_element.properties['colour_distance'] > 50 and palette[1][1] > 0.2):
             if page_coverage > 0.9:
                 return ImageType.BACKGROUND
 
             if page_coverage > 0.1 and image_element.properties['colour_offset'] > 15:
                 return ImageType.SECTION
 
-        if (x_variance < 50 and y_variance > 1000) or (x_variance > 1000 and y_variance < 50):
+        if ((x_variance < 50 and y_variance > 1000) or (x_variance > 1000 and y_variance < 50)) and image_element.properties['colour_distance'] > 50.:
             return ImageType.GRADIENT
 
         is_on_page_edge = image_element.bbox.x1_norm() < 0.08 or image_element.bbox.x0_norm() > 0.92 or \
@@ -263,7 +312,10 @@ class ImageHandler():
 
                 image_element.type = self._classify_image(
                     image_element, image, page_colour, page_bbox)
-                                
+
+                print(image_element)
+                print()
+                
                 image_elements[image_element.type].append(image_element)
 
                 image_as_bytes = io.BytesIO()
@@ -280,6 +332,8 @@ class ImageHandler():
 
         # if ImageType.PRIMARY in image_elements:
         #     image_elements[ImageType.PRIMARY] = self.merge_images(image_elements[ImageType.PRIMARY], images)
+        
+        print("\n")
 
         for image_type in image_elements:
             self.logger.debug("Found %d %s images", len(

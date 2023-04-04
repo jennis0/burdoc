@@ -7,8 +7,32 @@ from typing import Any, Dict, List, Optional
 
 
 def _hash(obj):
-    obj_as_json_string = json.dumps(obj, sort_keys=True, indent=2)
-    return hashlib.md5(obj_as_json_string.encode('utf-8'), usedforsecurity=False).hexdigest()
+    text = None
+    if isinstance(obj, dict):
+        if 'name' in obj:
+            if obj['name'] == 'textblock':
+                text = obj['block_text']
+            elif obj['name'] == 'line':
+                text =  " ".join([s['text'] for s in obj['spans']])
+            elif obj['name'] == 'span':
+                text =  obj['text']
+            elif obj['name'] == 'image':
+                text = "image-" + str(obj['image'])
+            elif obj['name'] == 'aside':
+                text = "aside-" + _hash(obj['items'])
+            elif obj['name'] == 'table':
+                text = "table-" + _hash(obj['cells'][0])
+            elif obj['name'] == 'textlist':
+                text = 'list-' + _hash(obj['items'])
+            elif obj['name'] == 'textlistitem':
+                text = 'listitem-' + _hash(obj['items'])
+    elif isinstance(obj, list):
+        parts = [_hash(p) for p in obj]
+        parts.sort()
+        text = "-".join(parts)
+    if not text:
+        text = json.dumps(obj, sort_keys=True, indent=2)
+    return hashlib.md5(text.encode('utf-8'), usedforsecurity=False).hexdigest()
 
 
 def _diff_value(path: str, value1: Any, value2: Any) -> List[Dict[str, Any]]:

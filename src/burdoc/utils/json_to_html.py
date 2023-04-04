@@ -186,8 +186,11 @@ class JsonHtmlConverter():
         return html_text
 
     def _image_to_html(self, image: Dict[str, Any]) -> str:
-        image_data = self.images[self.current_page][image['image']]
-        return f'<img src="data:image/webp;base64, {image_data}" style="max-width:45%; max-height:300pt">'
+        if image['image'] < len(self.images[self.current_page]):
+            image_data = self.images[self.current_page][image['image']]
+            return f'<img src="data:image/webp;base64, {image_data}" style="max-width:45%; max-height:300pt">'
+        else:
+            return f"<div><h2>MISSING IMAGE {image['image']}</h2></div>"
 
     def _item_to_html(self, item: Dict[str, Any]) -> str:
         """Routes an item to the correct HTML generator based on 'name' attribute

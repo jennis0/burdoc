@@ -375,7 +375,7 @@ def create_embedded_view(
                 for page in html_pages:
 
                     page_changes = [c for c in report['changes']
-                                    if f'content.{page}' in c['path']]
+                                    if f'content.{page}' in c['path'] and 'font' not in c['path']]
                     if len(page_changes) > 0:
                         col = '#ff5050'
                     else:
@@ -439,7 +439,7 @@ def create_directory_view(in_path: str, path_stem: str, links: Dict[str, str],
 
             result = report['files'][name]
 
-            total_changes = len([c for c in result['changes'] if c['path'].startswith("content.")])
+            total_changes = len([c for c in result['changes'] if c['path'].startswith("content.") and not 'font' in c['path']])
 
             adds = len([c for c in result['changes']
                        if c['type'] == 'addition'])

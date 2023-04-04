@@ -285,7 +285,7 @@ class ReadingOrderProcessor(Processor):
 
         for o_section in other_sections:
             self.logger.debug("Ordering section %s", o_section)
-
+            
             in_line_elements = []
             out_of_line_elements = []
             for i, element in enumerate(global_elements):
@@ -315,7 +315,7 @@ class ReadingOrderProcessor(Processor):
                 overlap = o_section.bbox.overlap(d_section.bbox, 'first') > 0.5
                 if overlap > best_section[1]:
                     best_section = (d_section, overlap)
-
+                    
             best_section[0].append(o_section, update_bbox=False)
 
         self.logger.debug("Finished ordering non-default sections")

@@ -28,6 +28,7 @@ class DrawingHandler():
         Returns:
             bool: True if this looks like a filled rectangle, False if it is not likely to be visible
         """
+                
         if 'fill_opacity' not in shape_info or shape_info['fill_opacity'] < 0.1:
             return False
 
@@ -46,6 +47,7 @@ class DrawingHandler():
         Returns:
             bool: True if this looks like a filled rectangle, False if it is not likely to be visible
         """
+                        
         if 'stroke_opacity' not in shape_info or shape_info['stroke_opacity'] < 0.1:
             return False
 
@@ -56,6 +58,24 @@ class DrawingHandler():
             return False
 
         return True
+
+    def _is_bullet(self, drawing_dict: Dict[str, Any]) -> bool:
+        """Classifies a drawing as a bullet - looks for a filled item that is small
+        and symmetrical.
+
+        Args:
+            drawing_dict (Dict[str, Any]): PyMuPDF Drawing dictionary
+        Returns:
+            bool: Whether or not it is a bullet
+        """
+        if drawing_dict['type'] == 'f' and drawing_dict['fill_opacity'] > 0.9 and len(drawing_dict['items']) > 2:
+                width = drawing_dict['rect'][2] - drawing_dict['rect'][0]
+                height = drawing_dict['rect'][3] - drawing_dict['rect'][1]
+                if abs(width/height - 1) < 0.1 and width < 12:
+                    return True
+                
+        return False
+    
 
     def get_page_drawings(self, page: fitz.Page, page_colour: np.ndarray) -> Dict[DrawingType, List[DrawingElement]]:
         """Extract all drawings from the page and apply basic classification
@@ -75,26 +95,23 @@ class DrawingHandler():
         processed_drawings: Dict[DrawingType, List[DrawingElement]] = {
             t: [] for t in DrawingType}
         for d in self.page.get_cdrawings():
-
+                        
             # Detect things that look like bullets
-            if d['type'] == 'f' and d['fill_opacity'] > 0.9 and len(d['items']) > 2:
-                width = d['rect'][2] - d['rect'][0]
-                height = d['rect'][3] - d['rect'][1]
-                if abs(width/height - 1) < 0.1 and width < 12:
-                    drawing = DrawingElement(bbox=Bbox(*d['rect'], bound[2], bound[3]),  # type:ignore
-                                             drawing_type=DrawingType.BULLET, opacity=d['fill_opacity']
-                                             )
-                    processed_drawings[drawing.drawing_type].append(drawing)
-                    self.logger.debug(
-                        "Found bullet with box %s", str(drawing.bbox))
-                    continue
+            if self._is_bullet(d):
+                drawing = DrawingElement(bbox=Bbox(*d['rect'], bound[2], bound[3]),  # type:ignore
+                                            drawing_type=DrawingType.BULLET, opacity=d['fill_opacity']
+                                        )
+                processed_drawings[drawing.drawing_type].append(drawing)
+                self.logger.debug(
+                    "Found bullet with box %s", str(drawing.bbox))
+                continue
 
             is_meaningful_fill = 'f' in d['type'] and self._is_filled_rect(
                 d, page_colour)
             is_meaningful_stroke = 's' in d['type'] and self._is_stroked_rect(
                 d, page_colour)
             is_meaningful_rect = is_meaningful_fill or is_meaningful_stroke
-
+            
             fill_opacity = 0.0
             stroke_opacity = 0.0
             if is_meaningful_fill:
@@ -111,11 +128,16 @@ class DrawingHandler():
                 drawing.bbox.y0 = max(drawing.bbox.y0, 0)
                 drawing.bbox.x1 = min(drawing.bbox.x1, bound.x1)
                 drawing.bbox.y1 = min(drawing.bbox.y1, bound.y1)
-                overlap = drawing.bbox.overlap(
-                    self.page_bbox, normalisation='second')
-
+                
+                if drawing.bbox.height() == 0:
+                    drawing.bbox.y1 += 1.
+                if drawing.bbox.width() == 0:
+                    drawing.bbox.x1 += 1.
+                
+                overlap = drawing.bbox.overlap(self.page_bbox, normalisation='second')
+                
                 if (drawing.bbox.height() < 10) or (drawing.bbox.width() < 10):
-                    if overlap > 0:
+                    if drawing.bbox.x_overlap(self.page_bbox) > 0 and drawing.bbox.y_overlap(self.page_bbox) > 0:
                         self.logger.debug("Found line %d with box %s",
                                           len(processed_drawings[DrawingType.LINE]), str(drawing.bbox))
                         drawing.drawing_type = DrawingType.LINE
@@ -128,7 +150,7 @@ class DrawingHandler():
                                       len(processed_drawings[DrawingType.RECT]), str(drawing.bbox))
                     drawing.drawing_type = DrawingType.RECT
                     processed_drawings[drawing.drawing_type].append(drawing)
-
+                                        
         # Merge boxes with significant overlap
         if self.merge_rects and DrawingType.RECT:
             did_merge = True

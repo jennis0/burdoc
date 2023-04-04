@@ -229,7 +229,7 @@ class HeadingProcessor(Processor):
             if isinstance(element, PageSection):
                 if element.default or not (element.backing_drawing or element.backing_image):
                     proc_elements += self._assign_headings(element.items)
-                else:
+                elif len(element.items) > 0:
                     proc_elements.append(
                         Aside(element.bbox, self._assign_headings(element.items))
                     )

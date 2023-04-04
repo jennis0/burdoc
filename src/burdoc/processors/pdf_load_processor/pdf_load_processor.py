@@ -221,6 +221,7 @@ class PDFLoadProcessor(Processor):
         page_count = pdf.page_count
 
         for page_number in pages:
+            print(f"Page={page_number}")
             page_number = int(page_number)
             if page_number >= page_count:
                 self.logger.warning(
@@ -284,7 +285,12 @@ class PDFLoadProcessor(Processor):
                 if b_used[i]:
                     continue
 
-                if t.bbox.y_overlap(b.bbox, 'second') > 0.6 and abs(t.bbox.x0 - b.bbox.x1) < 25:
+                distance = 25 if b.bbox.width() > 8 else 10
+                
+                if b.bbox.height() / t.bbox.height() > 0.7:
+                    continue
+
+                if t.bbox.y_overlap(b.bbox, 'second') > 0.6 and abs(t.bbox.x0 - b.bbox.x1) < distance:
                     t.spans.insert(0, Span(b.bbox, font=t.spans[0].font, text="\u2022 "))
                     t.bbox = Bbox.merge([t.bbox, b.bbox])
                     b_used[i] = True
