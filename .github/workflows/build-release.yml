@@ -47,7 +47,8 @@ jobs:
         path: tests/integration/data/report.json
         
     - name: Publish
-      with:
+      shell: bash
+      env:
         API_KEY: ${{ secrets.PYPI_API_KEY }}
       run: | 
         pip install twine build
