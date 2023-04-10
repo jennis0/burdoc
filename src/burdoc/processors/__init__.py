@@ -9,4 +9,4 @@ from .margin_processor import MarginProcessor
 from .pdf_load_processor.pdf_load_processor import PDFLoadProcessor
 from .processor import Processor
 from .reading_order_processor import ReadingOrderProcessor
-from .table_processors import MLTableProcessor, RulesTableProcessor
+from .table_processors import MLTableProcessor, RulesTableProcessor, DrawingTableProcessor
