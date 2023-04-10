@@ -12,7 +12,9 @@ class JsonHtmlConverter():
         'h3': 'h3',
         'h4': 'h4',
         'h5': 'h5',
+        'h6': 'h6',
         'emphasis': 'p',
+        'small': 'p'
     }
 
     def __init__(self):
@@ -173,7 +175,7 @@ class JsonHtmlConverter():
         else:
             text_type = 'p'
 
-        if text_type in ['h1', 'h2', 'h3', 'h4', 'h5']:
+        if text_type in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
             try:
                 id_text = f" id=\"{self.current_page}-{self._make_anchor_name(text['block_text'])}\""
             except:
@@ -186,6 +188,10 @@ class JsonHtmlConverter():
         return html_text
 
     def _image_to_html(self, image: Dict[str, Any]) -> str:
+        
+        if not self.images:
+            return "<div><h2>MISSING IMAGE</h2></div>"
+        
         if image['image'] < len(self.images[self.current_page]):
             image_data = self.images[self.current_page][image['image']]
             return f'<img src="data:image/webp;base64, {image_data}" style="max-width:45%; max-height:300pt">'
@@ -287,7 +293,7 @@ class JsonHtmlConverter():
             full_content = ""
 
         for page_number in json_data['content']:
-            self.convert_page(json_data, page_number, insert_page_tags, False)
+            full_content += self.convert_page(json_data, page_number, insert_page_tags, False)
             full_content += "<hr>"
         full_content += "</div>"
 

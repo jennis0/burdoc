@@ -28,15 +28,18 @@ class BurdocParser():
     """
 
     def __init__(self,
+                 detailed: bool = False,
                  skip_ml_table_finding: bool = False,
                  ignore_images: bool = False,
                  max_threads: Optional[int] = None,
                  log_level: int = logging.INFO,
                  show_pages: bool = False,
                  ):
-        """Instantiate a BurdocParser
+        """Instantiate a BurdocParser. Note that one of either html_out or json_out must be true
 
         Args:
+            detailed (bool): Include detailed information such as font statistics and 
+                bounding boxes in the output
             skip_ml_table_finding (bool): Whether to use ML table finding algorithms. 
             ignore_images (bool): Don't extract any images from the document. Much faster but
                 prone to errors if images used as layout elements.
@@ -49,22 +52,25 @@ class BurdocParser():
         Raises:
             ImportError: transformer library detected but loading transformer library failed.
         """
+
         self.performance: Dict[str, float] = {}
         self.profile_info: Optional[List[Dict[str, Any]]] = None
         start = time.perf_counter()
 
         self.log_level = log_level
         self.ignore_images = ignore_images
+        self.detailed = detailed
         self.skip_ml_table_finding = skip_ml_table_finding
         self.logger = get_logger("burdoc_parser", log_level=log_level)
         self.min_slice_size = 5
         self.max_slices = 12
         self.max_threads = max_threads
         self.show_pages = show_pages
+
         self.default_return_fields = ['metadata', 'content']
 
         self.processors: List[Tuple[Type[Processor], Dict, bool, Optional[Processor]]] = [
-            (PDFLoadProcessor,  {'ignore_images': self.ignore_images}, True, None),
+            (PDFLoadProcessor,  {'ignore_images': self.ignore_images}, False, None),
         ]
 
         if not skip_ml_table_finding:
@@ -83,11 +89,12 @@ class BurdocParser():
                     ListProcessor,
                     JSONOutProcessor
                 ],
+                'processor_args': {'json-out': {'include_bboxes': detailed}},
                 'render_default': True,
                 'additional_reqs': ['tables'] if not skip_ml_table_finding else []
             }, True, None)
         )
-        
+
         self.performance['initialise'] = round(time.perf_counter() - start, 3)
 
     @staticmethod
@@ -364,14 +371,12 @@ class BurdocParser():
             raise FileNotFoundError(path)
 
         start = time.perf_counter()
-        
-        
+
         for i, p in enumerate(self.processors):
             if p[0].expensive and (self.max_threads == 1 or not p[0].threadable) and not p[3]:
                 self.processors[i] = (*self.processors[i][:3], self.processors[i][0](**self.processors[i][1]))
                 self.processors[i][-1].initialise()
-        
-        
+
         pdf = fitz.open(path)
         if not pages:
             pages = list(range(pdf.page_count))
@@ -406,5 +411,13 @@ class BurdocParser():
 
         if extract_page_hierarchy:
             return_fields.append("page_hierarchy")
+
+        # Move font stats out of metadata block
+        if 'font_statistics' in data['metadata']:
+            data['font_statistics'] = data['metadata']['font_statistics']
+            del data['metadata']['font_statistics']
+
+        if self.detailed:
+            return_fields.append('font_statistics')
 
         return {k: data[k] for k in return_fields}

@@ -17,8 +17,15 @@ class JSONOutProcessor(Processor):
 
     name: str = "json-out"
 
-    def __init__(self, log_level: int = logging.INFO):
+    def __init__(self, include_bboxes: bool, log_level: int = logging.INFO):
+        """Creates a JSONOutProcessor instance.
+
+        Args:
+            include_bboxes (bool): Include Bboxes of elements
+            log_level (int, optional): _description_. Defaults to logging.INFO.
+        """
         super().__init__(JSONOutProcessor.name, log_level=log_level)
+        self.include_bboxes = include_bboxes
 
     def requirements(self) -> Tuple[List[str], List[str]]:
         return (['elements'], [])
@@ -27,7 +34,7 @@ class JSONOutProcessor(Processor):
         return ['content']
 
     def _to_json(self, elements: List[LayoutElement]) -> List[Dict[str, Any]]:
-        return [e.to_json() for e in elements]
+        return [e.to_json(include_bbox=self.include_bboxes) for e in elements]
 
     def _process(self, data: Any) -> Any:
         data['content'] = {}

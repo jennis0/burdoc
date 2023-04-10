@@ -45,13 +45,15 @@ class AggregatorProcessor(Processor):
             processor.name: render_default for processor in processors}
 
         for processor in processors:
+            
             if processor_args and processor.name in processor_args:
-                if 'render' in processor_args[processor.name]:
-                    self.render_processors[processor.name] = processor_args[processor.name]['render']
-
-                if 'args' in processor_args[processor.name]:
+                if '_render' in processor_args[processor.name]:
+                    self.render_processors[processor.name] = processor_args[processor.name]['_render']
+                args = {k:v for k,v in processor_args[processor.name].items() if k != '_render'}
+                
+                if len(args) > 0:
                     self.processors.append(
-                        processor(log_level=log_level, **processor_args[processor.name]['args']))  # type:ignore
+                        processor(log_level=log_level, **args))  # type:ignore
                 else:
                     self.processors.append(
                         processor(log_level=log_level))  # type:ignore

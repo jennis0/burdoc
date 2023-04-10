@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Any, Dict, List, Optional, Tuple
 
 from .bbox import Bbox
@@ -26,7 +27,7 @@ class LineElement(LayoutElement):
         self.rotation = rotation
 
     @staticmethod
-    def from_dict(line_dict: Dict[str, Any], page_width: float, page_height: float):
+    def from_dict(line_dict: Dict[str, Any], page_width: float, page_height: float) -> LineElement:
         """Create a LineElement from a PyMuPDF line dictionary
 
         Args:

@@ -303,9 +303,10 @@ class PDFLoadProcessor(Processor):
             ImageType.PRIMARY: "DarkRed",
             ImageType.BACKGROUND: "Red",
             ImageType.SECTION: "Pink",
-            DrawingType.LINE: "DarkBlue",
+            DrawingType.LINE: "Green",
             DrawingType.RECT: "Blue",
             DrawingType.BULLET: "LightBlue",
+            DrawingType.TABLE: "Yellow",
             "text_elements": "Grey",
         }
 

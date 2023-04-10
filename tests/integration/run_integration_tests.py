@@ -141,7 +141,7 @@ def run_parser(source_dir: str, out_dir: str, gold_dir: str, do_update: bool,
             message_parts.append(f"Missing gold files for testing={extra_in}")
         raise RuntimeError("\n".join(message_parts))
 
-    burdoc = BurdocParser()
+    burdoc = BurdocParser(detailed=True)
 
     for filetitle, filename in in_files.items():
 

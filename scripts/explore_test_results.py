@@ -367,7 +367,9 @@ def create_embedded_view(
                 line('h2', 'Metadata')
                 doc.asis(get_metadata_table(
                     json_data['metadata'], list(json_data['content'].keys())))
-                doc.asis(get_font_table(json_data['metadata']['font_statistics']))
+                
+                if 'font_statistics' in json_data['metadata']:
+                    doc.asis(get_font_table(json_data['metadata']['font_statistics']))
                 doc.asis(get_toc_list(json_data['page_hierarchy']))
                 doc.asis(get_images(json_data))
                 doc.stag("hr")
