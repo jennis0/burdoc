@@ -1,4 +1,4 @@
-ContentProcessor
+ListProcessor
 ==========================
 
 .. contents::
@@ -6,5 +6,5 @@ ContentProcessor
     :local:
     :backlinks: top
 
-.. automodule:: burdoc.processors.content_processor
+.. automodule:: burdoc.processors.list_processor
    :members:
