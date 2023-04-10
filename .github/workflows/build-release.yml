@@ -47,8 +47,10 @@ jobs:
         path: tests/integration/data/report.json
         
     - name: Publish
+      with:
+        API_KEY: ${{ secrets.PYPI_API_KEY }}
       run: | 
         pip install twine build
         python -m build
-        python -m twine upload dist/*
+        python -m twine upload dist/* -u "__token__" -p "$API_KEY"
      
