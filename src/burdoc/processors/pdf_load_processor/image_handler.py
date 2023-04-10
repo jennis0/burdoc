@@ -15,6 +15,9 @@ from ...utils.logging import get_logger
 
 
 class ImageHandler():
+    """Extracts Images from a PDF, applies common preprocessing such as merging smasks and correcting inverted storage
+    formats then classifies them according to their purpose within the document.
+    """
 
     def __init__(self, pdf: fitz.Document, log_level: int = logging.INFO):
         self.cache: Dict[str, Any] = {}
@@ -256,7 +259,17 @@ class ImageHandler():
 
         return [i for i, u in zip(images, used_images) if not u]
 
-    def get_image_elements(self, page: fitz.Page, page_image: Image, page_colour: np.ndarray) -> Tuple[Dict[ImageType, List[ImageElement]], List[Image.Image]]:
+    def get_image_elements(self, page: fitz.Page, page_image: Image.Image, page_colour: np.ndarray) -> Tuple[Dict[ImageType, List[ImageElement]], List[Image.Image]]:
+        """Extracts images from a PDF page.
+
+        Args:
+            page (fitz.Page): PDF Page to extract from 
+            page_image (Image.Image): An image of the page, used to identify the role of each image
+            page_colour (np.ndarray): The primary background colour of the page
+
+        Returns:
+            Tuple[Dict[ImageType, List[ImageElement]], List[Image.Image]]: A list of each possible image type
+        """
         self.logger.debug("Starting image extraction")
 
         bound = page.bound()

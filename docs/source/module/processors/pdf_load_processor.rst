@@ -23,7 +23,6 @@ PDF Content Handlers
    :members:
 
 
-
 .. autoclass:: burdoc.processors.pdf_load_processor.image_handler.ImageHandler
    :members:
 

@@ -1,14 +1,14 @@
 # Working with Burdoc Output
 
 ```{toctree}
-  :maxdepth: 3
+  :maxdepth: 4
 ```
 
 By default, Burdoc returns a JSON dictionary containing the content extracted from the PDF. It will always contain 'metadata', 'content', and 'page_hierarchy' and may optionally contain extracted images and rendered page images
 
 
 ```{contents}
-    :depth: 3
+    :depth: 4
     :local:
     :backlinks: top
 
@@ -22,7 +22,6 @@ Any file and content metadata produced during the extraction process
 | path | str | Path to the original file |
 | title | str | Title of the document, if available in the PDF, otherwise is the file name | 
 | pdf_metadata | object | Metadata extracted by PyMuPDF | 
-| font_statistics | object | Information about font occurences used in inferring text content roles | 
 | toc | list | Table of content if stored programmatically within the pdf, otherwise [] |
 
 Example Output:
@@ -45,26 +44,11 @@ Example Output:
             "trapped": "",
             "encryption": null
         }, 
-        "font_statistics": {
-            "TimesNewRomanPSMT": {
-                "_counts": {
-                    "20.0": 1,
-                    "12.0": 68
-                },
-                "TimesNewRomanPSMT": {
-                    "family": "TimesNewRomanPSMT",
-                    "basefont": "TimesNewRomanPSMT",
-                    "counts": {
-                        "20.0": 1,
-                        "12.0": 68
-                    }
-                }
-            }, 
-        },
         "toc": [] 
     },
 }
 ```
+___
 
 ## Content
 The content field provides all extracted text, images, and tables indexed by page number and ordered in inferred reading order.
@@ -108,7 +92,7 @@ Example:
     } #/end content
  }
 ```
-
+___
 
 ### Content Types
 
@@ -169,6 +153,7 @@ This expresses the font information of text
 | bold | bool | True if text is bold |
 | italic | bool | True if text is italic |
 | superscript | bool | True if text is superscript |
+| smallcaps | bool | True if font is a smallcaps font |
 
 #### Image
 HTML: ```<image>```
@@ -203,7 +188,7 @@ A span is a grouping of test within a line based on font information
 | font | Font | Font information for the span |
 
 #### Table
-HTML: <table>
+HTML: ```<table>```
 
 Representation of any tables extracted from the document.
 
@@ -223,7 +208,8 @@ A set of lines that has been inferred to be part of the same grouping. Usually r
 |-|-|-|
 | name | str | "textblock" |
 | type | str | Inferred interpretation of the text. One of ['paragraph', 'h[1-5]', 'emphasis', 'small'] | 
-| items | list[Line] | All lines contained within the block|
+| items | list[Line] | All lines contained within the block. |
+| block_text | str | A basic representation of all text within the block with all font information removed. |
 
 #### TextList
 HTML: ```<ul>,<ol>```
@@ -243,6 +229,7 @@ An ordered or unordered list
 | label | str | The extract label, can be one of [\u2022, (a), a), a., (1), 1), 1.]| 
 | items | list[TextBlock] | All paragraphs contained within this list item. |
 
+___
 
 ## Page Hierarchy
 The page hierarchy is an inferred table of contents based on headers found within the text. It is indexed by page, similarly to the 'content' field.
@@ -254,7 +241,12 @@ The page hierarchy is an inferred table of contents based on headers found withi
 | text | str | Simplified text reprentation of the heading. All font information is removed | 
 | size | float | Font size in pt |
 
+___
 
-## Images
-If extracted using the "--images" flag or 'extract_images' argument, images are stored as a page-indexed list of base64 encoded images.
+## Images (``--images`` only)
+If extracted using the "--images" flag or 'extract_images' argument, images are stored as a page-indexed list of base64 encoded images. If the images flag is not used, ImageElements will still be present in the extracted content but they won't contain the actual image data.
 
+___
+
+## Font Statistics (``--detailed`` only)
+If 'detailed' extraction mode is used then font statistics for the full document will be extracted. This includes information on each font, it's occurences, and it's actual size on the page.
