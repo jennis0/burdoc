@@ -12,13 +12,13 @@ A python library for extracting structured text, images, and tables from PDFs wi
 
 <div align="center">
 
-<a href="">![PyPI - Python Version](https://img.shields.io/pypi/pyversions/burdoc)</a>
-<a href="">![Build](https://img.shields.io/github/actions/workflow/status/jennis0/burdoc/python-package.yml)
-<a href="">[![Documentation Status](https://readthedocs.org/projects/burdoc/badge/?version=latest)](https://burdoc.readthedocs.io/en/latest/?badge=latest)</a>
-<a href="">[![codecov](https://codecov.io/gh/jennis0/burdoc/branch/main/graph/badge.svg?token=7X7146BQ72)](https://codecov.io/gh/jennis0/burdoc)</a>
+<a href="https://pypi.org/project/burdoc/">![PyPI - Python Version](https://img.shields.io/pypi/pyversions/burdoc)</a>
+<a href="https://github.com/jennis0/burdoc/actions/workflows/python-package.yml">![Build](https://img.shields.io/github/actions/workflow/status/jennis0/burdoc/python-package.yml)
+<a href="https://readthedocs.org/projects/burdoc/">[![Documentation Status](https://readthedocs.org/projects/burdoc/badge/?version=latest)](https://burdoc.readthedocs.io/en/latest/?badge=latest)</a>
+<a href="https://codecov.io/gh/jennis0/burdoc/branch/main">[![codecov](https://codecov.io/gh/jennis0/burdoc/branch/main/graph/badge.svg?token=7X7146BQ72)](https://codecov.io/gh/jennis0/burdoc)</a>
 
-<a href="">![Issues](https://img.shields.io/github/issues/jennis0/burdoc)</a>
-<a href="">![License](https://img.shields.io/github/license/jennis0/burdoc)</a>
+<a href="https://github.com/jennis0/burdoc/issues">![Issues](https://img.shields.io/github/issues/jennis0/burdoc)</a>
+<a href="https://github.com/jennis0/burdoc/blob/main/LICENSE">![License](https://img.shields.io/github/license/jennis0/burdoc)</a>
 
 </div>
 
@@ -47,8 +47,10 @@ A python library for extracting structured text, images, and tables from PDFs wi
 
 ## About the Project
 
+Burdoc is a python library and script designed to automate the extraction of complex, text-driven content from PDFs. Burdoc generates a rich semantic representation of a PDF, including headings, reading order, tables, and images that can be used for downstream processing.
+
 #### Why Another PDF Parsing Library?
-Excellent question! Between pdfminer, PyMuPDF, Tika, and many others there are a plethora of tools for parsing PDFs, but nearly all are focused on the initial step of pulling out raw content, not on representing the documents actual meaning. Burdoc's goal is to generate a rich semantic representation of a PDF, including headings, reading order, tables, and images that can be used for downstream processing.
+Excellent question! Between pdfminer, PyMuPDF, Tika, and many others there are a plethora of tools for parsing PDFs, but nearly all are focused on the initial step of pulling out raw content, not on representing the documents actual meaning. 
 
 ### Key Features
  - **Rich Document Representation:** Burdoc is able to identify most common types of text, including:
@@ -156,12 +158,12 @@ content = parser.read('file.pdf')
 
 Current issues I'd like to address are:
 
-* Improved Table Extraction - tables extraction is currently quite poor, I'd like to adopt some of the line-based methods used by Camelot and similar tools. 
-* Improved Headers/Footers/Sidebars - The current approach is quite conservative and can will often miss obvious headers/footers. We also currently don't include this information in the final content
-* ToC Alignment - The extracted Page Hierarchy is functionally a table of content. Need to do work to align this with ToCs that exist within the document
-* Image Usage Classifiction - The current image classifier is quite poor and doesn't distinguish between 'content' and 
-* Out-of-line Ordering - Ordering of out-of-line elements, such as page-width tables and images is somewhat random.
-* Captions - We should be able to identify when a piece of text is tied to an image or figure.
+* **Improved Table Extraction** - tables extraction is currently quite poor, I'd like to adopt some of the line-based methods used by Camelot and similar tools. 
+* **Improved Headers/Footers/Sidebars** - The current approach is quite conservative and can will often miss obvious headers/footers. We also currently don't include this information in the final content
+* **ToC Alignment** - The extracted Page Hierarchy is functionally a table of content. Need to do work to align this with ToCs that exist within the document
+* **Image Usage Classifiction** - The current image classifier is quite poor and doesn't distinguish between 'content' and 
+* **Out-of-line Ordering** - Ordering of out-of-line elements, such as page-width tables and images is somewhat random.
+* **Captions** - We should be able to identify when a piece of text is tied to an image or figure.
 
 ## Built With
 
