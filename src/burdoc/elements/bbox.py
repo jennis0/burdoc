@@ -343,10 +343,10 @@ class Bbox:
             Dict[str, float]
         """
         if not include_page:
-            return {'x0': self.x0, 'y0': self.y0, 'x1': self.x1, 'y1': self.y1}
+            return {'x0': round(self.x0, 4), 'y0': round(self.y0, 4), 'x1': round(self.x1, 4), 'y1': round(self.y1, 4)}
         else:
-            return {'x0': self.x0, 'y0': self.y0, 'x1': self.x1, 'y1': self.y1,
-                    'pw': self.page_width, 'ph': self.page_height}
+            return {'x0': round(self.x0, 4), 'y0': round(self.y0, 4), 'x1': round(self.x1, 4), 'y1': round(self.y1, 4),
+                    'pw': round(self.page_width, 4), 'ph': round(self.page_height, 4)}
 
     def __repr__(self):
         return f'<Bbox x0={round(self.x0, 2)}, y0={round(self.y0, 2)} x1={round(self.x1, 2)}, y1={round(self.y1, 2)} w={round(self.page_width, 2)}, h={round(self.page_height, 2)}>'
