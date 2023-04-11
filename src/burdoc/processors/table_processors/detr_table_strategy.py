@@ -23,8 +23,8 @@ class DetrTableStrategy(TableExtractorStrategy):
         super().__init__('detr', log_level=log_level)
 
         self.margin = 25
-        self.detection_threshold = 0.9
-        self.structure_threshold = 0.75
+        self.detection_threshold = 0.7
+        self.structure_threshold = 0.8
         self.extractor = DetrImageProcessor()
         self.detector_model = TableTransformerForObjectDetection.from_pretrained(
             'microsoft/table-transformer-detection')
@@ -88,8 +88,10 @@ class DetrTableStrategy(TableExtractorStrategy):
             BatchFeature: Converted images, ready for processing
         """
 
-        page_images = [i.convert("RGB") for i in page_images]
+
         s = time.time()
+        page_images = [i.convert("RGB") for i in page_images]
+        #page_images[0].show()
         encoding = self.extractor.preprocess(page_images, return_tensors='pt',
                                              do_resize=True, do_rescale=True, do_normalize=True)
         self.logger.debug("Encoding %f", round(time.time() - s, 3))
@@ -166,7 +168,7 @@ class DetrTableStrategy(TableExtractorStrategy):
         tables: List = [[] for _ in range(len(page_images))]
         for p, c, t in zip(table_pages, bbox_corrections, results):
             tables[p].append(self._prepare_table(t,  c, *page_images[p].size))
-
+            
         return tables
 
     def _prepare_table(self, results, corrections, page_width, page_height) \
@@ -195,10 +197,10 @@ class DetrTableStrategy(TableExtractorStrategy):
                 table = (TableParts(label), Bbox(*corrected_bb,
                          page_width, page_height), score)  # type:ignore
             else:
-                if part_type in [TableParts.COLUMN, TableParts.ROWHEADER]:
+                if part_type in [TableParts.COLUMN, TableParts.COLUMNHEADER]:
                     cols.append((TableParts(label), Bbox(
                         *corrected_bb, page_width, page_height), score))  # type:ignore
-                if part_type in [TableParts.ROW, TableParts.COLUMNHEADER]:
+                if part_type in [TableParts.ROW, TableParts.ROWHEADER]:
                     rows.append((TableParts(label), Bbox(
                         *corrected_bb, page_width, page_height), score))  # type:ignore
                 if part_type == TableParts.SPANNINGCELL:
@@ -208,12 +210,17 @@ class DetrTableStrategy(TableExtractorStrategy):
 
         # Ensure the rows/columns span the full table
         cols.sort(key=lambda x: x[1].x0)
+        cols[0][1].x0 = table[1].x0
         for i, col in enumerate(cols[:-1]):
             col[1].x1 = cols[i+1][1].x0-1
+        cols[-1][1].x1 = table[1].x1
 
+        
         rows.sort(key=lambda x: x[1].y0)
+        rows[0][1].y0 = table[1].y0
         for i, row in enumerate(rows[:-1]):
             row[1].y1 = rows[i+1][1].y0-1
+        rows[-1][1].y1 = table[1].y1
 
         parts = cols + rows + merges
 

@@ -70,6 +70,9 @@ class MLTableProcessor(Processor):
             # Create a list of table candidates for the page
             page_table_candidates: List[Table] = []
             for table_parts in list_of_table_parts:
+                for tp in table_parts:
+                    print(tp)
+                print()
                 
                 table_bbox = table_parts[0][1]
                 row_headers = [s for s in table_parts[1:]
@@ -92,6 +95,21 @@ class MLTableProcessor(Processor):
 
                 all_rows.sort(key=lambda r: r[1].y0)
                 all_cols.sort(key=lambda r: r[1].x0)
+                
+                merge_boxes: List[Tuple[List[int], List[int]]] = []
+                for merge in merges:
+                    merge_rows: List[int] = []
+                    merge_cols: List[int] = []
+                    row_index = None
+                    for i,row in enumerate(all_rows):
+                        if merge[1].overlap(row[1], 'first') > 0.1:
+                            merge_rows.append(i)
+                    
+                    for i,col in enumerate(all_cols):
+                        if merge[1].overlap(col[1], 'first') > 0.1:
+                            merge_cols.append(i)
+                    
+                    merge_boxes.append([(merge_rows, merge_cols)])
 
                 page_table_candidates.append(
                     Table(table_bbox, all_rows, all_cols, merges))
@@ -102,6 +120,9 @@ class MLTableProcessor(Processor):
             for line_index, line in enumerate(data['text_elements'][page]):
                 shrunk_bbox = line.bbox.clone()
                 shrunk_bbox.y0 += 2
+                shrunk_bbox.y1 -= 5
+                shrunk_bbox.x0 += 2
+                shrunk_bbox.x1 -= 2
                 if shrunk_bbox.height() > 8:
                     shrunk_bbox.y1 -= 5
 
@@ -115,41 +136,69 @@ class MLTableProcessor(Processor):
                     table_line_y_overlap = shrunk_bbox.y_overlap(
                         candidate_table.bbox, 'first')
 
-                    if table_line_x_overlap > 0.93 and table_line_y_overlap > 0.93:
+                    if table_line_x_overlap > 0.9 and table_line_y_overlap > 0.9:
+
+                        print(line.get_text())
 
                         # Find correct row
-                        candidate_row_index = -1
+                        overlapping_row_indices: List[int] = []
                         for row_index, row in enumerate(candidate_table.row_boxes):
-                            if shrunk_bbox.overlap(row[1], 'first') > 0.85:
-                                candidate_row_index = row_index
+                            print(shrunk_bbox.overlap(row[1], 'first'), row_index)
+                            if shrunk_bbox.overlap(row[1], 'first') > 0.1:
+                                overlapping_row_indices.append(row_index)
+                                continue
+                            if len(overlapping_row_indices) >= 1:
                                 break
-                        # If no correct row, punish table candiate
-                        if candidate_row_index < 0:
-                            if table_line_x_overlap > 0.99 and table_line_y_overlap > 0.99:
-                                bad_lines[table_index] += 10
-                            else:
-                                bad_lines[table_index] += 1
-                            continue
 
                         # Find correct column
-                        candidate_col_index = -1
+                        overlapping_col_indices: List[int] = []
                         for col_index, col in enumerate(candidate_table.col_boxes):
-                            if line.bbox.overlap(col[1], 'first') > 0.85:
-                                candidate_col_index = col_index
+                            print(shrunk_bbox.overlap(col[1], 'first'), col_index)
+                            if line.bbox.overlap(col[1], 'first') > 0.1:
+                                overlapping_col_indices.append(col_index)
+                                continue
+                            if len(overlapping_col_indices) >= 1:
                                 break
-                        # If no correct row, punish table candidate
-                        if candidate_col_index < 0:
-                            if table_line_x_overlap > 0.99 and table_line_y_overlap > 0.99:
-                                bad_lines[table_index] += 10
-                            else:
-                                bad_lines[table_index] += 1
+                        
+                        if len(overlapping_col_indices) == 0 or len(overlapping_row_indices) == 0:
+                            bad_lines[table_index] += 1
                             continue
-
-                        # Note which table text has been assigned too
-                        used_text[line_index] = table_index
-                        # Add text to table
-                        candidate_table.cells[candidate_row_index][candidate_col_index].append(
-                            line)
+                        
+                        if len(overlapping_row_indices) == 1 and len(overlapping_col_indices) == 1:
+                            used_text[line_index] = table_index
+                            candidate_table.cells[overlapping_row_indices[0]][overlapping_col_indices[0]].append(line)
+                            continue
+                            
+                        print(line.get_text(), overlapping_col_indices, overlapping_row_indices)
+                        
+                        merge_box = None
+                        for merge in merge_boxes:
+                            this_row = True
+                            for row in overlapping_row_indices:
+                                if row not in merge[0]:
+                                    this_row = False
+                                    break
+                                
+                            if not this_row:
+                                continue
+                                
+                            this_col = True
+                            for col in overlapping_col_indices:
+                                if col not in merge[1]:
+                                    this_col = False
+                                    break
+                                
+                            if this_row and this_col:
+                                merge_box = merge
+                                break
+                            
+                        if not merge_box:
+                            candidate_table.cells[overlapping_row_indices[0]][overlapping_col_indices[0]].append(line)
+                            used_text[line_index] = table_index
+                            bad_lines[table_index] += 1
+                            continue
+                        
+                        candidate_table.cells[merge_box[0][0]][merge_box[1][0]].append(line)
                         continue
 
                     # If table overlaps with none-table text, punish table
@@ -221,5 +270,8 @@ class MLTableProcessor(Processor):
                         line=dict(width=3, color=colours["table"]))
         fig.add_scatter(x=[None], y=[None], name="Table Row/Column",
                         line=dict(width=3, color=colours["row"]))
+        fig.add_scatter(x=[None], y=[None], name="Table Spanning Cell",
+                        line=dict(width=3, color=colours["merges"]))
+
         fig.add_scatter(x=[None], y=[None], name="Table Header",
                         line=dict(width=3, color=colours["row_header"]))
