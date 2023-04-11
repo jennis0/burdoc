@@ -75,7 +75,7 @@ class BurdocParser():
 
         if not skip_ml_table_finding:
             self.processors.append(
-                (MLTableProcessor, {}, False, None)
+                (MLTableProcessor, {}, True, None)
             )
 
         self.processors.append(
@@ -83,7 +83,7 @@ class BurdocParser():
                 'processors': [
                     MarginProcessor,
                     LayoutProcessor,
-                    RulesTableProcessor,
+                    #RulesTableProcessor,
                     ReadingOrderProcessor,
                     HeadingProcessor,
                     ListProcessor,

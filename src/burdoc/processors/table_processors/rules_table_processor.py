@@ -74,7 +74,7 @@ class RulesTableProcessor(Processor):
 
                     all_rows = row_headers + rows
                     all_cols = col_headers + cols
-
+                    
                     if len(all_cols) == 2:
                         if all_cols[0][1].width() / all_cols[1][1].width() > 0.9:
                             continue
@@ -132,18 +132,26 @@ class RulesTableProcessor(Processor):
                 for element_index, table_and_bad_line_count in enumerate(zip(section_table_candidates, bad_lines)):
                     table = table_and_bad_line_count[0]
                     bad_line_count = table_and_bad_line_count[1]
+                    
+                    skip = False
                     if bad_line_count > 0:
                         used_text[used_text == element_index] = -1
                         continue
 
-                    skip = False
-                    for table_row in table.cells:
+                    skip_rows = []
+                    for i,table_row in enumerate(table.cells[1:]):
                         if len(table_row[0]) == 0:
-                            skip = True
+                            skip_rows.append(i+1)
+                            for j,table_cell in enumerate(table.cells[i+1]):
+                                if len(table.cells[i+1][j]) > 0:
+                                    table.cells[i][j] += table_cell
+                                    
+                            table.row_boxes[i][1].y1 = table.row_boxes[i+1][1].y1
                             break
-                    if skip:
-                        used_text[used_text == element_index] = -1
-                        continue
+                        
+                    for sr in skip_rows:
+                        table.cells.pop(sr)
+                        table.row_boxes.pop(sr)
 
                     data['tables'][page_number].append(table)
 
@@ -248,7 +256,7 @@ class RulesTableProcessor(Processor):
                 candidate = layout_graph.get_node(candidate.down[0])
                 candidate_element = cast(TextBlock, candidate.element)
                 self.logger.debug(
-                    "Considering %s for next column", str(candidate))
+                    "Considering %s for next column with text %s", str(candidate), candidate.element.get_text())
 
                 # If its an empty element we're at end of table
                 if len(candidate_element.items) == 0:
@@ -265,7 +273,7 @@ class RulesTableProcessor(Processor):
 
                     length = sum([len(l.get_text())
                                  for l in candidate_element.items])
-                    if length > 4*last_length and length > 20:
+                    if len(columns[0]) > 1 and length > 4*last_length and length > 20:
                         self.logger.debug(
                             "Skipping due to text length disparity")
                         break
