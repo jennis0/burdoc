@@ -32,7 +32,7 @@ def _hash(obj):
         text = "-".join(parts)
     if not text:
         text = json.dumps(obj, sort_keys=True, indent=2)
-    return hashlib.md5(text.encode('utf-8'), usedforsecurity=False).hexdigest()
+    return hashlib.md5(text.encode('utf-8', 'replace'), usedforsecurity=False).hexdigest()
 
 
 def _diff_value(path: str, value1: Any, value2: Any) -> List[Dict[str, Any]]:
