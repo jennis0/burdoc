@@ -1,14 +1,15 @@
 import logging
 from enum import Enum, auto
-from typing import Any, Dict, List, Tuple, cast
+from typing import Any, Dict, List, Optional, Tuple, Type, cast
 
 import numpy as np
 from plotly.graph_objects import Figure
 
-from ...elements import Table, TableParts
+from ...elements import Bbox, LayoutElement, Table, TablePart
 from ...utils.render_pages import add_rect_to_figure
 from ..processor import Processor
 from .detr_table_strategy import DetrTableStrategy
+from .rules_table_strategy import RulesTableStrategy
 from .table_extractor_strategy import TableExtractorStrategy
 
 
@@ -25,23 +26,31 @@ class MLTableProcessor(Processor):
     expensive: bool = True
     name: str = "ml-tables"
 
-    class Strategies (Enum):
+    class Strategy (Enum):
         """List of possible ML table finding strategies
-        
+
         Currently implemented:
         * DETR: DETR Using Microsoft Table Transformers  gi
 
         """
         DETR = auto()
+        RULES = auto()
+
+    strategies: Dict[Strategy, Type[TableExtractorStrategy]] = {
+        Strategy.DETR: DetrTableStrategy,
+        Strategy.RULES: RulesTableStrategy
+    }
 
     strategy: TableExtractorStrategy
 
-    def __init__(self, strategy: Strategies = Strategies.DETR, log_level: int = logging.INFO):
+    def __init__(self, strategy: Strategy = Strategy.DETR,
+                 input_field: str = 'text_elements', log_level: int = logging.INFO):
         super().__init__(MLTableProcessor.name, log_level=log_level)
         self.log_level = log_level
-
-        if strategy == MLTableProcessor.Strategies.DETR:
-            self.strategy_type = DetrTableStrategy
+        self.strategy_type = self.strategies[strategy]
+        self.input_field = input_field
+        self.using_elements = input_field == 'elements'
+        self.bad_element_threshold = 10
 
     def initialise(self):
         self.strategy = self.strategy_type(self.log_level)
@@ -51,193 +60,208 @@ class MLTableProcessor(Processor):
         return (self.strategy_type.requirements() + ['text_elements'], [])
 
     def generates(self) -> List[str]:
-        return ['tables', 'text_elements']
+        return ['tables', self.input_field] + self.strategy_type.generates()
+
+    def _get_cell_index_for_bbox(self, table: Table, bbox: Bbox) -> Optional[Tuple[List[int], List[int]]]:
+        """Gets the index of all rows and columns the bbox overlaps with.
+
+        Args:
+            table (Table): The table to test overlap against
+            bbox (Bbox): The bboxto test overlap with
+
+        Returns:
+            Optional[Tuple[List[int], List[int]]]: Row indices and cell indices the line overlaps with. Returns None if
+                the line doesn't overlap the table at all
+        """
+
+        table_line_x_overlap = bbox.x_overlap(
+            table.bbox, 'first')
+        table_line_y_overlap = bbox.y_overlap(
+            table.bbox, 'first')
+
+        if table_line_x_overlap > 0.9 and table_line_y_overlap > 0.9:
+
+            # Find correct row
+            overlapping_row_indices: List[int] = []
+            for row_index, row in enumerate(table.row_boxes):
+                if bbox.overlap(row[1], 'first') > 0.1:
+                    overlapping_row_indices.append(row_index)
+                    continue
+                if len(overlapping_row_indices) >= 1:
+                    break
+
+            # Find correct column
+            overlapping_col_indices: List[int] = []
+            for col_index, col in enumerate(table.col_boxes):
+                if bbox.overlap(col[1], 'first') > 0.1:
+                    overlapping_col_indices.append(col_index)
+                    continue
+                if len(overlapping_col_indices) >= 1:
+                    break
+
+            return (overlapping_row_indices, overlapping_col_indices)
+
+        return None
+
+    def _check_if_in_spanning_cell(self, table: Table, cell_indices: Tuple[List[int], List[int]]) -> Optional[Tuple[List[int], List[int]]]:
+        """Checks whether the passed indices are contained entirely within a single spanning cell. 
+
+        Args:
+            table (Table): Table to check against
+            cell_indices (Tuple[List[int], List[int]]): The lists of row indices and column indices the element
+                overlaps with
+
+        Returns:
+            Optional[Tuple[List[int], List[int]]]: The full indices of the spanning cell if found, otherwise None
+        """
+
+        spanning_cell = None
+        for tsc in table.spanning_cells:
+            this_row = True
+            for row in cell_indices[0]:
+                if row not in tsc[0]:
+                    this_row = False
+                    break
+
+            if not this_row:
+                continue
+
+            this_col = True
+            for col in cell_indices[1]:
+                if col not in tsc[1]:
+                    this_col = False
+                    break
+
+            if this_row and this_col:
+                spanning_cell = tsc
+                break
+
+        return spanning_cell
+
+    def _extract_tables(
+        self, text: List[LayoutElement],
+        list_of_table_parts: List[List[Tuple[TablePart, Bbox]]]
+    ) -> Tuple[List[LayoutElement], List[Table]]:
+        """Creates table from table parts and assigns elements to those tables.
+
+        Args:
+            text (List[LayoutElement]): Elements to be assigned to tables
+            list_of_table_parts (List[List[Tuple[TablePart, Bbox]]]): Table parts from extraction strategy
+
+        Returns:
+            Tuple[List[LayoutElement], List[Table]]: Updated list of elements and found tables
+        """
+
+        # Create a list of table candidates for the page
+        page_table_candidates: List[Table] = []
+        for table_parts in list_of_table_parts:
+
+            for tp in table_parts:
+                print(tp)
+
+            table = Table.from_table_parts(table_parts)
+
+            if len(table.row_boxes) < 2 or len(table.col_boxes) < 2:
+                continue
+
+            page_table_candidates.append(table)
+
+        bad_lines = np.array([0 for _ in page_table_candidates])
+        used_text = np.array([-1 for _ in text])
+
+        for line_index, line in enumerate(text):
+            shrunk_bbox = line.bbox.clone()
+            shrunk_bbox.x0 += 2
+            shrunk_bbox.x1 -= 2
+            shrunk_bbox.y0 += 2
+            shrunk_bbox.y1 = max(shrunk_bbox.y0+1, shrunk_bbox.y1-5)
+
+            for table_index, candidate_table in enumerate(page_table_candidates):
+
+                if not candidate_table.row_boxes or not candidate_table.col_boxes:
+                    continue
+
+                cell_indices = self._get_cell_index_for_bbox(candidate_table, shrunk_bbox)
+
+                if not cell_indices:
+                    continue
+
+                if len(cell_indices[0]) == 0 or len(cell_indices[1]) == 0:
+                    bad_lines[table_index] += 1
+                    continue
+
+                spanning_cell = self._check_if_in_spanning_cell(table, cell_indices)
+
+                if not spanning_cell:
+                    candidate_table.cells[cell_indices[0][0]][cell_indices[1][0]].append(line)
+                    used_text[line_index] = table_index
+
+                    if len(cell_indices[0]) > 1 or len(cell_indices[1]) > 1:
+                        bad_lines[table_index] += 1
+
+                else:
+                    candidate_table.cells[spanning_cell[0][0]][spanning_cell[1][0]].append(line)
+
+        # Check badness of tables and either accept them or unmark any used text
+        true_page_tables: List[Table] = []
+        for line_index, tables_and_bad_line_count in enumerate(zip(page_table_candidates, bad_lines)):
+            table = tables_and_bad_line_count[0]
+            bad_line_count = tables_and_bad_line_count[1]
+
+            if bad_line_count > self.bad_element_threshold or len(table.cells) == 0:
+                used_text[used_text == line_index] = -1
+                continue
+
+            remove_rows = set()
+            remove_cols = set()
+            for i, iter_row in enumerate(table.cells):
+                count = sum(len(cell) for cell in iter_row)
+                if count == 0:
+                    remove_rows.add(i)
+
+            for j in range(len(table.cells[0])):
+                count = sum(len(row[j]) for row in table.cells)
+                if count == 0:
+                    remove_cols.add(j)
+
+            table.cells = [
+                [cell for j, cell in enumerate(
+                    row) if j not in remove_cols]
+                for i, row in enumerate(table.cells) if i not in remove_rows]
+
+            true_page_tables.append(table)
+
+        # Filter text that has been inserted into tables
+        new_elements = [t for t, is_used in zip(text, used_text)
+                        if is_used < 0]
+
+        return new_elements, true_page_tables
 
     def _process(self, data: Dict[str, Any]):
         required_fields = self.strategy.requirements()
         fields = {r: data[r] for r in self.strategy.requirements()}
         fields['page_numbers'] = list(data[required_fields[0]].keys())
 
-        data['tables'] = {p: [] for p in fields['page_numbers']}
+        if 'tables' not in data:
+            data['tables'] = {p: [] for p in fields['page_numbers']}
 
-        extracted_tables = self.strategy.extract_tables(**fields)
+        found_table_parts = self.strategy.extract_tables(fields)
 
-        if len(extracted_tables) == 0:
-            return
-
-        for page, list_of_table_parts in extracted_tables.items():
-
-            # Create a list of table candidates for the page
-            page_table_candidates: List[Table] = []
-            for table_parts in list_of_table_parts:
-                for tp in table_parts:
-                    print(tp)
-                print()
-                
-                table_bbox = table_parts[0][1]
-                row_headers = [s for s in table_parts[1:]
-                               if s[0] == TableParts.COLUMNHEADER]
-                rows = [s for s in table_parts[1:] if s[0] == TableParts.ROW]
-                col_headers = [s for s in table_parts[1:]
-                               if s[0] == TableParts.ROWHEADER]
-                cols = [s for s in table_parts[1:]
-                        if s[0] == TableParts.COLUMN]
-                merges = [s for s in table_parts[1:] if s[0] == TableParts.SPANNINGCELL]
-
-                all_rows = row_headers + rows
-                all_cols = col_headers + cols
-
-                if len(all_cols) < 2:
-                    continue
-
-                if len(all_rows) < 1:
-                    continue
-
-                all_rows.sort(key=lambda r: r[1].y0)
-                all_cols.sort(key=lambda r: r[1].x0)
-                
-                merge_boxes: List[Tuple[List[int], List[int]]] = []
-                for merge in merges:
-                    merge_rows: List[int] = []
-                    merge_cols: List[int] = []
-                    row_index = None
-                    for i,row in enumerate(all_rows):
-                        if merge[1].overlap(row[1], 'first') > 0.1:
-                            merge_rows.append(i)
-                    
-                    for i,col in enumerate(all_cols):
-                        if merge[1].overlap(col[1], 'first') > 0.1:
-                            merge_cols.append(i)
-                    
-                    merge_boxes.append([(merge_rows, merge_cols)])
-
-                page_table_candidates.append(
-                    Table(table_bbox, all_rows, all_cols, merges))
-
-            bad_lines = np.array([0 for _ in page_table_candidates])
-            used_text = np.array([-1 for _ in data['text_elements'][page]])
-
-            for line_index, line in enumerate(data['text_elements'][page]):
-                shrunk_bbox = line.bbox.clone()
-                shrunk_bbox.y0 += 2
-                shrunk_bbox.y1 -= 5
-                shrunk_bbox.x0 += 2
-                shrunk_bbox.x1 -= 2
-                if shrunk_bbox.height() > 8:
-                    shrunk_bbox.y1 -= 5
-
-                for table_index, candidate_table in enumerate(page_table_candidates):
-
-                    if not candidate_table.row_boxes or not candidate_table.col_boxes:
-                        continue
-
-                    table_line_x_overlap = shrunk_bbox.x_overlap(
-                        candidate_table.bbox, 'first')
-                    table_line_y_overlap = shrunk_bbox.y_overlap(
-                        candidate_table.bbox, 'first')
-
-                    if table_line_x_overlap > 0.9 and table_line_y_overlap > 0.9:
-
-                        print(line.get_text())
-
-                        # Find correct row
-                        overlapping_row_indices: List[int] = []
-                        for row_index, row in enumerate(candidate_table.row_boxes):
-                            print(shrunk_bbox.overlap(row[1], 'first'), row_index)
-                            if shrunk_bbox.overlap(row[1], 'first') > 0.1:
-                                overlapping_row_indices.append(row_index)
-                                continue
-                            if len(overlapping_row_indices) >= 1:
-                                break
-
-                        # Find correct column
-                        overlapping_col_indices: List[int] = []
-                        for col_index, col in enumerate(candidate_table.col_boxes):
-                            print(shrunk_bbox.overlap(col[1], 'first'), col_index)
-                            if line.bbox.overlap(col[1], 'first') > 0.1:
-                                overlapping_col_indices.append(col_index)
-                                continue
-                            if len(overlapping_col_indices) >= 1:
-                                break
-                        
-                        if len(overlapping_col_indices) == 0 or len(overlapping_row_indices) == 0:
-                            bad_lines[table_index] += 1
-                            continue
-                        
-                        if len(overlapping_row_indices) == 1 and len(overlapping_col_indices) == 1:
-                            used_text[line_index] = table_index
-                            candidate_table.cells[overlapping_row_indices[0]][overlapping_col_indices[0]].append(line)
-                            continue
-                            
-                        print(line.get_text(), overlapping_col_indices, overlapping_row_indices)
-                        
-                        merge_box = None
-                        for merge in merge_boxes:
-                            this_row = True
-                            for row in overlapping_row_indices:
-                                if row not in merge[0]:
-                                    this_row = False
-                                    break
-                                
-                            if not this_row:
-                                continue
-                                
-                            this_col = True
-                            for col in overlapping_col_indices:
-                                if col not in merge[1]:
-                                    this_col = False
-                                    break
-                                
-                            if this_row and this_col:
-                                merge_box = merge
-                                break
-                            
-                        if not merge_box:
-                            candidate_table.cells[overlapping_row_indices[0]][overlapping_col_indices[0]].append(line)
-                            used_text[line_index] = table_index
-                            bad_lines[table_index] += 1
-                            continue
-                        
-                        candidate_table.cells[merge_box[0][0]][merge_box[1][0]].append(line)
-                        continue
-
-                    # If table overlaps with none-table text, punish table
-                    if table_line_x_overlap > 0.5 and table_line_y_overlap > 0.5:
-                        bad_lines[table_index] += 10
-                    elif table_line_x_overlap > 0.1 and table_line_y_overlap > 0.1:
-                        bad_lines[table_index] += 1
-
-            # Check badness of tables and either accept them or unmark any used text
-            for line_index, tables_and_bad_line_count in enumerate(zip(page_table_candidates, bad_lines)):
-                table = tables_and_bad_line_count[0]
-                bad_line_count = tables_and_bad_line_count[1]
-
-                if bad_line_count >= 11:
-                    used_text[used_text == line_index] = -1
-                    continue
-
-                remove_rows = set()
-                remove_cols = set()
-                for i, iter_row in enumerate(table.cells):
-                    count = sum(len(cell) for cell in iter_row)
-                    if count == 0:
-                        remove_rows.add(i)
-
-                for j in range(len(table.cells[0])):
-                    count = sum(len(row[j]) for row in table.cells)
-                    if count == 0:
-                        remove_cols.add(j)
-
-                table.cells = [
-                    [cell for j, cell in enumerate(
-                        row) if j not in remove_cols]
-                    for i, row in enumerate(table.cells) if i not in remove_rows]
-
-                data['tables'][page].append(table)
-
-            # Filter text that has been inserted into tables
-            data['text_elements'][page] = [t for t, is_used in zip(data['text_elements'][page], used_text)
-                                           if is_used < 0]
+        if self.using_elements:
+            for page, page_section_table_parts in found_table_parts.items():
+                elements = data[self.input_field]
+                i = 0
+                page_section_table_parts = cast(List[List[List[Tuple[TablePart, Bbox]]]], page_section_table_parts)
+                for section_elements, list_of_table_parts in zip(elements, page_section_table_parts):
+                    new_elements, tables = self._extract_tables(section_elements, list_of_table_parts)
+                    data[self.input_field][page][i].items = new_elements
+                    data["tables"][page] += tables
+                    i += 1
+        else:
+            for page, list_of_table_parts in found_table_parts.items():
+                new_elements, tables = self._extract_tables(data[self.input_field][page], list_of_table_parts)
+                data[self.input_field][page] = new_elements
+                data["tables"][page] = tables
 
     def add_generated_items_to_fig(self, page_number: int, fig: Figure, data: Dict[str, Any]):
         colours = {
@@ -253,12 +277,12 @@ class MLTableProcessor(Processor):
             table = cast(Table, table)
             add_rect_to_figure(fig, table.bbox, colours["table"])
 
-            for i,row_box in enumerate(table.row_boxes):
+            for i, row_box in enumerate(table.row_boxes):
                 if i in table.col_headers:
                     add_rect_to_figure(fig, row_box[1], colours['col_header'])
                 else:
                     add_rect_to_figure(fig, row_box[1], colours['row'])
-            for i,col_box in enumerate(table.col_boxes):
+            for i, col_box in enumerate(table.col_boxes):
                 if i in table.row_headers:
                     add_rect_to_figure(fig, col_box[1], colours['row_header'])
                 else:

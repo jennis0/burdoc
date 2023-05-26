@@ -451,20 +451,28 @@ def create_directory_view(in_path: str, path_stem: str, links: Dict[str, str],
                            if c['type'] == 'reorder'])
             change_count = len(
                 [c for c in result['changes'] if c['type'] == 'change'])
+            
+            if name in scores:
+                if total_changes == 0:
+                    tick = '&check;'
+                    colour = 'green'
+                elif total_changes > 0 and scores[name][0] >= 4:
+                    tick = '&#10006;'
+                    colour = 'red'
+                else:
+                    tick = '&#9888;'
+                    colour = 'orange'
 
-            if total_changes == 0:
-                tick = '&check;'
-                colour = 'green'
-            elif total_changes > 0 and scores[name][0] >= 4:
-                tick = '&#10006;'
-                colour = 'red'
+                score = scores[name][0]
+                comment = scores[name][1]
+                score_colour = score_colour_map[score]
+                
             else:
-                tick = '&#9888;'
-                colour = 'orange'
-
-            score = scores[name][0]
-            comment = scores[name][1]
-            score_colour = score_colour_map[score]
+                tick = '-'
+                colour = 'blue'
+                comment = "New File"
+                score_colour = 'blue'
+                score = "-"
 
             name = os.path.basename(name)
 

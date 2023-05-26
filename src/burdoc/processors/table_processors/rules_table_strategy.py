@@ -2,15 +2,13 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple, cast
 
 import numpy as np
-from plotly.graph_objects import Figure
 
-from ...elements import Bbox, Table, TablePart, TextBlock
+from ...elements import Bbox, PageSection, TablePart, TextBlock
 from ...utils.layout_graph import LayoutGraph
-from ...utils.render_pages import add_rect_to_figure
-from ..processor import Processor
+from .table_extractor_strategy import TableExtractorStrategy
 
 
-class RulesTableProcessor(Processor):
+class RulesTableStrategy(TableExtractorStrategy):
     """Applies a simple rules-based algorithm to identify tables in text.
     This looks for patterns in text blocks and makes no use of lines/images.
     Very good at pulling out dense inline tables missed by the ML algorithms.
@@ -20,23 +18,28 @@ class RulesTableProcessor(Processor):
     Generates: ['tables', 'elements']
     """
 
-    name: str = 'rules-table'
-
     def __init__(self, log_level: int = logging.INFO):
-        super().__init__(RulesTableProcessor.name, log_level=log_level)
+        super().__init__('rules', log_level=log_level)
 
-    def requirements(self) -> Tuple[List[str], List[str]]:
-        return (['page_bounds', 'elements'], [])
+    @staticmethod
+    def requirements() -> List[str]:
+        return ['page_bounds', 'elements']
+    
+    @staticmethod
+    def generates() -> List[str]:
+        return []
+    
+    def extract_tables(self, page_numbers: List[int], fields: Dict[str, Dict[int, Any]]
+                       ) -> Dict[int, List[List[Tuple[TablePart, Bbox]]]]:
 
-    def generates(self) -> List[str]:
-        return ['tables', 'elements']
+        page_bounds: Dict[int, Bbox] = fields['page_bounds']
+        elements: Dict[int, List[PageSection]] = fields['elements']
 
-    def _process(self, data: Any) -> Any:
-        if 'tables' not in data:
-            data['tables'] = {}
-        for page_number, page_bound, page_elements in self.get_page_data(data):
-            if page_number not in data['tables']:
-                data['tables'][page_number] = []
+        results: Dict[int, List[List[Tuple[TablePart, Bbox]]]] = {p: [] for p in page_numbers}
+
+        for page_number in page_numbers:
+            page_bound = page_bounds[page_number]
+            page_elements = elements[page_number]
 
             for section in page_elements:
                 table_candidates = self._generate_table_candidates(
@@ -59,139 +62,9 @@ class RulesTableProcessor(Processor):
                 if len(section_tables) == 0:
                     continue
 
-                section_table_candidates: List[Table] = []
-                for table_parts in section_tables:
-                    table_bbox = table_parts[0][1]
-                    row_headers = [s for s in table_parts[1:]
-                                   if s[0] == TablePart.ROWHEADER]
-                    rows = [s for s in table_parts[1:]
-                            if s[0] == TablePart.ROW]
-                    col_headers = [s for s in table_parts[1:]
-                                   if s[0] == TablePart.COLUMNHEADER]
-                    cols = [s for s in table_parts[1:]
-                            if s[0] == TablePart.COLUMN]
-                    # merges      = [s for s in table_parts[1:] if s[0] == TableParts.SPANNINGCELL]
+                results[page_number] += section_tables
 
-                    all_rows = row_headers + rows
-                    all_cols = col_headers + cols
-                    
-                    if len(all_cols) == 2:
-                        if all_cols[0][1].width() / all_cols[1][1].width() > 0.9:
-                            continue
-
-                    all_rows.sort(key=lambda r: r[1].y0)
-                    all_cols.sort(key=lambda r: r[1].x0)
-
-                    section_table_candidates.append(
-                        Table(table_bbox, all_rows, all_cols, []))
-
-                bad_lines = np.array([0 for _ in section_table_candidates])
-                used_text = np.array([-1 for _ in section.items])
-                for element_index, element in enumerate(section.items):
-                    e_bbox = element.bbox
-
-                    if not isinstance(element, TextBlock):
-                        continue
-
-                    for table_index, table in enumerate(section_table_candidates):
-                        table_element_x_overlap = e_bbox.x_overlap(
-                            table.bbox, 'first')
-                        table_element_y_overlap = e_bbox.y_overlap(
-                            table.bbox, 'first')
-
-                        if table_element_x_overlap > 0.9 and table_element_y_overlap > 0.9:
-
-                            for line in element.items:
-                                candidate_row_index = -1
-                                for row_index, row in enumerate(table.row_boxes):
-                                    if line.bbox.y_overlap(row[1], 'first') > 0.8:
-                                        candidate_row_index = row_index
-                                        break
-                                if candidate_row_index < 0:
-                                    bad_lines[table_index] += 1
-                                    continue
-
-                                candidate_col_index = -1
-                                for col_index, col in enumerate(table.col_boxes):
-                                    if line.bbox.x_overlap(col[1], 'first') > 0.8:
-                                        candidate_col_index = col_index
-                                        break
-                                if candidate_col_index < 0:
-                                    bad_lines[table_index] += 1
-                                    continue
-
-                                table.cells[candidate_row_index][candidate_col_index].append(
-                                    line)
-
-                            used_text[element_index] = table_index
-                            break
-
-                        if table_element_x_overlap * table_element_y_overlap > 0.02:
-                            bad_lines[table_index] += 1
-
-                for element_index, table_and_bad_line_count in enumerate(zip(section_table_candidates, bad_lines)):
-                    table = table_and_bad_line_count[0]
-                    bad_line_count = table_and_bad_line_count[1]
-                    
-                    skip = False
-                    if bad_line_count > 0:
-                        used_text[used_text == element_index] = -1
-                        continue
-
-                    skip_rows = []
-                    for i,table_row in enumerate(table.cells[1:]):
-                        if len(table_row[0]) == 0:
-                            skip_rows.append(i+1)
-                            for j,table_cell in enumerate(table.cells[i+1]):
-                                if len(table.cells[i+1][j]) > 0:
-                                    table.cells[i][j] += table_cell
-                                    
-                            table.row_boxes[i][1].y1 = table.row_boxes[i+1][1].y1
-                            break
-                        
-                    for sr in skip_rows:
-                        table.cells.pop(sr)
-                        table.row_boxes.pop(sr)
-
-                    data['tables'][page_number].append(table)
-
-                # Remove any items that have been pulled into the table
-                section.items = [i for i, u in zip(
-                    section.items, used_text) if u < 0]
-
-    def add_generated_items_to_fig(self, page_number: int, fig: Figure, data: Dict[str, Any]):
-        colours = {
-            "table": "Cyan",
-            'row': "Grey",
-            'row_header': 'DarkGrey',
-            "col": "Grey",
-            'col_header': 'DarkGrey',
-            "merges": "Turquoise"
-        }
-
-        for table in data['tables'][page_number]:
-            table = cast(Table, table)
-            add_rect_to_figure(fig, table.bbox, colours["table"])
-
-            for i, row_box in enumerate(table.row_boxes):
-                if i in table.col_headers:
-                    add_rect_to_figure(fig, row_box[1], colours['col_header'])
-                else:
-                    add_rect_to_figure(fig, row_box[1], colours['row'])
-            for i, col_box in enumerate(table.col_boxes):
-                if i in table.row_headers:
-                    add_rect_to_figure(fig, col_box[1], colours['row_header'])
-                else:
-                    add_rect_to_figure(fig, col_box[1], colours['col'])
-            for merged_box in table.merges:
-                add_rect_to_figure(fig, merged_box[1], colours['merges'])
-
-        fig.add_scatter(x=[None], y=[None], name="Table",
-                        line=dict(width=3, color=colours["table"]))
-        fig.add_scatter(x=[None], y=[None], name="Table Row/Column",
-                        line=dict(width=3, color=colours["row"]))
-        fig.add_scatter(x=[None], y=[None], name="Table Header",
-                        line=dict(width=3, color=colours["row_header"]))
+        return results
 
     def _generate_table_candidates(self, page_bound: Bbox, blocks: List[TextBlock]) -> List[List[List[TextBlock]]]:
 
@@ -256,7 +129,7 @@ class RulesTableProcessor(Processor):
                 candidate = layout_graph.get_node(candidate.down[0])
                 candidate_element = cast(TextBlock, candidate.element)
                 self.logger.debug(
-                    "Considering %s for next column with text %s", str(candidate), candidate.element.get_text())
+                    "Considering %s for next column with text %s", str(candidate), candidate_element.get_text())
 
                 # If its an empty element we're at end of table
                 if len(candidate_element.items) == 0:

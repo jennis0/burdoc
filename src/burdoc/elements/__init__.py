@@ -13,6 +13,6 @@ from .image import ImageElement, ImageType
 from .line import LineElement
 from .section import PageSection
 from .span import Span
-from .table import Table, TableParts
+from .table import Table, TablePart
 from .textblock import TextBlock, TextBlockType
 from .textlist import TextList, TextListItem

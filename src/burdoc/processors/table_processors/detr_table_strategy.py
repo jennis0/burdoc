@@ -7,7 +7,7 @@ from PIL import Image
 from transformers import (BatchFeature, DetrImageProcessor,
                           TableTransformerForObjectDetection)
 
-from ...elements import Bbox, TableParts
+from ...elements import Bbox, TablePart
 from .table_extractor_strategy import TableExtractorStrategy
 
 
@@ -46,8 +46,12 @@ class DetrTableStrategy(TableExtractorStrategy):
     def requirements() -> List[str]:
         return ['page_images']
 
-    def extract_tables(self, page_numbers: List[int], page_images: Dict[int, Image.Image]) \
-            -> Dict[int, List[List[Tuple[TableParts, Bbox]]]]:  # type:ignore
+    @staticmethod
+    def generates() -> List[str]:
+        return []
+
+    def extract_tables(self, fields: Dict[str, Dict[int, Any]]) \
+            -> Dict[int, List[List[Tuple[TablePart, Bbox]]]]:
         """Identifies tables within a page image and for each table returns a list of table parts.
         If a GPU is used, pages are batched together to improve efficiency
 
@@ -61,6 +65,9 @@ class DetrTableStrategy(TableExtractorStrategy):
                 }
 
         """
+
+        page_numbers: List[int] = fields['page_numbers']
+        page_images: Dict[int, Image.Image] = fields['page_images']
 
         i = 0
         results = {}
@@ -88,10 +95,9 @@ class DetrTableStrategy(TableExtractorStrategy):
             BatchFeature: Converted images, ready for processing
         """
 
-
         s = time.time()
         page_images = [i.convert("RGB") for i in page_images]
-        #page_images[0].show()
+        # page_images[0].show()
         encoding = self.extractor.preprocess(page_images, return_tensors='pt',
                                              do_resize=True, do_rescale=True, do_normalize=True)
         self.logger.debug("Encoding %f", round(time.time() - s, 3))
@@ -128,7 +134,7 @@ class DetrTableStrategy(TableExtractorStrategy):
             time.perf_counter() - start, 3))
         return results
 
-    def _extract_tables_batch(self, page_images: List[Image.Image]) -> List[List[List[Tuple[TableParts, Bbox]]]]:
+    def _extract_tables_batch(self, page_images: List[Image.Image]) -> List[List[List[Tuple[TablePart, Bbox]]]]:
         """Iterate over an entire batch of page images and extract tables
 
         Args:
@@ -168,11 +174,11 @@ class DetrTableStrategy(TableExtractorStrategy):
         tables: List = [[] for _ in range(len(page_images))]
         for p, c, t in zip(table_pages, bbox_corrections, results):
             tables[p].append(self._prepare_table(t,  c, *page_images[p].size))
-            
+
         return tables
 
     def _prepare_table(self, results, corrections, page_width, page_height) \
-            -> List[Tuple[TableParts, Bbox, float]]:
+            -> List[Tuple[TablePart, Bbox, float]]:
         """Convert the results from the DETR extraction into a list of table parts and
         bounding boxes.
 
@@ -183,44 +189,51 @@ class DetrTableStrategy(TableExtractorStrategy):
             List[Tuple[TableParts, Bbox, float]]: Table part, containing Bbox, and score.
                 The first entry should always be for the full table bbox.
         """
-        cols: List[Tuple[TableParts, Bbox]] = []
-        rows: List[Tuple[TableParts, Bbox]] = []
-        merges: List[Tuple[TableParts, Bbox]] = []
+        cols: List[Tuple[TablePart, Bbox]] = []
+        rows: List[Tuple[TablePart, Bbox]] = []
+        merges: List[Tuple[TablePart, Bbox]] = []
         for label, score, bbox in zip(results['labels'].tolist(),
                                       results['scores'].tolist(),
                                       results['boxes'].tolist()
                                       ):
             corrected_bb = [bbox[0]+corrections[0], bbox[1]+corrections[1],
                             bbox[2]+corrections[0], bbox[3]+corrections[1]]
-            part_type = TableParts(label)
-            if part_type == TableParts.TABLE:
-                table = (TableParts(label), Bbox(*corrected_bb,
+            part_type = TablePart(label)
+            
+            if part_type == TablePart.TABLE:
+                table = (TablePart(label), Bbox(*corrected_bb,
                          page_width, page_height), score)  # type:ignore
             else:
-                if part_type in [TableParts.COLUMN, TableParts.COLUMNHEADER]:
-                    cols.append((TableParts(label), Bbox(
-                        *corrected_bb, page_width, page_height), score))  # type:ignore
-                if part_type in [TableParts.ROW, TableParts.ROWHEADER]:
-                    rows.append((TableParts(label), Bbox(
-                        *corrected_bb, page_width, page_height), score))  # type:ignore
-                if part_type == TableParts.SPANNINGCELL:
-                    merges.append((TableParts(label), Bbox(
-                        *corrected_bb, page_width, page_height), score))  # type:ignore
 
+                print(part_type, corrected_bb)
+                print(corrected_bb[2] - corrected_bb[0], corrected_bb[3] - corrected_bb[1])
+                if (corrected_bb[2] - corrected_bb[0]) < 1. or (corrected_bb[3] - corrected_bb[1]) < 1.:
+                    continue
+
+                if part_type in [TablePart.COLUMN, TablePart.ROWHEADER]:
+                    cols.append((TablePart(label), Bbox(
+                        *corrected_bb, page_width, page_height), score))  # type:ignore
+                if part_type in [TablePart.ROW, TablePart.COLUMNHEADER]:
+                    rows.append((TablePart(label), Bbox(
+                        *corrected_bb, page_width, page_height), score))  # type:ignore
+                if part_type == TablePart.SPANNINGCELL:
+                    merges.append((TablePart(label), Bbox(
+                        *corrected_bb, page_width, page_height), score))  # type:ignore
 
         # Ensure the rows/columns span the full table
-        cols.sort(key=lambda x: x[1].x0)
-        cols[0][1].x0 = table[1].x0
-        for i, col in enumerate(cols[:-1]):
-            col[1].x1 = cols[i+1][1].x0-1
-        cols[-1][1].x1 = table[1].x1
+        # if len(cols) > 0:
+        #     cols.sort(key=lambda x: x[1].x0)
+        #     cols[0][1].x0 = table[1].x0
+        #     for i, col in enumerate(cols[:-1]):
+        #         col[1].x1 = cols[i+1][1].x0-1
+        #     cols[-1][1].x1 = table[1].x1
 
-        
-        rows.sort(key=lambda x: x[1].y0)
-        rows[0][1].y0 = table[1].y0
-        for i, row in enumerate(rows[:-1]):
-            row[1].y1 = rows[i+1][1].y0-1
-        rows[-1][1].y1 = table[1].y1
+        # if len(rows) > 0:
+        #     rows.sort(key=lambda x: x[1].y0)
+        #     rows[0][1].y0 = table[1].y0
+        #     for i, row in enumerate(rows[:-1]):
+        #         row[1].y1 = rows[i+1][1].y0-1
+        #     rows[-1][1].y1 = table[1].y1
 
         parts = cols + rows + merges
 

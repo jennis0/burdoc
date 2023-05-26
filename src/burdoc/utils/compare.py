@@ -21,7 +21,10 @@ def _hash(obj):
             elif obj['name'] == 'aside':
                 text = "aside-" + _hash(obj['items'])
             elif obj['name'] == 'table':
-                text = "table-" + _hash(obj['cells'][0])
+                if len(obj['cells']) > 0:
+                    text = "table-" + _hash(obj['cells'][0])
+                else:
+                    text = "table-empty"
             elif obj['name'] == 'textlist':
                 text = 'list-' + _hash(obj['items'])
             elif obj['name'] == 'textlistitem':
