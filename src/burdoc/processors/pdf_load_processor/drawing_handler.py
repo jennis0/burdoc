@@ -29,7 +29,7 @@ class DrawingHandler():
             bool: True if this looks like a filled rectangle, False if it is not likely to be visible
         """
 
-        if 'fill_opacity' not in shape_info or shape_info['fill_opacity'] < 0.1:
+        if 'fill_opacity' not in shape_info or not shape_info['fill_opacity'] or shape_info['fill_opacity'] < 0.1:
             return False
 
         if np.linalg.norm(255.*np.array(shape_info['fill']) - page_colour) < 10:
