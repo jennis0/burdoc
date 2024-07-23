@@ -29,7 +29,7 @@ class DetrTableStrategy(TableExtractorStrategy):
         self.detector_model = TableTransformerForObjectDetection.from_pretrained(
             'microsoft/table-transformer-detection')
         self.structure_model = TableTransformerForObjectDetection.from_pretrained(
-            'microsoft/table-transformer-structure-recognition')
+            'microsoft/table-transformer-structure-recognition-v1.1-all')
 
         if torch.cuda.is_available():
             self.logger.debug("Found CUDA")
