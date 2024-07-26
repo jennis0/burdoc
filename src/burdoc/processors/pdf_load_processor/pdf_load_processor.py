@@ -277,7 +277,7 @@ class PDFLoadProcessor(Processor):
         """
         if len(bullets) == 0:
             return
-
+        
         b_used = [False for _ in bullets]
         for t in text:
             for i, b in enumerate(bullets):

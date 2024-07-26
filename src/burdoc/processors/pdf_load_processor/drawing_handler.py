@@ -71,7 +71,8 @@ class DrawingHandler():
         if drawing_dict['type'] == 'f' and drawing_dict['fill_opacity'] > 0.9 and len(drawing_dict['items']) > 2:
             width = drawing_dict['rect'][2] - drawing_dict['rect'][0]
             height = drawing_dict['rect'][3] - drawing_dict['rect'][1]
-            if abs(width/height - 1) < 0.1 and width < 12:
+            
+            if abs(width/height - 1) < 0.1 and width < 10:
                 return True
 
         return False

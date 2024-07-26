@@ -149,8 +149,6 @@ class HeadingProcessor(Processor):
     def _predict_heading_type(self, factors: Dict[str, Any]):
         size = mode(factors['sizes'], axis=0, keepdims=False)[0]
 
-        if size < self.default_font_size + 0.5:
-            return TextBlockType.H6
         for i, t in zip(range(1, 5), [TextBlockType.H5, TextBlockType.H4, TextBlockType.H3, TextBlockType.H2]):
             if size < self.default_font_size*(1.05+0.2*i):
                 return t
