@@ -71,7 +71,8 @@ class DrawingHandler():
         if drawing_dict['type'] == 'f' and drawing_dict['fill_opacity'] > 0.9 and len(drawing_dict['items']) > 2:
             width = drawing_dict['rect'][2] - drawing_dict['rect'][0]
             height = drawing_dict['rect'][3] - drawing_dict['rect'][1]
-            if abs(width/height - 1) < 0.1 and width < 12:
+
+            if abs(width/height - 1) < 0.1 and width < 10:
                 return True
 
         return False
@@ -123,7 +124,6 @@ class DrawingHandler():
 
         return merged_boxes
 
-
     def get_page_drawings(self, page: fitz.Page, page_colour: np.ndarray) -> Dict[DrawingType, List[DrawingElement]]:
         """Extract all drawings from the page and apply basic classification
 
@@ -138,18 +138,19 @@ class DrawingHandler():
         self.page = page
         bound = page.bound()
         self.page_bbox = Bbox(*bound, bound[2], bound[3])  # type:ignore
-        
+
         processed_drawings: Dict[DrawingType, List[DrawingElement]] = {
             t: [] for t in DrawingType}
         for d in self.page.get_cdrawings():
 
             # Detect things that look like bullets
             if self._is_bullet(d):
-                drawing = DrawingElement.from_dict(d, bound[2], bound[3], DrawingType.BULLET)
+                drawing = DrawingElement.from_dict(
+                    d, bound[2], bound[3], DrawingType.BULLET)
                 processed_drawings[drawing.drawing_type].append(drawing)
                 self.logger.debug(
                     "Found bullet with box %s", str(drawing.bbox))
-                continue           
+                continue
 
             is_meaningful_fill = 'f' in d['type'] and self._is_filled_rect(
                 d, page_colour)
@@ -169,11 +170,12 @@ class DrawingHandler():
                 if drawing.bbox.width() == 0:
                     drawing.bbox.x1 += 1.
 
-                overlap = drawing.bbox.overlap(self.page_bbox, normalisation='second')
+                overlap = drawing.bbox.overlap(
+                    self.page_bbox, normalisation='second')
 
                 height = drawing.bbox.height()
                 width = drawing.bbox.width()
-                                
+
                 if (height < 10 and width > min(30, height*3)) or (width < 10 and height > min(width*6, 30)):
                     if drawing.bbox.x_overlap(self.page_bbox) > 0 and drawing.bbox.y_overlap(self.page_bbox) > 0:
                         self.logger.debug("Found line %d with box %s",
@@ -192,7 +194,8 @@ class DrawingHandler():
         # Merge boxes with significant overlap
         if self.merge_rects:
             processed_drawings[DrawingType.RECT] = \
-                self._merge_overlapping_rects(processed_drawings[DrawingType.RECT])
+                self._merge_overlapping_rects(
+                    processed_drawings[DrawingType.RECT])
 
         for t in processed_drawings:
             self.logger.debug("Found %d %s drawings", len(

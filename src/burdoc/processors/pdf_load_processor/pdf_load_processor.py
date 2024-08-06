@@ -58,10 +58,10 @@ class PDFLoadProcessor(Processor):
         return Image.frombytes('RGB', [pix.width, pix.height], pix.samples)
 
     def _update_font_statistics(self, font_statistics: Dict[str, Any], fonts: List[Any], text: List[LineElement]):
-        
+
         for font in fonts:
             family, basefont = Font.split_font_name(font[3], font[2])
-            
+
             if family not in font_statistics:
                 font_statistics[family] = {'_counts': {}}
 
@@ -73,10 +73,10 @@ class PDFLoadProcessor(Processor):
 
         for line in text:
             for span in line.spans:
-                
+
                 weight = len(span.text)
                 size = span.font.size
-                
+
                 if span.font.family not in font_statistics:
                     font_statistics[span.font.family] = {
                         '_counts': {}
@@ -84,37 +84,36 @@ class PDFLoadProcessor(Processor):
                     fs_fam = font_statistics[span.font.family]
                 else:
                     fs_fam = font_statistics[span.font.family]
-                                    
+
                 if size not in fs_fam['_counts']:
                     fs_fam['_counts'][size] = 0
-                
+
                 fs_fam['_counts'][size] += weight
-                    
+
                 if span.font.name not in fs_fam:
                     fs_fam[span.font.name] = {
-                            'family': span.font.family,
-                            'basefont': span.font.name,
-                            'counts': {},
-                            'true_sizes': {}
-                        }
+                        'family': span.font.family,
+                        'basefont': span.font.name,
+                        'counts': {},
+                        'true_sizes': {}
+                    }
                     fs_name = fs_fam[span.font.name]
                 else:
                     fs_name = fs_fam[span.font.name]
 
-                
                 if size not in fs_name['counts']:
                     fs_name['counts'][size] = weight
                     fs_name['true_sizes'][size] = []
                 else:
                     fs_name['counts'][size] += weight
-                    
+
                 if line.rotation[0] == 1.0:
                     fs_name['true_sizes'][size].append(span.bbox.height())
                 else:
                     fs_name['true_sizes'][size].append(span.bbox.width())
-                
-                font_statistics[span.font.family][span.font.name]['data'] = span.font.to_json()
 
+                font_statistics[span.font.family][span.font.name]['data'] = span.font.to_json(
+                )
 
     def _add_metadata_and_fields(self, data: Dict[str, Any], path: str, pdf: fitz.Document) -> Dict[str, Any]:
         metadata: Dict[str, Any] = {
@@ -143,7 +142,8 @@ class PDFLoadProcessor(Processor):
                       performance_tracker: Dict[str, List[float]]) -> Dict[DrawingType, List[DrawingElement]]:
         start = time.perf_counter()
         result = drawing_handler.get_page_drawings(page, page_colour)
-        performance_tracker['drawing_handler'].append(time.perf_counter() - start)
+        performance_tracker['drawing_handler'].append(
+            time.perf_counter() - start)
         return result
 
     def _get_text(self,
@@ -255,13 +255,15 @@ class PDFLoadProcessor(Processor):
             data['drawing_elements'][page_number] = self._get_drawings(drawing_handler, page,
                                                                        page_colour, performance_tracker)
 
-            data['text_elements'][page_number] = self._get_text(text_handler, page, performance_tracker)
+            data['text_elements'][page_number] = self._get_text(
+                text_handler, page, performance_tracker)
 
             if DrawingType.BULLET in data['drawing_elements'][page_number]:
                 self.merge_bullets_into_text(
                     data['drawing_elements'][page_number][DrawingType.BULLET], data['text_elements'][page_number])
-            
-            self._update_font_statistics(data['metadata']['font_statistics'], page.get_fonts(), data['text_elements'][page_number])
+
+            self._update_font_statistics(data['metadata']['font_statistics'], page.get_fonts(
+            ), data['text_elements'][page_number])
 
         pdf.close()
 
@@ -285,12 +287,13 @@ class PDFLoadProcessor(Processor):
                     continue
 
                 distance = 25 if b.bbox.width() > 8 else 10
-                
+
                 if b.bbox.height() / t.bbox.height() > 0.7:
                     continue
 
                 if t.bbox.y_overlap(b.bbox, 'second') > 0.6 and abs(t.bbox.x0 - b.bbox.x1) < distance:
-                    t.spans.insert(0, Span(b.bbox, font=t.spans[0].font, text="\u2022 "))
+                    t.spans.insert(
+                        0, Span(b.bbox, font=t.spans[0].font, text="\u2022 "))
                     t.bbox = Bbox.merge([t.bbox, b.bbox])
                     b_used[i] = True
                     break

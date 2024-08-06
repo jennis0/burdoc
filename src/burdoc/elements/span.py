@@ -1,5 +1,5 @@
 import unicodedata
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, Optional
 
 from .bbox import Bbox
 from .element import LayoutElement

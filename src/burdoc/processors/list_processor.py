@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Tuple, Union
 
 from plotly.graph_objects import Figure
 
-from ..elements.aside import Aside
 from ..elements.element import LayoutElement
 from ..elements.section import PageSection
 from ..elements.textblock import TextBlock, TextBlockType
@@ -171,13 +170,6 @@ class ListProcessor(Processor):
                 in_list = False
                 list_elements = []
 
-            proc_elements.append(element)
-            continue
-
-            if isinstance(element, Aside):
-                aside.items = self._find_lists(element.items)
-
-            # If not a list
             proc_elements.append(element)
 
         if len(list_elements) > 0:

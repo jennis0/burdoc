@@ -5,7 +5,7 @@ import os
 from typing import List
 
 from ..burdoc_parser import BurdocParser
-from ..utils.json_to_html import JsonHtmlConverter
+from ..utils.json_html_converter import JsonHtmlConverter
 
 
 def parse_range(text_range: str) -> List[int]:
@@ -74,13 +74,19 @@ def create_argparser() -> argparse.ArgumentParser:
     )
 
     argparser.add_argument(
-        '--html', 
-        help="Output a simple HTML representation of the document, rather than the JSON content.",
+        '--html-debug',
+        help="Output a simple HTML representation of the document, rather than the JSON content with additional structural information.",
         action='store_true', default=False
     )
 
     argparser.add_argument(
-        '--detailed', 
+        '--html',
+        help="Output a pretty HTML representation of the document, rather than the JSON content.",
+        action='store_true', default=False
+    )
+
+    argparser.add_argument(
+        '--detailed',
         help="Include BoundingBoxes and font statistics in the output to aid onward processing",
         action="store_true", default=False
     )
@@ -159,6 +165,12 @@ def run():
 
     print(f"Writing output to {out_file}")
     if args.html:
+        converter = JsonHtmlConverter()
+        html_output = converter.convert(out, False, False)
+        with open(out_file, 'w', encoding='utf-8') as f:
+            f.write(html_output)
+
+    elif args.html_debug:
         converter = JsonHtmlConverter()
         html_output = converter.convert(out, True, True)
         with open(out_file, 'w', encoding='utf-8') as f:
