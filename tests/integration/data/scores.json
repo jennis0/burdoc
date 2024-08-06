@@ -94,5 +94,9 @@
     "wrapped_images": [
         5,
         ""
+    ],
+    "structured_tables": [
+        5,
+        ""
     ]
 }
