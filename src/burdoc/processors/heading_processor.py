@@ -50,7 +50,7 @@ class HeadingProcessor(Processor):
 
         def str_to_scaled_int(s):
             return int(round(float(s), 1)*10)
-        
+
         for font_family in font_statistics:
             f_counts = font_statistics[font_family]['_counts']
             if len(f_counts) > 0:
@@ -60,7 +60,8 @@ class HeadingProcessor(Processor):
                     shape=(str_to_scaled_int(font_max_size)+1)
                 )
                 for size in f_counts:
-                    counts[font_family][str_to_scaled_int(size)] += f_counts[size]
+                    counts[font_family][str_to_scaled_int(
+                        size)] += f_counts[size]
                     total_lines += f_counts[size]
                 if counts[font_family].sum() > default_font_count:
                     default_font = font_family
@@ -68,10 +69,10 @@ class HeadingProcessor(Processor):
 
         self.default_font = default_font
 
-        font_count_array = np.zeros(shape=(max_size+1))
+        font_count_array = np.zeros(shape=max_size+1)
         for font_count in counts.values():
             font_count_array[:font_count.shape[0]] += font_count
-            
+
         sorted_indices = list(reversed(font_count_array.argsort(axis=0)))
         self.default_font_size = min(sorted_indices[0]/10., 20.0)
 
@@ -79,8 +80,8 @@ class HeadingProcessor(Processor):
 
         if len(factors['text']) == 0:
             return False
-        
-        if u"\u2022" in factors['text']:
+
+        if "\u2022" in factors['text']:
             return False
 
         word_count = factors['word_count']
@@ -93,30 +94,31 @@ class HeadingProcessor(Processor):
         if factors['font'] == factors['last_font']:
             word_count += factors['last_len']
             line_count += factors['last_lines']
-        
+
         if factors['size'] < self.default_font_size + 2:
             if factors['word_count'] > 8 or factors['line_count'] > 2:
                 return False
-            
+
         if factors['size'] < self.default_font_size + 10:
             if factors['word_count'] > 15 or factors['line_count'] > 3:
                 return False
 
         if factors['word_count'] > 20:
             return False
-        
+
         if factors['all_italics'] and not factors['all_bold'] and \
                 (factors['size'] < self.default_font_size + 1 or word_count > 7):
             return False
 
-        para_header = factors['dist_to_last'] > min(5, factors['dist_to_next'] + 1)
+        para_header = factors['dist_to_last'] > min(
+            5, factors['dist_to_next'] + 1)
         if para_header:
-            if factors['all_caps'] and not(factors['next_font'] and factors['next_font'].smallcaps):
+            if factors['all_caps'] and not (factors['next_font'] and factors['next_font'].smallcaps):
                 return True
 
             if factors['all_bold'] and abs(factors['line_align']) > 5 and \
                     abs(factors['dist_to_next']) < 4 and \
-                        not(factors['next_font'] and factors['next_font'].bold):
+            not(factors['next_font'] and factors['next_font'].bold):
                 return True
 
             if factors['all_bold'] and factors['size'] > self.default_font_size + 0.5:
@@ -127,9 +129,9 @@ class HeadingProcessor(Processor):
 
             if factors['dist_to_next'] < 5 and factors['last_font'] and factors['next_font']:
                 if factors['font'].family != factors['last_font'].family and \
-                    factors['font'].family != factors['next_font'].family:
+                        factors['font'].family != factors['next_font'].family:
                     return True
-                
+
             if factors['dist_to_next'] < 10 and factors['next_font']:
                 if factors['font'].size > factors['next_font'].size + 0.5:
                     return True
@@ -141,7 +143,7 @@ class HeadingProcessor(Processor):
             factors['font'].colour == factors['next_font'].colour
 
         if factors['size'] > self.default_font_size + 0.5 and \
-            (factors['all_bold'] or factors['all_caps'] or not matched_colour):
+                (factors['all_bold'] or factors['all_caps'] or not matched_colour):
             return True
 
         return False
@@ -165,14 +167,21 @@ class HeadingProcessor(Processor):
         heading_factors['word_count'] = len(element.get_text().split())
         heading_factors['line_count'] = len(element.items)
         heading_factors['all_caps'] = element.get_text().isupper()
-        heading_factors['all_bold'] = all(s.font.bold for line in element.items for s in line.spans)
-        heading_factors['all_italics'] = all(s.font.italic for line in element.items for s in line.spans)
-        heading_factors['dist_to_last'] = element.bbox.y0 - last_element.bbox.y1 if last_element else 5000.
+        heading_factors['all_bold'] = all(
+            s.font.bold for line in element.items for s in line.spans)
+        heading_factors['all_italics'] = all(
+            s.font.italic for line in element.items for s in line.spans)
+        heading_factors['dist_to_last'] = element.bbox.y0 - \
+            last_element.bbox.y1 if last_element else 5000.
         heading_factors['dist_to_next'] = next_element.bbox.y0 - \
-            element.bbox.y1 if next_element and (isinstance(next_element, TextBlock) or isinstance(next_element, Table)) else 5000.
-        heading_factors['line_align'] = next_element.bbox.x1 - element.bbox.x1 if next_element else 0.
-        heading_factors['sizes'] = [s.font.size for line in element.items for s in line.spans]
-        heading_factors['size'] = mode(heading_factors['sizes'], axis=None, keepdims=False)[0]
+            element.bbox.y1 if next_element and (isinstance(
+                next_element, TextBlock) or isinstance(next_element, Table)) else 5000.
+        heading_factors['line_align'] = next_element.bbox.x1 - \
+            element.bbox.x1 if next_element else 0.
+        heading_factors['sizes'] = [
+            s.font.size for line in element.items for s in line.spans]
+        heading_factors['size'] = mode(
+            heading_factors['sizes'], axis=None, keepdims=False)[0]
 
         if isinstance(next_element, TextBlock):
             heading_factors['next_font'] = next_element.items[0].spans[0].font
@@ -220,7 +229,8 @@ class HeadingProcessor(Processor):
                 next_element = None
 
             if isinstance(element, TextBlock):
-                element.type = self._classify_block(element, last_element, next_element)
+                element.type = self._classify_block(
+                    element, last_element, next_element)
                 proc_elements.append(element)
                 continue
 

@@ -74,19 +74,19 @@ def create_argparser() -> argparse.ArgumentParser:
     )
 
     argparser.add_argument(
-        '--html-debug', 
+        '--html-debug',
         help="Output a simple HTML representation of the document, rather than the JSON content with additional structural information.",
         action='store_true', default=False
     )
 
     argparser.add_argument(
-        '--html', 
+        '--html',
         help="Output a pretty HTML representation of the document, rather than the JSON content.",
         action='store_true', default=False
     )
 
     argparser.add_argument(
-        '--detailed', 
+        '--detailed',
         help="Include BoundingBoxes and font statistics in the output to aid onward processing",
         action="store_true", default=False
     )
@@ -169,7 +169,7 @@ def run():
         html_output = converter.convert(out, False, False)
         with open(out_file, 'w', encoding='utf-8') as f:
             f.write(html_output)
-            
+
     elif args.html_debug:
         converter = JsonHtmlConverter()
         html_output = converter.convert(out, True, True)

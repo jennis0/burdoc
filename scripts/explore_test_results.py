@@ -45,7 +45,7 @@ def get_head(title):
 
 
 def get_font_table(font_data):
-    doc, tag, text, line = Doc().ttl()
+    doc, tag, _, line = Doc().ttl()
     with tag('div'):
         with tag('table'):
             with tag('theader'):
@@ -71,7 +71,7 @@ def get_font_table(font_data):
                                 line('td', fontname)
                                 line('td', size)
                                 line('td', size_count)
-                                
+
                                 if 'data' in font:
                                     line('td', font['data']['bd'])
                                     line('td', font['data']['it'])
@@ -82,12 +82,12 @@ def get_font_table(font_data):
                                     line('td', '?')
                                     line('td', '?')
                                     line('td', '?')
-                                
+
                                 if 'true_sizes' in font and size in font['true_sizes']:
                                     vals = font['true_sizes'][size]
-                                    line('td', f"Mean={round(np.mean(vals), 1)} | Min={round(np.min(vals), 1)}"+\
-                                        f" | Max={round(np.max(vals), 1)} | Var={round(np.var(vals), 1)}")
-                                    
+                                    line('td', f"Mean={round(np.mean(vals), 1)} | Min={round(np.min(vals), 1)}" +
+                                         f" | Max={round(np.max(vals), 1)} | Var={round(np.var(vals), 1)}")
+
     return get_collapsible(doc.getvalue(), 'Fonts')
 
 
@@ -142,7 +142,7 @@ def get_metadata_table(metadata: Dict[str, Any], pages: List[str]) -> str:
     Returns:
         str: _description_
     """
-    doc, tag, text, line = Doc().ttl()
+    doc, tag, _, line = Doc().ttl()
 
     pages.sort()
     with tag('div'):
@@ -185,12 +185,12 @@ def get_toc_list(page_hierarchy: Dict[str, Any]) -> str:
                 with tag('li'):
                     with tag('a', style='font-size:12pt', href=f'#anchor-page-{page}'):
                         text(f'Page {page}')
-                    
+
                 for item in page_hierarchy[page]:
                     with tag('li'):
                         with tag('a', href=f"#{page}-{make_anchor_name(item['text'])}"):
-                            text(f"{item['assigned_heading']} :: {item['text']}")
-
+                            text(
+                                f"{item['assigned_heading']} :: {item['text']}")
 
     return get_collapsible(doc.getvalue(), 'Contents')
 
@@ -209,7 +209,7 @@ def get_images(json_data: Dict[str, Any]):
                 for image_data in json_data['images'][page]:
                     doc.stag('img', src=f"data:image/webp;base64, {image_data}",
                              style='margin:10pt; max-height:200pt; max-width:45%')
-                    
+
                 if len(json_data['images'][page]) == 0:
                     with tag('div'):
                         text('No images')
@@ -226,6 +226,7 @@ def create_top_links(links: Dict[str, str]) -> str:
     text += '<hr></div>'
     return text
 
+
 def get_value_rep(content, depth=0):
     doc, tag, text, line = Doc().ttl()
 
@@ -239,7 +240,7 @@ def get_value_rep(content, depth=0):
                 line('th', 'Key')
                 line('th', 'Value')
             with tag('tbody'):
-                for k,item in content.items():
+                for k, item in content.items():
                     with tag('tr'):
                         line('th', k)
                         with tag('td'):
@@ -251,31 +252,32 @@ def get_value_rep(content, depth=0):
                     with tag('tr'):
                         with tag('td'):
                             doc.asis(get_value_rep(item, depth+1))
-                        
+
     else:
         text(str(content))
     return doc.getvalue()
 
+
 def json_to_table(old_content, new_content):
     doc, tag, _, line = Doc().ttl()
-    
-    oct = type(old_content)
-    nct = type(new_content)
-    
+
+    old_content = type(old_content)
+    new_content = type(new_content)
+
     if not old_content:
-        old_content = nct()
+        old_content = new_content()
     if not new_content:
-        new_content = oct()
-    
+        new_content = old_content()
+
     with tag('table', style='margin:2pt; padding:2pt'):
         with tag('theader'):
             if isinstance(old_content, dict):
                 line('th', 'Key')
             line('th', 'Old')
             line('th', 'New')
-            
+
         with tag('tbody'):
-            
+
             if isinstance(old_content, dict):
                 keys = list(set(old_content.keys()).union(new_content.keys()))
                 for key in keys:
@@ -291,7 +293,7 @@ def json_to_table(old_content, new_content):
                                 doc.asis(get_value_rep(new_content[key]))
                         else:
                             line('td', '')
-                            
+
             elif isinstance(old_content, list):
                 if len(new_content) < len(old_content):
                     new_content += [None]*(len(old_content) - len(new_content))
@@ -303,7 +305,7 @@ def json_to_table(old_content, new_content):
                             doc.asis(get_value_rep(i1))
                         with tag('td'):
                             doc.asis(get_value_rep(i2))
-                        
+
             else:
                 with tag('tr'):
                     with tag('td'):
@@ -312,11 +314,10 @@ def json_to_table(old_content, new_content):
                         doc.asis(get_value_rep(new_content))
 
     return doc.getvalue()
-                        
-                        
+
 
 def get_change_view(changes: List[Dict[str, Any]]):
-    doc, tag, text, line = Doc().ttl()
+    doc, tag, _, line = Doc().ttl()
 
     with tag('div'):
         for c in changes:
@@ -328,7 +329,7 @@ def get_change_view(changes: List[Dict[str, Any]]):
                     with tag('tr'):
                         line('th', 'Type:')
                         line('td', c['type'])
-                        
+
                     if c['type'] == 'reorder':
                         with tag('tr'):
                             line('th', 'Old Pos')
@@ -338,10 +339,11 @@ def get_change_view(changes: List[Dict[str, Any]]):
                             line('td', c['new'])
 
                 if 'value' in c:
-                    doc.asis(get_collapsible(get_value_rep(c['value']), 'Value'))
+                    doc.asis(get_collapsible(
+                        get_value_rep(c['value']), 'Value'))
                     doc.stag('hr')
                     continue
-                    
+
                 new = c['new'] if 'new' in c else None
                 old = c['old'] if 'old' in c else None
                 doc.asis(get_collapsible(json_to_table(old, new), 'Change'))
@@ -363,13 +365,14 @@ def create_embedded_view(
     with tag('body'):
         with tag('div', style='height:98%; padding:0pt; margin:0pt'):
             with tag('div',
-                    style='width:50%; overflow-y:scroll; height:100%; padding:20pt; float: left'):
+                     style='width:50%; overflow-y:scroll; height:100%; padding:20pt; float: left'):
                 line('h2', 'Metadata')
                 doc.asis(get_metadata_table(
                     json_data['metadata'], list(json_data['content'].keys())))
-                
+
                 if 'font_statistics' in json_data['metadata']:
-                    doc.asis(get_font_table(json_data['metadata']['font_statistics']))
+                    doc.asis(get_font_table(
+                        json_data['metadata']['font_statistics']))
                 doc.asis(get_toc_list(json_data['page_hierarchy']))
                 doc.asis(get_images(json_data))
                 doc.stag("hr")
@@ -388,12 +391,11 @@ def create_embedded_view(
                     with tag('div', klass='content'):
                         if len(page_changes) > 0:
                             doc.asis(get_collapsible(get_change_view(page_changes),
-                                                    'Changes', background="#909090"))
+                                                     'Changes', background="#909090"))
                         doc.asis(get_collapsible(
                             html_pages[page], f'New Page {page}', background=col))
                         doc.asis(get_collapsible(
                             gold_pages[page], f'Gold Page {page}', background="gold"))
-                        
 
             with tag('div', style='margin:0, padding:0; height:100%; width:45%; float:left'):
                 links['Contents'] = '#-contents'
@@ -441,7 +443,8 @@ def create_directory_view(in_path: str, path_stem: str, links: Dict[str, str],
 
             result = report['files'][name]
 
-            total_changes = len([c for c in result['changes'] if c['path'].startswith("content.") and not 'font' in c['path']])
+            total_changes = len([c for c in result['changes'] if c['path'].startswith(
+                "content.") and not 'font' in c['path']])
 
             adds = len([c for c in result['changes']
                        if c['type'] == 'addition'])
@@ -510,7 +513,7 @@ def create_directory_view(in_path: str, path_stem: str, links: Dict[str, str],
 
             text += f"<tr><th style='background-color:{colour}; text-align:center; color:#fafafa; font-size:14pt'>{tick}</th>"
             text += f"<td><a href=\"{path}\">{name}/</a></td><td></td><td></td><td></td><td></td>"
-            text += f"<th style='background-color:darkgrey; font-size:14pt'></th><td></td>"
+            text += "<th style='background-color:darkgrey; font-size:14pt'></th><td></td>"
 
             text += "</tr>"
 
@@ -557,14 +560,14 @@ def parse_path(converter: JsonHtmlConverter,
             data = json.load(f)
         with open(gold_target_path, 'r', encoding='utf-8') as f:
             gold_data = json.load(f)
-        
+
         links['File'] = "file://" + os.path.abspath(target_path)
 
         html_pages = {page_number: converter.convert_page(data, page_number, False, False)
-                    for page_number in data['content'].keys()}
+                      for page_number in data['content'].keys()}
         gold_pages = {page_number: converter.convert_page(gold_data, page_number, False, False)
-                    for page_number in data['content'].keys()}
-    
+                      for page_number in data['content'].keys()}
+
         html = create_embedded_view(links, html_pages, gold_pages,
                                     report['files'][".".join(path.split(".")[:-1])], data)
 
@@ -572,7 +575,6 @@ def parse_path(converter: JsonHtmlConverter,
 
         with open(target_out_path, 'w', encoding='utf-8') as f:
             f.write(html)
-
 
 
 def run():
@@ -618,8 +620,9 @@ def run():
     if write_scores:
         with open(scores_path, 'w', encoding='utf-8') as f:
             json.dump(scores, f)
-            
-    print(f"Written index to {os.path.abspath(os.path.join(out_dir, 'index.html'))}")
+
+    print(
+        f"Written index to {os.path.abspath(os.path.join(out_dir, 'index.html'))}")
 
 
 if __name__ == "__main__":
