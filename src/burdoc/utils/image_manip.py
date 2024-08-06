@@ -30,15 +30,15 @@ def get_image_palette(image: Image, n_colours: int, n_means: int = 5) -> List[Tu
     arr = np.asarray(image)
     shape = arr.shape
     if len(shape) == 3:
-        arr = arr.reshape(scipy.product(shape[:2]), shape[2]).astype(float)
+        arr = arr.reshape(np.prod(shape[:2]), shape[2]).astype(float)
         n_dims = 3
     else:
-        arr = arr.reshape(scipy.product(shape[:2]), 1).astype(float)
+        arr = arr.reshape(np.prod(shape[:2]), 1).astype(float)
         n_dims = 2
 
     codes, _ = scipy.cluster.vq.kmeans(arr, n_means)
     vecs, _ = scipy.cluster.vq.vq(arr, codes)         # assign codes
-    counts, _ = scipy.histogram(vecs, len(codes))    # count occurrences
+    counts, _ = np.histogram(vecs, len(codes))    # count occurrences
 
     pixel_count = 150*150
     code_counts = [([round(c, 0) for c in code[:n_dims]], round(
