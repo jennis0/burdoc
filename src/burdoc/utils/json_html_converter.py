@@ -148,7 +148,7 @@ class JsonHtmlConverter():
         header = ""
         if 'col_header_index' in table and len(table['col_header_index']) > 0 and table['col_header_index'][0] == 0:
             if len(table['cells']) > 0:
-                for cell in table['cells'[0]]:
+                for cell in table['cells'][0]:
                     child = self._cell_to_html(cell)
                     header += self._tag("th", child)
 
@@ -316,6 +316,9 @@ class JsonHtmlConverter():
         Returns:
             str: Dict[str, Any]
         """
+        
+        if not item or item['name'] == "empty":
+            return ""
 
         if item['name'] in self.route_dict:
             return self.route_dict[item['name']](item)
@@ -329,6 +332,15 @@ class JsonHtmlConverter():
         head = self._tag("title", json_data['metadata']['title'])
         head += self._tag("style", self.css)
         return self._tag("head", head)
+
+    def convert_elements(self, elements: List[Any]) -> str:
+        """Converts an arbitrary list of elements from Burdoc JSON output into HTML
+        Args:
+            elements: A list of JSON elements from Burdoc
+        Returns:
+            str: HTML representation of those elements wrapped in a div
+        """
+        return self._tag("div", "".join(self._item_to_html(element) for element in elements))
 
     def convert_page(self, json_data: Dict[str, Any],
             page_number: int,
