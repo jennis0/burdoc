@@ -5,6 +5,8 @@ import re
 
 
 def check_if_header_and_fix(item, toc_items):
+    '''Checks if an individual header is in the passed list of ToC items and if so
+    sets the header to the correct level'''
     if 'type' in item:
         if item['type'] in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
             text = item['block_text'].lower()
@@ -17,7 +19,8 @@ def check_if_header_and_fix(item, toc_items):
             check_if_header_and_fix(new_item, toc_items)
 
 def fix_header_format(toc, content):
-        
+    '''Uses an included Table of Contents to correct header levels
+    TODO: Incorporate into main processor'''
     page_toc = {}
     for item in toc:
         if item[2] - 1 in page_toc:
@@ -52,12 +55,17 @@ class JsonHtmlConverter():
         'small': 'p'
     }
 
-    def __init__(self, split: List[str]=['page'], css: Optional[str]=None, classes: Dict[str, str]={}):
+    def __init__(self, split: Optional[List[str]]=None, css: Optional[str]=None, classes: Optional[Dict[str, str]]=None):
+        '''Create a JsonHTMLConverter object
+        split: List of HTML elements on which to split the rendering (by wrapping within a <div>). Defaults to ['page'] but can also pass any of 'h1'-'h3'
+        css: List of css statements to include within the rendered HTML
+        classes: Dictionary of HTML elements and css classes to attach to them. E.g. {'table':'mytable-class1 mytable-class2'}
+        '''
         self.images: Optional[Dict[str, Sequence[str]]] = None
         self.current_page = 0
         
-        self.split = split
-        self.classes = classes
+        self.split = split if split else ['page']
+        self.classes = classes if classes else {}
         self.split_marker = "#£!"
                         
         if not css:
@@ -101,7 +109,7 @@ class JsonHtmlConverter():
 
     def _tag(self, tag: str, children: str=None, 
              tag_class: Optional[str]=None,
-             additional_args: Dict[str, str]={}
+             additional_args: Optional[Dict[str, str]]=None
              ) -> str:
         '''Returns an HTML tag with optional class data added from configuration
         tag [str] - HTML tag
@@ -110,6 +118,9 @@ class JsonHtmlConverter():
         additional_args: Dict[str, str] - Any additional options to be passed into the HTML tag
         Returns: An HTML tag with classes
         '''
+        
+        if not additional_args:
+            additional_args = {}
         
         if not tag_class:
             tag_class = tag
@@ -141,8 +152,6 @@ class JsonHtmlConverter():
         Returns:
             str: HTML
         """
-        text = self._tag("table", "table")
-
         # For now, only consider first column header. More complex table parsing to come!
         skip_rows = set()
         header = ""
