@@ -140,13 +140,12 @@ optional arguments:
 ```python
 from burdoc import BurdocParser
 
-parser = BurdocParser(
- detailed: bool = False, # Include detailed information such as font statistics and bounding boxes in the output
- skip_ml_table_finding: bool = False, # Whether to use ML table finding algorithms
- ignore_images: bool = False, # Don’t extract any images from the document. Much faster but prone to errors if images used as layout elements 
- max_threads: int | None = None, # Maximum number of threads to run. Set to None to use default system limits or 1 to force single-threaded mode. Defaults to None 
- log_level: int = 20, #  Defaults to logging.INFO 
- show_pages: bool = False # Draw each page as it’s extracted with extraction information laid on top. Primarily for debugging. Defaults to False.
+parser = BurdocParser(detailed = False, # Include detailed information such as font statistics and bounding boxes in the output
+ skip_ml_table_finding = False, # Whether to use ML table finding algorithms
+ ignore_images = False, # Don’t extract any images from the document. Much faster but prone to errors if images used as layout elements 
+ max_threads = None, # Maximum number of threads to run. Set to None to use default system limits or 1 to force single-threaded mode. Defaults to None 
+ log_level = 20, #  Defaults to logging.INFO 
+ show_pages = False # Draw each page as it’s extracted with extraction information laid on top. Primarily for debugging. Defaults to False.
 )
 content = parser.read('file.pdf')
 
