@@ -96,6 +96,10 @@ class ImageHandler():
         reduced_image = image.crop([image.size[0]*0.33, image.size[1]*0.33,
                                     image.size[0]*0.66, image.size[1]*0.66])
 
+        if reduced_image.size[0] == 0 or reduced_image.size[1] == 0:
+            self.logger.debug("Reduced image is empty, skipping further processing")
+            return ImageType.DECORATIVE
+        
         gaussian_filter = GaussianBlur(radius=10)
         blurred_image = reduced_image.filter(gaussian_filter)
         reduced_image = np.asarray(blurred_image)
